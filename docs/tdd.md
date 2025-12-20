@@ -43,8 +43,9 @@ Emit report + exit code
 
 3. Module Layout
    coverctl/
-   ├── cmd/coverctl/
+   ├── cmd/coverctl/        # legacy entrypoint (thin wrapper)
    │ └── main.go
+   ├── main.go              # root entrypoint for go install
    ├── internal/
    │ ├── config/
    │ ├── autodetect/

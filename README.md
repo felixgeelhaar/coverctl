@@ -67,7 +67,8 @@ The autodetect command covers `cmd/`, `pkg/`, and directories inside `internal/`
 - `internal/domain`: coverage stats, policy evaluation, warning aggregation.
 - `internal/application`: services (`check`, `run`, `report`, `detect`) orchestrate config loading, domain resolution, coverage runs, and reporting.
 - `internal/infrastructure`: adapters for config files, Go tooling (`go test`), profile parsing, reporters, and autodetection.
-- `cmd/coverctl`: CLI glue keeping dependencies flowing inward (DDD) and enabling TDD-friendly testing.
+- `internal/cli`: CLI parsing, output, and wiring for the root command entrypoint.
+- `main.go`: root entrypoint so `go install github.com/felixgeelhaar/coverctl@latest` works. (The `cmd/coverctl` wrapper remains for compatibility.)
 
 ## Testing & contribution guidelines
 

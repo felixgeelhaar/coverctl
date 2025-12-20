@@ -9,7 +9,7 @@ build() {
   local goarch=$2
   local name=$3
   local output=dist/$name
-  env CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -o "$output" ./cmd/coverctl
+  env CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -o "$output" .
   case "$goos" in
     linux)
       tar -C dist -czf "$output.tar.gz" "$name"
