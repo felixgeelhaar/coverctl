@@ -1,0 +1,45 @@
+name: coverctl
+description: Run coverctl coverage checks in GitHub Actions
+inputs:
+  version:
+    description: coverctl version to install
+    default: latest
+  command:
+    description: coverctl command to run (check|report|run)
+    default: check
+  config:
+    description: Path to .coverctl.yaml
+    default: .coverctl.yaml
+  output:
+    description: Output format (text|json)
+    default: text
+  profile:
+    description: Coverage profile path (optional)
+    default: ""
+  extra_args:
+    description: Additional arguments passed to coverctl
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Install coverctl
+      shell: bash
+      run: |
+        set -euo pipefail
+        go install github.com/felixgeelhaar/coverctl@${{ inputs.version }}
+    - name: Run coverctl
+      shell: bash
+      run: |
+        set -euo pipefail
+        args=()
+        args+=("${{ inputs.command }}")
+        args+=("--config" "${{ inputs.config }}")
+        args+=("-o" "${{ inputs.output }}")
+        if [ -n "${{ inputs.profile }}" ]; then
+          args+=("--profile" "${{ inputs.profile }}")
+        fi
+        if [ -n "${{ inputs.extra_args }}" ]; then
+          # shellcheck disable=SC2206
+          args+=(${{ inputs.extra_args }})
+        fi
+        coverctl "${args[@]}"

@@ -32,6 +32,46 @@
       },
       "required": ["default", "domains"]
     },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "match": {"type": "array", "items": {"type": "string"}},
+          "min": {"type": "number"}
+        },
+        "required": ["match", "min"]
+      }
+    },
+    "diff": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "base": {"type": "string"}
+      }
+    },
+    "merge": {
+      "type": "object",
+      "properties": {
+        "profiles": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "integration": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "packages": {"type": "array", "items": {"type": "string"}},
+        "run_args": {"type": "array", "items": {"type": "string"}},
+        "cover_dir": {"type": "string"},
+        "profile": {"type": "string"}
+      }
+    },
+    "annotations": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"}
+      }
+    },
     "exclude": {
       "type": "array",
       "items": {"type": "string"}

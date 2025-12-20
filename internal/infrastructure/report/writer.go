@@ -20,12 +20,14 @@ func (Writer) Write(w io.Writer, result domain.Result, format application.Output
 	case application.OutputJSON:
 		payload := struct {
 			Domains []domain.DomainResult `json:"domains"`
+			Files   []domain.FileResult   `json:"files,omitempty"`
 			Summary struct {
 				Pass bool `json:"pass"`
 			} `json:"summary"`
 			Warnings []string `json:"warnings,omitempty"`
 		}{
 			Domains: result.Domains,
+			Files:   result.Files,
 		}
 		payload.Summary.Pass = result.Passed
 		payload.Warnings = result.Warnings
@@ -59,6 +61,29 @@ func writeText(w io.Writer, result domain.Result) error {
 	}
 	if err := tw.Flush(); err != nil {
 		return err
+	}
+	if len(result.Files) > 0 {
+		fmt.Fprintln(w, "\nFile rules:")
+		ftw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
+		_, _ = fmt.Fprintln(ftw, "File\tCoverage\tRequired\tStatus")
+		colorize := colorEnabled(w)
+		passStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#16A34A")).Bold(true)
+		failStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#DC2626")).Bold(true)
+		for _, f := range result.Files {
+			status := string(f.Status)
+			if colorize {
+				switch f.Status {
+				case domain.StatusPass:
+					status = passStyle.Render(status)
+				case domain.StatusFail:
+					status = failStyle.Render(status)
+				}
+			}
+			_, _ = fmt.Fprintf(ftw, "%s\t%.1f%%\t%.1f%%\t%s\n", f.File, f.Percent, f.Required, status)
+		}
+		if err := ftw.Flush(); err != nil {
+			return err
+		}
 	}
 	if len(result.Warnings) > 0 {
 		fmt.Fprintln(w, "\nWarnings:")

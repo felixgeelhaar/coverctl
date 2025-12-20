@@ -10,9 +10,11 @@ import (
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/annotations"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/autodetect"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/config"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/coverprofile"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/diff"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/report"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/wizard"
@@ -124,13 +126,15 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 func BuildService(out *os.File) *application.Service {
 	module := gotool.ModuleResolver{}
 	return &application.Service{
-		ConfigLoader:   config.Loader{},
-		Autodetector:   autodetect.Detector{Module: module},
-		DomainResolver: gotool.DomainResolver{Module: module},
-		CoverageRunner: gotool.Runner{Module: module},
-		ProfileParser:  coverprofile.Parser{},
-		Reporter:       report.Writer{},
-		Out:            out,
+		ConfigLoader:      config.Loader{},
+		Autodetector:      autodetect.Detector{Module: module},
+		DomainResolver:    gotool.DomainResolver{Module: module},
+		CoverageRunner:    gotool.Runner{Module: module},
+		ProfileParser:     coverprofile.Parser{},
+		DiffProvider:      diff.GitDiff{Module: module},
+		AnnotationScanner: annotations.Scanner{},
+		Reporter:          report.Writer{},
+		Out:               out,
 	}
 }
 

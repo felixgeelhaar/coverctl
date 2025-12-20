@@ -40,6 +40,9 @@ func TestWriteConfig(t *testing.T) {
 	if err := Write(&buf, cfg); err != nil {
 		t.Fatalf("write: %v", err)
 	}
+	if !strings.Contains(buf.String(), "version: 1") {
+		t.Fatalf("expected version in output")
+	}
 	if !strings.Contains(buf.String(), "policy:") {
 		t.Fatalf("expected policy block")
 	}
@@ -58,6 +61,7 @@ func dummyConfig() application.Config {
 			}},
 		},
 		Exclude: []string{"internal/generated/*"},
+		Files:   []domain.FileRule{{Match: []string{"internal/core/*.go"}, Min: 85}},
 	}
 }
 

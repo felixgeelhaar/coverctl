@@ -72,3 +72,41 @@ func TestWriteWarningsJSON(t *testing.T) {
 		t.Fatalf("expected warnings field")
 	}
 }
+
+func TestWriteFileRulesText(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Files: []domain.FileResult{{
+			File:     "internal/core/a.go",
+			Percent:  88.8,
+			Required: 90,
+			Status:   domain.StatusFail,
+		}},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputText); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	if !strings.Contains(buf.String(), "File rules:") {
+		t.Fatalf("expected file rules section")
+	}
+}
+
+func TestWriteFileRulesJSON(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Files: []domain.FileResult{{
+			File:     "internal/core/a.go",
+			Percent:  88.8,
+			Required: 90,
+			Status:   domain.StatusFail,
+		}},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputJSON); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	if !strings.Contains(buf.String(), "\"files\"") {
+		t.Fatalf("expected files field")
+	}
+}

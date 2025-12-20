@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -12,13 +13,15 @@ import (
 )
 
 type Service struct {
-	ConfigLoader   ConfigLoader
-	Autodetector   Autodetector
-	DomainResolver DomainResolver
-	CoverageRunner CoverageRunner
-	ProfileParser  ProfileParser
-	Reporter       Reporter
-	Out            io.Writer
+	ConfigLoader      ConfigLoader
+	Autodetector      Autodetector
+	DomainResolver    DomainResolver
+	CoverageRunner    CoverageRunner
+	ProfileParser     ProfileParser
+	DiffProvider      DiffProvider
+	AnnotationScanner AnnotationScanner
+	Reporter          Reporter
+	Out               io.Writer
 }
 
 type CheckOptions struct {
@@ -62,9 +65,42 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 		return err
 	}
 
-	fileCoverage, err := s.ProfileParser.Parse(profile)
+	profiles := []string{profile}
+	if cfg.Integration.Enabled {
+		integrationProfile, err := s.CoverageRunner.RunIntegration(ctx, IntegrationOptions{
+			Domains:  domains,
+			Packages: cfg.Integration.Packages,
+			RunArgs:  cfg.Integration.RunArgs,
+			CoverDir: cfg.Integration.CoverDir,
+			Profile:  cfg.Integration.Profile,
+		})
+		if err != nil {
+			return err
+		}
+		profiles = append(profiles, integrationProfile)
+	}
+	if len(cfg.Merge.Profiles) > 0 {
+		profiles = append(profiles, cfg.Merge.Profiles...)
+	}
+	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
 	if err != nil {
 		return err
+	}
+
+	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
+	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
+	if err != nil {
+		return err
+	}
+	changedFiles, err := s.diffFiles(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	filteredCoverage := filterCoverageByFiles(normalizedCoverage, changedFiles)
+	if cfg.Diff.Enabled && len(filteredCoverage) == 0 {
+		result := domain.Result{Passed: true}
+		result.Warnings = []string{"no files matched diff-based coverage check"}
+		return s.Reporter.Write(s.Out, result, opts.Output)
 	}
 
 	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
@@ -72,9 +108,18 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 		return err
 	}
 
-	domainCoverage := AggregateByDomain(fileCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath)
-	result := domain.Evaluate(cfg.Policy, domainCoverage)
+	domainCoverage := AggregateByDomain(filteredCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath, annotations)
+	policy := cfg.Policy
+	if cfg.Diff.Enabled {
+		policy.Domains = filterPolicyDomains(policy.Domains, domainCoverage)
+	}
+	result := domain.Evaluate(policy, domainCoverage)
 	result.Warnings = domainOverlapWarnings(domainDirs)
+	fileResults, filesPassed := evaluateFileRules(filteredCoverage, cfg.Files, cfg.Exclude, annotations)
+	result.Files = fileResults
+	if !filesPassed {
+		result.Passed = false
+	}
 
 	if err := s.Reporter.Write(s.Out, result, opts.Output); err != nil {
 		return err
@@ -110,9 +155,29 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 		return err
 	}
 
-	fileCoverage, err := s.ProfileParser.Parse(opts.Profile)
+	profiles := []string{opts.Profile}
+	if len(cfg.Merge.Profiles) > 0 {
+		profiles = append(profiles, cfg.Merge.Profiles...)
+	}
+	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
 	if err != nil {
 		return err
+	}
+
+	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
+	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
+	if err != nil {
+		return err
+	}
+	changedFiles, err := s.diffFiles(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	filteredCoverage := filterCoverageByFiles(normalizedCoverage, changedFiles)
+	if cfg.Diff.Enabled && len(filteredCoverage) == 0 {
+		result := domain.Result{Passed: true}
+		result.Warnings = []string{"no files matched diff-based coverage check"}
+		return s.Reporter.Write(s.Out, result, opts.Output)
 	}
 
 	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
@@ -120,9 +185,18 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 		return err
 	}
 
-	domainCoverage := AggregateByDomain(fileCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath)
-	result := domain.Evaluate(cfg.Policy, domainCoverage)
+	domainCoverage := AggregateByDomain(filteredCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath, annotations)
+	policy := cfg.Policy
+	if cfg.Diff.Enabled {
+		policy.Domains = filterPolicyDomains(policy.Domains, domainCoverage)
+	}
+	result := domain.Evaluate(policy, domainCoverage)
 	result.Warnings = domainOverlapWarnings(domainDirs)
+	fileResults, filesPassed := evaluateFileRules(filteredCoverage, cfg.Files, cfg.Exclude, annotations)
+	result.Files = fileResults
+	if !filesPassed {
+		result.Passed = false
+	}
 
 	return s.Reporter.Write(s.Out, result, opts.Output)
 }
@@ -170,13 +244,26 @@ func (s *Service) loadOrDetect(configPath string) (Config, []domain.Domain, erro
 }
 
 // AggregateByDomain matches files to domain directories and aggregates coverage.
-func AggregateByDomain(files map[string]domain.CoverageStat, domainDirs map[string][]string, exclude []string, moduleRoot, modulePath string) map[string]domain.CoverageStat {
+func AggregateByDomain(files map[string]domain.CoverageStat, domainDirs map[string][]string, exclude []string, moduleRoot, modulePath string, annotations map[string]Annotation) map[string]domain.CoverageStat {
 	result := make(map[string]domain.CoverageStat, len(domainDirs))
 
 	for file, stat := range files {
 		normalized := normalizeCoverageFile(file, modulePath, moduleRoot)
-		if excluded(moduleRelativePath(normalized, moduleRoot), exclude) {
+		relPath := moduleRelativePath(normalized, moduleRoot)
+		if excluded(relPath, exclude) {
 			continue
+		}
+		if ann, ok := annotations[filepath.ToSlash(relPath)]; ok {
+			if ann.Ignore {
+				continue
+			}
+			if ann.Domain != "" {
+				agg := result[ann.Domain]
+				agg.Covered += stat.Covered
+				agg.Total += stat.Total
+				result[ann.Domain] = agg
+				continue
+			}
 		}
 		for domainName, dirs := range domainDirs {
 			if matchesAnyDir(normalized, dirs, moduleRoot) {
@@ -255,6 +342,126 @@ func moduleRelativePath(path, moduleRoot string) string {
 		return filepath.Clean(path)
 	}
 	return filepath.Clean(rel)
+}
+
+func normalizeCoverageMap(files map[string]domain.CoverageStat, moduleRoot, modulePath string) map[string]domain.CoverageStat {
+	result := make(map[string]domain.CoverageStat, len(files))
+	for file, stat := range files {
+		normalized := normalizeCoverageFile(file, modulePath, moduleRoot)
+		rel := filepath.ToSlash(moduleRelativePath(normalized, moduleRoot))
+		agg := result[rel]
+		agg.Covered += stat.Covered
+		agg.Total += stat.Total
+		result[rel] = agg
+	}
+	return result
+}
+
+func filterCoverageByFiles(files map[string]domain.CoverageStat, allow map[string]struct{}) map[string]domain.CoverageStat {
+	if allow == nil {
+		return files
+	}
+	filtered := make(map[string]domain.CoverageStat)
+	for file, stat := range files {
+		if _, ok := allow[file]; ok {
+			filtered[file] = stat
+		}
+	}
+	return filtered
+}
+
+func evaluateFileRules(files map[string]domain.CoverageStat, rules []domain.FileRule, exclude []string, annotations map[string]Annotation) ([]domain.FileResult, bool) {
+	if len(rules) == 0 {
+		return nil, true
+	}
+	minByFile := make(map[string]float64)
+	for file := range files {
+		if excluded(file, exclude) {
+			continue
+		}
+		if ann, ok := annotations[file]; ok && ann.Ignore {
+			continue
+		}
+		for _, rule := range rules {
+			if matchAnyPattern(file, rule.Match) {
+				if minByFile[file] < rule.Min {
+					minByFile[file] = rule.Min
+				}
+			}
+		}
+	}
+	results := make([]domain.FileResult, 0, len(minByFile))
+	passed := true
+	for file, min := range minByFile {
+		stat := files[file]
+		percent := round1(stat.Percent())
+		status := domain.StatusPass
+		if percent < min {
+			status = domain.StatusFail
+			passed = false
+		}
+		results = append(results, domain.FileResult{
+			File:     file,
+			Covered:  stat.Covered,
+			Total:    stat.Total,
+			Percent:  percent,
+			Required: min,
+			Status:   status,
+		})
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].File < results[j].File
+	})
+	return results, passed
+}
+
+func round1(v float64) float64 {
+	return math.Round(v*10) / 10
+}
+
+func matchAnyPattern(file string, patterns []string) bool {
+	for _, pattern := range patterns {
+		if ok, _ := filepath.Match(pattern, file); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func filterPolicyDomains(domains []domain.Domain, coverage map[string]domain.CoverageStat) []domain.Domain {
+	filtered := make([]domain.Domain, 0, len(domains))
+	for _, d := range domains {
+		if stat, ok := coverage[d.Name]; ok && stat.Total > 0 {
+			filtered = append(filtered, d)
+		}
+	}
+	return filtered
+}
+
+func (s *Service) diffFiles(ctx context.Context, cfg Config) (map[string]struct{}, error) {
+	if !cfg.Diff.Enabled || s.DiffProvider == nil {
+		return nil, nil
+	}
+	files, err := s.DiffProvider.ChangedFiles(ctx, cfg.Diff.Base)
+	if err != nil {
+		return nil, err
+	}
+	allow := make(map[string]struct{}, len(files))
+	for _, file := range files {
+		allow[filepath.ToSlash(filepath.Clean(file))] = struct{}{}
+	}
+	return allow, nil
+}
+
+func (s *Service) loadAnnotations(ctx context.Context, cfg Config, moduleRoot string, files map[string]domain.CoverageStat) (map[string]Annotation, error) {
+	if !cfg.Annotations.Enabled || s.AnnotationScanner == nil {
+		return nil, nil
+	}
+	paths := make([]string, 0, len(files))
+	for file := range files {
+		paths = append(paths, file)
+	}
+	return s.AnnotationScanner.Scan(ctx, moduleRoot, paths)
 }
 
 func domainOverlapWarnings(domainDirs map[string][]string) []string {

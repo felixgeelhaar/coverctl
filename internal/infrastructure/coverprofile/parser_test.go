@@ -85,3 +85,28 @@ func TestParseRepeatedLineKeepsMax(t *testing.T) {
 		t.Fatalf("expected covered to be 2, got %d", stat.Covered)
 	}
 }
+
+func TestParseAllMergesProfiles(t *testing.T) {
+	tmp := t.TempDir()
+	pathA := filepath.Join(tmp, "a.out")
+	pathB := filepath.Join(tmp, "b.out")
+	contentA := "mode: atomic\ninternal/core/foo.go:1.1,2.2 2 1\n"
+	contentB := "mode: atomic\ninternal/core/foo.go:3.1,4.2 2 0\n"
+	if err := os.WriteFile(pathA, []byte(contentA), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	if err := os.WriteFile(pathB, []byte(contentB), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	stats, err := (Parser{}).ParseAll([]string{pathA, pathB})
+	if err != nil {
+		t.Fatalf("parse all: %v", err)
+	}
+	stat := stats["internal/core/foo.go"]
+	if stat.Total != 4 {
+		t.Fatalf("expected total 4, got %d", stat.Total)
+	}
+	if stat.Covered != 2 {
+		t.Fatalf("expected covered 2, got %d", stat.Covered)
+	}
+}

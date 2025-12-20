@@ -121,6 +121,44 @@ func TestRunnerRun(t *testing.T) {
 	}
 }
 
+func TestRunnerRunIntegration(t *testing.T) {
+	tmp := t.TempDir()
+	profile := filepath.Join(tmp, "integration.out")
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			return []byte("github.com/felixgeelhaar/coverctl/internal/core\n"), nil
+		},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			if len(args) > 2 && args[0] == "tool" && args[1] == "covdata" {
+				for i, arg := range args {
+					if arg == "-o" && i+1 < len(args) {
+						return os.WriteFile(args[i+1], []byte("mode: atomic\n"), 0o644)
+					}
+				}
+			}
+			return nil
+		},
+		ExecEnv: func(ctx context.Context, dir string, env []string, cmd string, args []string) error {
+			return nil
+		},
+	}
+	out, err := runner.RunIntegration(context.Background(), application.IntegrationOptions{
+		Packages: []string{"./internal/core"},
+		CoverDir: filepath.Join(tmp, "covdata"),
+		Profile:  profile,
+	})
+	if err != nil {
+		t.Fatalf("run integration: %v", err)
+	}
+	if out != profile {
+		t.Fatalf("expected profile path %s, got %s", profile, out)
+	}
+	if _, err := os.Stat(out); err != nil {
+		t.Fatalf("expected integration profile: %v", err)
+	}
+}
+
 func TestUnique(t *testing.T) {
 	values := []string{"a", "b", "a"}
 	out := unique(values)

@@ -63,6 +63,34 @@ exclude:
 
 The autodetect command covers `cmd/`, `pkg/`, and directories inside `internal/`, skipping `generated`/`mocks`.
 
+Advanced options you can enable as needed:
+
+```yaml
+version: 1
+files:
+  - match: ["internal/core/*.go"]
+    min: 90
+diff:
+  enabled: true
+  base: origin/main
+integration:
+  enabled: true
+  packages: ["./internal/integration/..."]
+  run_args: ["-test.run", "TestIntegration"]
+  cover_dir: ".cover/integration"
+  profile: ".cover/integration.out"
+merge:
+  profiles: [".cover/unit.out", ".cover/integration.out"]
+annotations:
+  enabled: true
+```
+
+- `files` enforces per-file minima for any matching paths.
+- `diff` enforces coverage only on files changed since the base ref.
+- `integration` builds `go test -c` binaries and runs them with `GOCOVERDIR` (Go 1.20+).
+- `merge` combines multiple coverprofiles into a single policy evaluation.
+- `annotations` enables `// coverctl:ignore` and `// coverctl:domain=NAME` pragmas.
+
 ## Architecture
 
 - `internal/domain`: coverage stats, policy evaluation, warning aggregation.
@@ -85,6 +113,26 @@ The autodetect command covers `cmd/`, `pkg/`, and directories inside `internal/`
 - `.github/workflows/release.yml` triggers `relicta release --yes` on protected `main` (after each merge). The Relicta `pre_release_hook` runs `scripts/build-artifacts.sh` to compile Linux/macOS/Windows CLI tarballs/zips that the GitHub plugin attaches as release assets.
 - Configure a secret named `RELICTA_TOKEN` (or rely on `${{ secrets.GITHUB_TOKEN }}`) with contents/workflows/packages permissions so Relicta can push tags, update the changelog, and attach artifacts.
 - **Do not manually push `v*` tags**; let Relicta own the tag lifecycle to avoid conflicts.
+
+## GitHub Action
+
+Use the built-in composite action to run coverctl in CI:
+
+```yaml
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - uses: ./.github/actions/coverctl
+        with:
+          command: check
+          config: .coverctl.yaml
+          output: text
+```
 
 ## Docs & governance
 

@@ -44,8 +44,23 @@ type DomainResult struct {
 	Status   Status  `json:"status"`
 }
 
+type FileRule struct {
+	Match []string
+	Min   float64
+}
+
+type FileResult struct {
+	File     string  `json:"file"`
+	Covered  int     `json:"covered"`
+	Total    int     `json:"total"`
+	Percent  float64 `json:"percent"`
+	Required float64 `json:"required"`
+	Status   Status  `json:"status"`
+}
+
 type Result struct {
 	Domains  []DomainResult `json:"domains"`
+	Files    []FileResult   `json:"files,omitempty"`
 	Passed   bool           `json:"passed"`
 	Warnings []string       `json:"warnings,omitempty"`
 }

@@ -21,7 +21,7 @@ func TestAggregateByDomain(t *testing.T) {
 	exclude := []string{"internal/gen/*"}
 
 	modulePath := "github.com/felixgeelhaar/coverctl"
-	result := AggregateByDomain(files, domainDirs, exclude, moduleRoot, modulePath)
+	result := AggregateByDomain(files, domainDirs, exclude, moduleRoot, modulePath, nil)
 	if got := result["core"]; got.Covered != 1 || got.Total != 2 {
 		t.Fatalf("unexpected core coverage: %+v", got)
 	}
@@ -70,8 +70,30 @@ func TestAggregateWithModulePath(t *testing.T) {
 	domainDirs := map[string][]string{
 		"cmd": {filepath.Join(moduleRoot, "cmd/coverctl")},
 	}
-	result := AggregateByDomain(files, domainDirs, nil, moduleRoot, modulePath)
+	result := AggregateByDomain(files, domainDirs, nil, moduleRoot, modulePath, nil)
 	if got := result["cmd"]; got.Total != 10 || got.Covered != 8 {
 		t.Fatalf("expected cmd to aggregate coverage, got %+v", got)
+	}
+}
+
+func TestAggregateByDomainAnnotations(t *testing.T) {
+	files := map[string]domain.CoverageStat{
+		"internal/core/a.go": {Covered: 1, Total: 2},
+		"internal/skip/b.go": {Covered: 2, Total: 2},
+	}
+	moduleRoot := "/repo"
+	domainDirs := map[string][]string{
+		"core": {filepath.Join(moduleRoot, "internal/core")},
+	}
+	annotations := map[string]Annotation{
+		"internal/core/a.go": {Domain: "core"},
+		"internal/skip/b.go": {Ignore: true},
+	}
+	result := AggregateByDomain(files, domainDirs, nil, moduleRoot, "", annotations)
+	if got := result["core"]; got.Covered != 1 || got.Total != 2 {
+		t.Fatalf("unexpected core coverage: %+v", got)
+	}
+	if _, ok := result["skip"]; ok {
+		t.Fatalf("expected ignored file to be skipped")
 	}
 }

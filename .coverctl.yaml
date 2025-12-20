@@ -33,6 +33,12 @@ policy:
     - name: report
       match:
         - "./internal/infrastructure/report/..."
+    - name: annotations
+      match:
+        - "./internal/infrastructure/annotations/..."
+    - name: diff
+      match:
+        - "./internal/infrastructure/diff/..."
     - name: wizard
       match:
         - "./internal/infrastructure/wizard/..."

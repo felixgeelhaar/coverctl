@@ -13,6 +13,53 @@ import (
 type Parser struct{}
 
 func (Parser) Parse(path string) (map[string]domain.CoverageStat, error) {
+	return (Parser{}).ParseAll([]string{path})
+}
+
+func (Parser) ParseAll(paths []string) (map[string]domain.CoverageStat, error) {
+	merged, err := parseProfiles(paths)
+	if err != nil {
+		return nil, err
+	}
+	stats := make(map[string]domain.CoverageStat, len(merged))
+	for filePath, lines := range merged {
+		for _, stat := range lines {
+			agg := stats[filePath]
+			agg.Covered += stat.Covered
+			agg.Total += stat.Total
+			stats[filePath] = agg
+		}
+	}
+	return stats, nil
+}
+
+func parseProfiles(paths []string) (map[string]map[string]domain.CoverageStat, error) {
+	merged := make(map[string]map[string]domain.CoverageStat)
+	for _, path := range paths {
+		lineStats, err := parseProfile(path)
+		if err != nil {
+			return nil, err
+		}
+		for filePath, lines := range lineStats {
+			combined := merged[filePath]
+			if combined == nil {
+				combined = make(map[string]domain.CoverageStat)
+				merged[filePath] = combined
+			}
+			for lineKey, stat := range lines {
+				current := combined[lineKey]
+				current.Total = stat.Total
+				if stat.Covered > current.Covered {
+					current.Covered = stat.Covered
+				}
+				combined[lineKey] = current
+			}
+		}
+	}
+	return merged, nil
+}
+
+func parseProfile(path string) (map[string]map[string]domain.CoverageStat, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -53,16 +100,7 @@ func (Parser) Parse(path string) (map[string]domain.CoverageStat, error) {
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	stats := make(map[string]domain.CoverageStat, len(lineStats))
-	for filePath, lines := range lineStats {
-		for _, stat := range lines {
-			agg := stats[filePath]
-			agg.Covered += stat.Covered
-			agg.Total += stat.Total
-			stats[filePath] = agg
-		}
-	}
-	return stats, nil
+	return lineStats, nil
 }
 
 func parseLine(line string) (string, string, int, int, error) {
