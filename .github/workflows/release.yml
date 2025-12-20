@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,6 +37,6 @@ jobs:
       - name: Run Relicta release
         uses: relicta-tech/relicta-action@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.RELICTA_TOKEN }}
           command: release --yes
           plugins: github

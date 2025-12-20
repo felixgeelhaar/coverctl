@@ -51,3 +51,4 @@ Suggested repository topics: `go`, `coverage`, `domain-driven-design`, `tdd`, `c
 - We use [Relicta](https://github.com/relicta-tech/relicta) (`relicta.config.yaml`) to calculate semantic versions, update `CHANGELOG.md`, and publish GitHub releases. Run `relicta release` locally (use `--dry-run` to preview) or rely on `.github/workflows/release.yml` triggered by `v*` tags.
 - Releases follow conventional commits, require approval, and default to the GitHub plugin publishing non-draft, non-prerelease assets.
 - Each release includes built CLI tarballs/zips (`dist/coverctl-*-amd64.*`) attached to the GitHub release via Relicta’s GitHub plugin.
+- The release workflow consumes a `RELICTA_TOKEN` secret with contents/write, workflows/write, and packages/write permissions (or use the default `GITHUB_TOKEN`) so Relicta can tag, update the changelog, and attach the binaries.
