@@ -39,7 +39,6 @@ type ReportOptions struct {
 }
 
 type DetectOptions struct {
-	ConfigPath string
 }
 
 func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
@@ -87,11 +86,10 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 }
 
 func (s *Service) RunOnly(ctx context.Context, opts RunOnlyOptions) error {
-	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	_, domains, err := s.loadOrDetect(opts.ConfigPath)
 	if err != nil {
 		return err
 	}
-	_, _ = cfg, domains
 	_, err = s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile})
 	return err
 }

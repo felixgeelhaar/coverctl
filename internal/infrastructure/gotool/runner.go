@@ -46,6 +46,7 @@ func (r Runner) Run(ctx context.Context, opts application.RunOptions) (string, e
 	if execFn == nil {
 		execFn = runCommand
 	}
+	fmt.Fprintf(os.Stderr, "running go args: %v\n", args)
 	if err := execFn(ctx, moduleRoot, args); err != nil {
 		return "", fmt.Errorf("go test failed: %w", err)
 	}

@@ -20,7 +20,7 @@ func (Parser) Parse(path string) (map[string]domain.CoverageStat, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	stats := make(map[string]domain.CoverageStat)
+	lineStats := make(map[string]map[string]domain.CoverageStat)
 	lineNo := 0
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -34,25 +34,41 @@ func (Parser) Parse(path string) (map[string]domain.CoverageStat, error) {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		filePath, covered, total, err := parseLine(line)
+		filePath, lineKey, covered, total, err := parseLine(line)
 		if err != nil {
 			return nil, fmt.Errorf("line %d: %w", lineNo, err)
 		}
-		stat := stats[filePath]
-		stat.Covered += covered
-		stat.Total += total
-		stats[filePath] = stat
+		lines := lineStats[filePath]
+		if lines == nil {
+			lines = make(map[string]domain.CoverageStat)
+			lineStats[filePath] = lines
+		}
+		stat := lines[lineKey]
+		stat.Total = total
+		if covered > stat.Covered {
+			stat.Covered = covered
+		}
+		lines[lineKey] = stat
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
+	stats := make(map[string]domain.CoverageStat, len(lineStats))
+	for filePath, lines := range lineStats {
+		for _, stat := range lines {
+			agg := stats[filePath]
+			agg.Covered += stat.Covered
+			agg.Total += stat.Total
+			stats[filePath] = agg
+		}
+	}
 	return stats, nil
 }
 
-func parseLine(line string) (string, int, int, error) {
+func parseLine(line string) (string, string, int, int, error) {
 	parts := strings.Fields(line)
 	if len(parts) < 3 {
-		return "", 0, 0, fmt.Errorf("invalid coverage line")
+		return "", "", 0, 0, fmt.Errorf("invalid coverage line")
 	}
 	filePart := parts[0]
 	stmtPart := parts[1]
@@ -61,16 +77,16 @@ func parseLine(line string) (string, int, int, error) {
 	filePath := strings.SplitN(filePart, ":", 2)[0]
 	stmtCount, err := strconv.Atoi(stmtPart)
 	if err != nil {
-		return "", 0, 0, fmt.Errorf("invalid statement count")
+		return "", "", 0, 0, fmt.Errorf("invalid statement count")
 	}
 	count, err := strconv.ParseInt(countPart, 10, 64)
 	if err != nil {
-		return "", 0, 0, fmt.Errorf("invalid count")
+		return "", "", 0, 0, fmt.Errorf("invalid count")
 	}
 
 	covered := 0
 	if count > 0 {
 		covered = stmtCount
 	}
-	return filePath, covered, stmtCount, nil
+	return filePath, filePart, covered, stmtCount, nil
 }
