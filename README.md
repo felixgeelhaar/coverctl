@@ -91,6 +91,8 @@ annotations:
 - `merge` combines multiple coverprofiles into a single policy evaluation.
 - `annotations` enables `// coverctl:ignore` and `// coverctl:domain=NAME` pragmas.
 
+Need a starting point? Copy `templates/coverctl.yaml` and adjust domains and thresholds to fit your repo.
+
 ## Architecture
 
 - `internal/domain`: coverage stats, policy evaluation, warning aggregation.

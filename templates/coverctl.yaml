@@ -1,0 +1,32 @@
+version: 1
+policy:
+  default:
+    min: 80
+  domains:
+    - name: core
+      match:
+        - "./internal/core/..."
+exclude:
+  - "internal/generated/*"
+files:
+  - match:
+      - "internal/core/*.go"
+    min: 90
+diff:
+  enabled: false
+  base: "origin/main"
+integration:
+  enabled: false
+  packages:
+    - "./internal/integration/..."
+  run_args:
+    - "-test.run"
+    - "TestIntegration"
+  cover_dir: ".cover/integration"
+  profile: ".cover/integration.out"
+merge:
+  profiles:
+    - ".cover/unit.out"
+    - ".cover/integration.out"
+annotations:
+  enabled: true
