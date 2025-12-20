@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"bytes"
@@ -70,7 +70,7 @@ func (f fakeService) Ignore(_ context.Context, _ application.IgnoreOptions) (app
 
 func TestRunUsage(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl"}, &out, &out, fakeService{})
+	code := Run([]string{"coverctl"}, &out, &out, fakeService{})
 	if code != 2 {
 		t.Fatalf("expected exit 2, got %d", code)
 	}
@@ -78,7 +78,7 @@ func TestRunUsage(t *testing.T) {
 
 func TestRunUnknown(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "nope"}, &out, &out, fakeService{})
+	code := Run([]string{"coverctl", "nope"}, &out, &out, fakeService{})
 	if code != 2 {
 		t.Fatalf("expected exit 2, got %d", code)
 	}
@@ -86,7 +86,7 @@ func TestRunUnknown(t *testing.T) {
 
 func TestRunCheck(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "check"}, &out, &out, fakeService{})
+	code := Run([]string{"coverctl", "check"}, &out, &out, fakeService{})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -94,7 +94,7 @@ func TestRunCheck(t *testing.T) {
 
 func TestRunCheckError(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "check"}, &out, &out, fakeService{checkErr: errSentinel})
+	code := Run([]string{"coverctl", "check"}, &out, &out, fakeService{checkErr: errSentinel})
 	if code != 1 {
 		t.Fatalf("expected exit 1, got %d", code)
 	}
@@ -103,7 +103,7 @@ func TestRunCheckError(t *testing.T) {
 func TestRunDetectWriteConfig(t *testing.T) {
 	var out bytes.Buffer
 	path := filepath.Join(t.TempDir(), ".coverctl.yaml")
-	code := run([]string{"coverctl", "detect", "--write-config", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "detect", "--write-config", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -114,7 +114,7 @@ func TestRunDetectWriteConfig(t *testing.T) {
 
 func TestRunReportError(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "report"}, &out, &out, fakeService{reportErr: errSentinel})
+	code := Run([]string{"coverctl", "report"}, &out, &out, fakeService{reportErr: errSentinel})
 	if code != 3 {
 		t.Fatalf("expected exit 3, got %d", code)
 	}
@@ -122,7 +122,7 @@ func TestRunReportError(t *testing.T) {
 
 func TestRunReportSuccess(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "report"}, &out, &out, fakeService{})
+	code := Run([]string{"coverctl", "report"}, &out, &out, fakeService{})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -134,7 +134,7 @@ func TestRunIgnore(t *testing.T) {
 		Exclude: []string{"internal/generated/proto/*"},
 	}
 	domains := []domain.Domain{{Name: "proto", Match: []string{"./internal/generated/proto/..."}}}
-	code := run([]string{"coverctl", "ignore", "--config", "custom.yaml"}, &out, &out, fakeService{ignoreCfg: cfg, ignoreDomains: domains})
+	code := Run([]string{"coverctl", "ignore", "--config", "custom.yaml"}, &out, &out, fakeService{ignoreCfg: cfg, ignoreDomains: domains})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -146,7 +146,7 @@ func TestRunIgnore(t *testing.T) {
 
 func TestRunIgnoreError(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "ignore"}, &out, &out, fakeService{ignoreErr: errSentinel})
+	code := Run([]string{"coverctl", "ignore"}, &out, &out, fakeService{ignoreErr: errSentinel})
 	if code != 4 {
 		t.Fatalf("expected exit 4, got %d", code)
 	}
@@ -154,7 +154,7 @@ func TestRunIgnoreError(t *testing.T) {
 
 func TestRunRunSuccess(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "run"}, &out, &out, fakeService{})
+	code := Run([]string{"coverctl", "run"}, &out, &out, fakeService{})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -164,7 +164,7 @@ func TestRunInitCreatesFile(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
 	path := filepath.Join(dir, ".coverctl.yaml")
-	code := run([]string{"coverctl", "init", "--config", path, "--no-interactive"}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "init", "--config", path, "--no-interactive"}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -184,7 +184,7 @@ func TestRunInitInteractiveBranch(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
 	path := filepath.Join(dir, ".coverctl.yaml")
-	code := run([]string{"coverctl", "init", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "init", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -205,7 +205,7 @@ func TestRunInitInteractiveCancelled(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
 	path := filepath.Join(dir, ".coverctl.yaml")
-	code := run([]string{"coverctl", "init", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "init", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 0 {
 		t.Fatalf("expected exit 0 when wizard cancels, got %d", code)
 	}
@@ -226,7 +226,7 @@ func TestRunInitWizardError(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
 	path := filepath.Join(dir, ".coverctl.yaml")
-	code := run([]string{"coverctl", "init", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "init", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 5 {
 		t.Fatalf("expected exit 5, got %d", code)
 	}
@@ -259,7 +259,7 @@ func TestOutputValueString(t *testing.T) {
 
 func TestRunDetectStdout(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "detect"}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "detect"}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
@@ -270,7 +270,7 @@ func TestRunDetectStdout(t *testing.T) {
 
 func TestRunRunError(t *testing.T) {
 	var out bytes.Buffer
-	code := run([]string{"coverctl", "run"}, &out, &out, fakeService{runErr: errSentinel})
+	code := Run([]string{"coverctl", "run"}, &out, &out, fakeService{runErr: errSentinel})
 	if code != 3 {
 		t.Fatalf("expected exit 3, got %d", code)
 	}

@@ -12,6 +12,7 @@ coverctl wraps `go test` with the right `-covermode`, `-coverpkg`, and domain po
 ## Getting started
 
 ```bash
+go install github.com/felixgeelhaar/coverctl@latest
 git clone git@github.com:felixgeelhaar/coverctl.git
 cd coverctl
 go build ./...
