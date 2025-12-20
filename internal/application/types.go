@@ -35,6 +35,7 @@ type Autodetector interface {
 type DomainResolver interface {
 	Resolve(ctx context.Context, domains []domain.Domain) (map[string][]string, error)
 	ModuleRoot(ctx context.Context) (string, error)
+	ModulePath(ctx context.Context) (string, error)
 }
 
 type CoverageRunner interface {
@@ -52,4 +53,8 @@ type Reporter interface {
 type RunOptions struct {
 	Domains     []domain.Domain
 	ProfilePath string
+}
+
+type IgnoreOptions struct {
+	ConfigPath string
 }

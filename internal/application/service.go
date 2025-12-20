@@ -59,6 +59,11 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 		return err
 	}
 
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return err
+	}
+
 	fileCoverage, err := s.ProfileParser.Parse(profile)
 	if err != nil {
 		return err
@@ -69,7 +74,7 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 		return err
 	}
 
-	domainCoverage := AggregateByDomain(fileCoverage, domainDirs, cfg.Exclude, moduleRoot)
+	domainCoverage := AggregateByDomain(fileCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath)
 	result := domain.Evaluate(cfg.Policy, domainCoverage)
 	result.Warnings = domainOverlapWarnings(domainDirs)
 
@@ -103,6 +108,11 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 		return err
 	}
 
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return err
+	}
+
 	fileCoverage, err := s.ProfileParser.Parse(opts.Profile)
 	if err != nil {
 		return err
@@ -113,7 +123,7 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 		return err
 	}
 
-	domainCoverage := AggregateByDomain(fileCoverage, domainDirs, cfg.Exclude, moduleRoot)
+	domainCoverage := AggregateByDomain(fileCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath)
 	result := domain.Evaluate(cfg.Policy, domainCoverage)
 	result.Warnings = domainOverlapWarnings(domainDirs)
 
@@ -126,6 +136,14 @@ func (s *Service) Detect(ctx context.Context, opts DetectOptions) (Config, error
 		return Config{}, err
 	}
 	return cfg, nil
+}
+
+func (s *Service) Ignore(ctx context.Context, opts IgnoreOptions) (Config, []domain.Domain, error) {
+	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return Config{}, nil, err
+	}
+	return cfg, domains, nil
 }
 
 func (s *Service) loadOrDetect(configPath string) (Config, []domain.Domain, error) {
@@ -155,15 +173,16 @@ func (s *Service) loadOrDetect(configPath string) (Config, []domain.Domain, erro
 }
 
 // AggregateByDomain matches files to domain directories and aggregates coverage.
-func AggregateByDomain(files map[string]domain.CoverageStat, domainDirs map[string][]string, exclude []string, moduleRoot string) map[string]domain.CoverageStat {
+func AggregateByDomain(files map[string]domain.CoverageStat, domainDirs map[string][]string, exclude []string, moduleRoot, modulePath string) map[string]domain.CoverageStat {
 	result := make(map[string]domain.CoverageStat, len(domainDirs))
 
 	for file, stat := range files {
-		if excluded(file, exclude) {
+		normalized := normalizeCoverageFile(file, modulePath, moduleRoot)
+		if excluded(moduleRelativePath(normalized, moduleRoot), exclude) {
 			continue
 		}
 		for domainName, dirs := range domainDirs {
-			if matchesAnyDir(file, dirs, moduleRoot) {
+			if matchesAnyDir(normalized, dirs, moduleRoot) {
 				agg := result[domainName]
 				agg.Covered += stat.Covered
 				agg.Total += stat.Total
@@ -207,6 +226,38 @@ func matchesAnyDir(file string, dirs []string, moduleRoot string) bool {
 		}
 	}
 	return false
+}
+
+func normalizeCoverageFile(file, modulePath, moduleRoot string) string {
+	clean := filepath.Clean(file)
+	if filepath.IsAbs(clean) {
+		return clean
+	}
+	if modulePath != "" {
+		if file == modulePath {
+			return filepath.Clean(moduleRoot)
+		}
+		if strings.HasPrefix(file, modulePath+"/") {
+			rel := strings.TrimPrefix(file, modulePath+"/")
+			rel = filepath.FromSlash(rel)
+			return filepath.Join(moduleRoot, rel)
+		}
+	}
+	if moduleRoot != "" {
+		return filepath.Join(moduleRoot, filepath.FromSlash(clean))
+	}
+	return clean
+}
+
+func moduleRelativePath(path, moduleRoot string) string {
+	if moduleRoot == "" {
+		return filepath.Clean(path)
+	}
+	rel, err := filepath.Rel(moduleRoot, path)
+	if err != nil {
+		return filepath.Clean(path)
+	}
+	return filepath.Clean(rel)
 }
 
 func domainOverlapWarnings(domainDirs map[string][]string) []string {
