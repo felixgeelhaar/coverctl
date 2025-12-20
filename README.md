@@ -76,6 +76,7 @@ Autodetect writes a similar structure when you run `coverctl detect --write-conf
 - Follow Conventional Commits (`feat:`, `fix:`, etc.) so Relicta can auto-bump versions.
 - CI runs the Go test suite (`.github/workflows/go.yml`).
 - Add PR descriptions that include CLI output samples when reports change.
+- `main` is protected; merge only via pull requests that pass the CI checks and include code review. That way CI-triggered `relicta release --yes` runs on approved changes without manual tags.
 
 ## Releases
 
