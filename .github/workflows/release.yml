@@ -9,10 +9,33 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22
+      - name: Build CLI binaries
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist
+          env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/coverctl-linux-amd64 ./cmd/coverctl
+          tar -czf dist/coverctl-linux-amd64.tar.gz -C dist coverctl-linux-amd64
+          rm dist/coverctl-linux-amd64
+          env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/coverctl-darwin-amd64 ./cmd/coverctl
+          tar -czf dist/coverctl-darwin-amd64.tar.gz -C dist coverctl-darwin-amd64
+          rm dist/coverctl-darwin-amd64
+          env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/coverctl-windows-amd64.exe ./cmd/coverctl
+          zip -j dist/coverctl-windows-amd64.zip dist/coverctl-windows-amd64.exe
+          rm dist/coverctl-windows-amd64.exe
       - name: Run Relicta release
         uses: relicta-tech/relicta-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           command: release --yes
+          plugins: github

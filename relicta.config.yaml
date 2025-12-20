@@ -18,6 +18,9 @@ plugins:
     config:
       draft: false
       prerelease: false
+      assets:
+        - "dist/*.tar.gz"
+        - "dist/*.zip"
 
 workflow:
   require_approval: true
