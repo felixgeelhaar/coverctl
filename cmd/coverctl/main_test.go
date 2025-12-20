@@ -217,6 +217,27 @@ func TestRunInitInteractiveCancelled(t *testing.T) {
 	}
 }
 
+func TestRunInitWizardError(t *testing.T) {
+	old := initWizard
+	defer func() { initWizard = old }()
+	initWizard = func(cfg application.Config, stdout io.Writer, stdin io.Reader) (application.Config, bool, error) {
+		return cfg, false, errors.New("wizard failed")
+	}
+	dir := t.TempDir()
+	var out bytes.Buffer
+	path := filepath.Join(dir, ".coverctl.yaml")
+	code := run([]string{"coverctl", "init", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	if code != 5 {
+		t.Fatalf("expected exit 5, got %d", code)
+	}
+	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("expected no config file when wizard errors")
+	}
+	if !strings.Contains(out.String(), "wizard failed") {
+		t.Fatalf("expected wizard error printed")
+	}
+}
+
 func TestWriteConfigFileStdout(t *testing.T) {
 	min := 80.0
 	cfg := application.Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
