@@ -39,8 +39,7 @@ type ReportOptions struct {
 }
 
 type DetectOptions struct {
-	WriteConfig bool
-	ConfigPath  string
+	ConfigPath string
 }
 
 func (s *Service) Check(ctx context.Context, opts CheckOptions) error {

@@ -63,7 +63,7 @@ func run(args []string, stdout, stderr io.Writer, svc service) int {
 		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
 		force := fs.Bool("force", false, "Overwrite config if it exists")
 		_ = fs.Parse(args[2:])
-		cfg, err := svc.Detect(ctx, application.DetectOptions{WriteConfig: *writeConfig, ConfigPath: *configPath})
+		cfg, err := svc.Detect(ctx, application.DetectOptions{ConfigPath: *configPath})
 		if err != nil {
 			return exitCode(err, 3, stderr)
 		}
@@ -101,7 +101,7 @@ func run(args []string, stdout, stderr io.Writer, svc service) int {
 		force := fs.Bool("force", false, "Overwrite existing config file")
 		noInteractive := fs.Bool("no-interactive", false, "Skip the interactive init wizard")
 		_ = fs.Parse(args[2:])
-		cfg, err := svc.Detect(ctx, application.DetectOptions{WriteConfig: true, ConfigPath: *configPath})
+		cfg, err := svc.Detect(ctx, application.DetectOptions{ConfigPath: *configPath})
 		if err != nil {
 			return exitCode(err, 3, stderr)
 		}
