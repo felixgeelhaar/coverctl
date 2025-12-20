@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
@@ -34,6 +35,24 @@ const (
 	stateIntro wizardState = iota
 	stateEdit
 	stateConfirm
+)
+
+var (
+	colorOrange = lipgloss.Color("#F97316")
+	colorSky    = lipgloss.Color("#0EA5E9")
+	colorLime   = lipgloss.Color("#84CC16")
+	colorSlate  = lipgloss.Color("#64748B")
+	colorInk    = lipgloss.Color("#0F172A")
+
+	titleStyle   = lipgloss.NewStyle().Bold(true).Foreground(colorOrange)
+	badgeStyle   = lipgloss.NewStyle().Bold(true).Foreground(colorInk).Background(colorSky).Padding(0, 1)
+	subtleStyle  = lipgloss.NewStyle().Foreground(colorSlate)
+	keyStyle     = lipgloss.NewStyle().Foreground(colorInk).Background(lipgloss.Color("#E2E8F0")).Padding(0, 1)
+	activeStep   = lipgloss.NewStyle().Bold(true).Foreground(colorInk).Background(colorLime).Padding(0, 1)
+	inactiveStep = lipgloss.NewStyle().Foreground(colorSlate).Padding(0, 1).Border(lipgloss.RoundedBorder(), false, false, true, false).BorderForeground(colorSlate)
+	selectedRow  = lipgloss.NewStyle().Bold(true).Foreground(colorInk).Background(lipgloss.Color("#E0F2FE")).Padding(0, 1)
+	domainStyle  = lipgloss.NewStyle().Bold(true).Foreground(colorSky)
+	valueStyle   = lipgloss.NewStyle().Bold(true).Foreground(colorOrange)
 )
 
 func Run(cfg application.Config, stdout io.Writer, stdin io.Reader) (application.Config, bool, error) {
@@ -188,56 +207,85 @@ func (m *initWizardModel) adjustDomain(index int, delta float64) {
 
 func (m *initWizardModel) viewIntro() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "\ncoverctl init wizard\n\n")
+	fmt.Fprintf(&b, "\n%s %s\n", titleStyle.Render("coverctl init"), badgeStyle.Render("wizard"))
+	fmt.Fprintf(&b, "%s\n\n", subtleStyle.Render("Domain-aware coverage policy setup"))
+	fmt.Fprintf(&b, "%s\n\n", m.stepper())
 	fmt.Fprintf(&b, "coverctl detected %d domains. The wizard helps you review coverage thresholds.\n\n", len(m.domains))
-	fmt.Fprintf(&b, "Press Enter to continue, or Ctrl+C to cancel. Default coverage is %.0f%%.\n", m.defaultMin)
+	fmt.Fprintf(&b, "Default coverage is %s. Press %s to continue or %s to cancel.\n",
+		valueStyle.Render(fmt.Sprintf("%.0f%%", m.defaultMin)),
+		keyStyle.Render("Enter"),
+		keyStyle.Render("Ctrl+C"),
+	)
 	return b.String()
 }
 
 func (m *initWizardModel) viewEdit() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "\nReview and adjust thresholds\n\n")
-	fmt.Fprintf(&b, "Use ↑/↓ to move, ←/→ or +/- to change values.\n")
-	fmt.Fprintf(&b, "Default min (affects non-customized domains):\n")
-	indicator := "  "
+	fmt.Fprintf(&b, "\n%s %s\n", titleStyle.Render("Review thresholds"), badgeStyle.Render("step 2/3"))
+	fmt.Fprintf(&b, "%s\n", m.stepper())
+	fmt.Fprintf(&b, "%s\n\n", subtleStyle.Render("Use ↑/↓ to move, ←/→ or +/- to adjust."))
+	fmt.Fprintf(&b, "%s\n", subtleStyle.Render("Default min (applies to non-customized domains):"))
+	defaultLine := fmt.Sprintf("Default min: %s", valueStyle.Render(fmt.Sprintf("%.0f%%", m.defaultMin)))
 	if m.cursor == 0 {
-		indicator = "> "
+		fmt.Fprintf(&b, "%s\n\n", selectedRow.Render(defaultLine))
+	} else {
+		fmt.Fprintf(&b, "  %s\n\n", defaultLine)
 	}
-	fmt.Fprintf(&b, "%s%.0f%%\n\n", indicator, m.defaultMin)
-	fmt.Fprintf(&b, "Domains:\n")
+	fmt.Fprintf(&b, "%s\n", subtleStyle.Render("Domains:"))
 	for idx, dom := range m.domains {
-		prefix := "  "
-		if m.cursor == idx+1 {
-			prefix = "> "
-		}
 		custom := ""
 		if dom.override {
 			custom = " (custom)"
 		}
-		fmt.Fprintf(&b, "%s%s: %.0f%%%s\n", prefix, dom.domain.Name, dom.min, custom)
+		row := fmt.Sprintf("%s %s%s", domainStyle.Render(dom.domain.Name), valueStyle.Render(fmt.Sprintf("%.0f%%", dom.min)), custom)
+		if m.cursor == idx+1 {
+			fmt.Fprintf(&b, "%s\n", selectedRow.Render(row))
+		} else {
+			fmt.Fprintf(&b, "  %s\n", row)
+		}
 	}
-	fmt.Fprintf(&b, "\nEnter to continue, q to cancel.\n")
+	fmt.Fprintf(&b, "\nPress %s to continue, %s to cancel.\n", keyStyle.Render("Enter"), keyStyle.Render("q"))
 	return b.String()
 }
 
 func (m *initWizardModel) viewConfirm() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "\nReady to write configuration\n\n")
-	fmt.Fprintf(&b, "Default min coverage: %.0f%%\n", m.defaultMin)
-	fmt.Fprintf(&b, "Domains summary:\n")
+	fmt.Fprintf(&b, "\n%s %s\n", titleStyle.Render("Confirm policy"), badgeStyle.Render("step 3/3"))
+	fmt.Fprintf(&b, "%s\n\n", m.stepper())
+	fmt.Fprintf(&b, "Default min coverage: %s\n", valueStyle.Render(fmt.Sprintf("%.0f%%", m.defaultMin)))
+	fmt.Fprintf(&b, "%s\n", subtleStyle.Render("Domains summary:"))
 	for _, dom := range m.domains {
-		fmt.Fprintf(&b, "  %s: %.0f%%\n", dom.domain.Name, dom.min)
+		fmt.Fprintf(&b, "  %s %s\n", domainStyle.Render(dom.domain.Name), valueStyle.Render(fmt.Sprintf("%.0f%%", dom.min)))
 	}
 	if len(m.exclude) > 0 {
-		fmt.Fprintf(&b, "\nConfigured exclusions:\n")
+		fmt.Fprintf(&b, "\n%s\n", subtleStyle.Render("Configured exclusions:"))
 		for _, pattern := range m.exclude {
 			fmt.Fprintf(&b, "  - %s\n", pattern)
 		}
 	} else {
-		fmt.Fprintf(&b, "\nNo exclusions configured.\n")
+		fmt.Fprintf(&b, "\n%s\n", subtleStyle.Render("No exclusions configured."))
 	}
-	fmt.Fprintf(&b, "\nPress Enter to save, Esc to go back, q to cancel.\n")
+	fmt.Fprintf(&b, "\nPress %s to save, %s to go back, %s to cancel.\n",
+		keyStyle.Render("Enter"),
+		keyStyle.Render("Esc"),
+		keyStyle.Render("q"),
+	)
 	return b.String()
+}
+
+func (m *initWizardModel) stepper() string {
+	return strings.Join([]string{
+		m.stepLabel("Intro", m.state == stateIntro),
+		m.stepLabel("Review", m.state == stateEdit),
+		m.stepLabel("Confirm", m.state == stateConfirm),
+	}, " ")
+}
+
+func (m *initWizardModel) stepLabel(label string, active bool) string {
+	if active {
+		return activeStep.Render(label)
+	}
+	return inactiveStep.Render(label)
 }
 
 func (m *initWizardModel) toConfig() application.Config {
