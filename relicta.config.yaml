@@ -3,27 +3,66 @@ versioning:
   tag_prefix: v
   git_tag: true
   git_push: true
+  git_sign: false
+  bump_from: tag
 
 changelog:
   file: CHANGELOG.md
   format: keep-a-changelog
+  group_by: type
+  include_commit_hash: true
+  include_date: true
+  link_commits: false
+  link_issues: false
   repository_url: https://github.com/felixgeelhaar/coverctl
+  exclude:
+    - chore
+    - docs
+    - test
+    - style
+  categories:
+    build: Build System
+    feat: Features
+    fix: Bug Fixes
+    perf: Performance Improvements
+    refactor: Code Refactoring
+    revert: Reverts
 
 ai:
   enabled: false
+  provider: openai
+  model: gpt-4
+  tone: professional
+  audience: developers
+  temperature: 0.7
+  include_emoji: false
+  max_tokens: 2048
+  retry_attempts: 3
+
+output:
+  format: text
+  color: true
+  verbose: false
+  quiet: false
+  log_level: info
+  plugin_audit_log: ""
 
 plugins:
   - name: github
     enabled: true
     config:
       draft: false
-      prerelease: false
       assets:
-        - "dist/*.tar.gz"
-        - "dist/*.zip"
+        - dist/*.tar.gz
+        - dist/*.zip
 
 workflow:
   require_approval: true
   allowed_branches:
     - main
+  require_clean_working_tree: true
+  require_up_to_date: false
+  auto_commit_changelog: true
+  changelog_commit_message: "chore(release): update changelog for ${version}"
   pre_release_hook: ./scripts/build-artifacts.sh
+  post_release_hook: ""
