@@ -1,0 +1,149 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/autodetect"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/config"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/coverprofile"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/report"
+)
+
+func main() {
+	code := run(os.Args, os.Stdout, os.Stderr, buildService(os.Stdout))
+	os.Exit(code)
+}
+
+type service interface {
+	Check(ctx context.Context, opts application.CheckOptions) error
+	RunOnly(ctx context.Context, opts application.RunOnlyOptions) error
+	Detect(ctx context.Context, opts application.DetectOptions) (application.Config, error)
+	Report(ctx context.Context, opts application.ReportOptions) error
+}
+
+func run(args []string, stdout, stderr io.Writer, svc service) int {
+	if len(args) < 2 {
+		usage(stderr)
+		return 2
+	}
+
+	ctx := context.Background()
+
+	switch args[1] {
+	case "check":
+		fs := flag.NewFlagSet("check", flag.ExitOnError)
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		output := outputFlags(fs)
+		profile := fs.String("profile", "", "Coverage profile output path")
+		_ = fs.Parse(args[2:])
+		err := svc.Check(ctx, application.CheckOptions{ConfigPath: *configPath, Output: *output, Profile: *profile})
+		return exitCode(err, 1, stderr)
+	case "run":
+		fs := flag.NewFlagSet("run", flag.ExitOnError)
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		profile := fs.String("profile", "", "Coverage profile output path")
+		_ = fs.Parse(args[2:])
+		err := svc.RunOnly(ctx, application.RunOnlyOptions{ConfigPath: *configPath, Profile: *profile})
+		return exitCode(err, 3, stderr)
+	case "detect":
+		fs := flag.NewFlagSet("detect", flag.ExitOnError)
+		writeConfig := fs.Bool("write-config", false, "Write detected config to .coverctl.yaml")
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		_ = fs.Parse(args[2:])
+		cfg, err := svc.Detect(ctx, application.DetectOptions{WriteConfig: *writeConfig, ConfigPath: *configPath})
+		if err != nil {
+			return exitCode(err, 3, stderr)
+		}
+		if *writeConfig {
+			if err := writeConfigFile(*configPath, cfg, stdout); err != nil {
+				return exitCode(err, 2, stderr)
+			}
+			return 0
+		}
+		if err := writeConfigFile("-", cfg, stdout); err != nil {
+			return exitCode(err, 2, stderr)
+		}
+		return 0
+	case "report":
+		fs := flag.NewFlagSet("report", flag.ExitOnError)
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		output := outputFlags(fs)
+		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
+		_ = fs.Parse(args[2:])
+		err := svc.Report(ctx, application.ReportOptions{ConfigPath: *configPath, Output: *output, Profile: *profile})
+		return exitCode(err, 3, stderr)
+	default:
+		usage(stderr)
+		return 2
+	}
+}
+
+func buildService(out *os.File) *application.Service {
+	module := gotool.ModuleResolver{}
+	return &application.Service{
+		ConfigLoader:   config.Loader{},
+		Autodetector:   autodetect.Detector{Module: module},
+		DomainResolver: gotool.DomainResolver{Module: module},
+		CoverageRunner: gotool.Runner{Module: module},
+		ProfileParser:  coverprofile.Parser{},
+		Reporter:       report.Writer{},
+		Out:            out,
+	}
+}
+
+func outputFlags(fs *flag.FlagSet) *application.OutputFormat {
+	output := application.OutputText
+	fs.Var((*outputValue)(&output), "output", "Output format: text|json")
+	fs.Var((*outputValue)(&output), "o", "Output format: text|json")
+	return &output
+}
+
+type outputValue application.OutputFormat
+
+func (o *outputValue) String() string { return string(*o) }
+
+func (o *outputValue) Set(value string) error {
+	switch value {
+	case string(application.OutputText), string(application.OutputJSON):
+		*o = outputValue(value)
+		return nil
+	default:
+		return fmt.Errorf("invalid output format: %s", value)
+	}
+}
+
+func writeConfigFile(path string, cfg application.Config, stdout io.Writer) error {
+	if path == "-" {
+		return config.Write(stdout, cfg)
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return config.Write(file, cfg)
+}
+
+func usage(w io.Writer) {
+	fmt.Fprintln(w, `coverctl <command>
+
+Commands:
+  check   Run coverage and enforce policy
+  run     Run coverage only, produce artifacts
+  detect  Autodetect domains (use --write-config to save)
+	report  Analyze an existing profile`)
+}
+
+func exitCode(err error, code int, stderr io.Writer) int {
+	if err == nil {
+		return 0
+	}
+	fmt.Fprintln(stderr, err)
+	return code
+}
