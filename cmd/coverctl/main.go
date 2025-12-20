@@ -55,18 +55,19 @@ func run(args []string, stdout, stderr io.Writer, svc service) int {
 		fs := flag.NewFlagSet("detect", flag.ExitOnError)
 		writeConfig := fs.Bool("write-config", false, "Write detected config to .coverctl.yaml")
 		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		force := fs.Bool("force", false, "Overwrite config if it exists")
 		_ = fs.Parse(args[2:])
 		cfg, err := svc.Detect(ctx, application.DetectOptions{WriteConfig: *writeConfig, ConfigPath: *configPath})
 		if err != nil {
 			return exitCode(err, 3, stderr)
 		}
 		if *writeConfig {
-			if err := writeConfigFile(*configPath, cfg, stdout); err != nil {
+			if err := writeConfigFile(*configPath, cfg, stdout, *force); err != nil {
 				return exitCode(err, 2, stderr)
 			}
 			return 0
 		}
-		if err := writeConfigFile("-", cfg, stdout); err != nil {
+		if err := writeConfigFile("-", cfg, stdout, *force); err != nil {
 			return exitCode(err, 2, stderr)
 		}
 		return 0
@@ -78,6 +79,19 @@ func run(args []string, stdout, stderr io.Writer, svc service) int {
 		_ = fs.Parse(args[2:])
 		err := svc.Report(ctx, application.ReportOptions{ConfigPath: *configPath, Output: *output, Profile: *profile})
 		return exitCode(err, 3, stderr)
+	case "init":
+		fs := flag.NewFlagSet("init", flag.ExitOnError)
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		force := fs.Bool("force", false, "Overwrite existing config file")
+		_ = fs.Parse(args[2:])
+		cfg, err := svc.Detect(ctx, application.DetectOptions{WriteConfig: true, ConfigPath: *configPath})
+		if err != nil {
+			return exitCode(err, 3, stderr)
+		}
+		if err := writeConfigFile(*configPath, cfg, stdout, *force); err != nil {
+			return exitCode(err, 2, stderr)
+		}
+		return 0
 	default:
 		usage(stderr)
 		return 2
@@ -118,9 +132,14 @@ func (o *outputValue) Set(value string) error {
 	}
 }
 
-func writeConfigFile(path string, cfg application.Config, stdout io.Writer) error {
+func writeConfigFile(path string, cfg application.Config, stdout io.Writer, force bool) error {
 	if path == "-" {
 		return config.Write(stdout, cfg)
+	}
+	if !force {
+		if _, err := os.Stat(path); err == nil {
+			return fmt.Errorf("config %s already exists", path)
+		}
 	}
 	file, err := os.Create(path)
 	if err != nil {

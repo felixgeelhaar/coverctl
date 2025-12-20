@@ -25,7 +25,8 @@ Go’s built-in coverage tooling reports global percentages but never enforces t
 
 1. `go build ./...` — produces the CLI under `cmd/coverctl`.
 2. Generate or adjust config:
-   - `coverctl detect --write-config` writes `.coverctl.yaml` (autodetect inspects `cmd/`, `internal/`, `pkg/`).
+   - `coverctl init --config .coverctl.yaml` (default) autodetects domains and writes `.coverctl.yaml`; use `--force` to overwrite.
+   - `coverctl detect` runs the same detection but only writes when `--write-config` is passed (prints to stdout otherwise); useful for inspection.
    - Manually edit `.coverctl.yaml` and validate it with `schemas/coverctl.schema.json`.
 3. Run `coverctl check --config .coverctl.yaml` in CI to enforce coverage policies. Use `-o json` for scripts and tooling integrations.
 
@@ -35,7 +36,8 @@ Go’s built-in coverage tooling reports global percentages but never enforces t
 | --- | --- | --- |
 | `coverctl check` | Run coverage, aggregate by domain, evaluate policy | Exits `0` when all domains pass, `1` when policy fails; `-o json` emits structured output including warnings. |
 | `coverctl run` | Run coverage only and emit profile | Useful for pairing with `report` or storing artifacts; use `--profile` to override `.cover/coverage.out`. |
-| `coverctl detect [--write-config]` | Autodetect domains and optionally persist config | Does not modify source unless `--write-config` is provided (CLI implements `detect` rather than a dedicated `init`). |
+| `coverctl init` | Autodetect domains and write `.coverctl.yaml` (with `--config`/`--force`) | Recommended way to bootrap the repo; it always writes config, unlike `detect`. |
+| `coverctl detect [--write-config]` | Inspect autodetected domains and optionally print/write config | Use `--write-config` (plus `--force`) to persist same result as `init`; omit it to preview the inferred policy. |
 | `coverctl report --profile <path>` | Evaluate an existing coverage profile | Designed for CI job artifact analysis; reuses config and domain resolution without rerunning tests. |
 
 ### Outputs & warnings

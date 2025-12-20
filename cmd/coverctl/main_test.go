@@ -30,7 +30,7 @@ func TestWriteConfigFile(t *testing.T) {
 	min := 80.0
 	cfg := application.Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
 	path := filepath.Join(t.TempDir(), "config.yaml")
-	if err := writeConfigFile(path, cfg, os.Stdout); err != nil {
+	if err := writeConfigFile(path, cfg, os.Stdout, false); err != nil {
 		t.Fatalf("write: %v", err)
 	}
 	if _, err := os.Stat(path); err != nil {
