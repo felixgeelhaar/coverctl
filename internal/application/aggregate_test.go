@@ -20,7 +20,8 @@ func TestAggregateByDomain(t *testing.T) {
 	}
 	exclude := []string{"internal/gen/*"}
 
-	result := AggregateByDomain(files, domainDirs, exclude, moduleRoot)
+	modulePath := "github.com/felixgeelhaar/coverctl"
+	result := AggregateByDomain(files, domainDirs, exclude, moduleRoot, modulePath)
 	if got := result["core"]; got.Covered != 1 || got.Total != 2 {
 		t.Fatalf("unexpected core coverage: %+v", got)
 	}
@@ -38,5 +39,39 @@ func TestExcludeNoMatch(t *testing.T) {
 func TestMatchesAnyDirFalse(t *testing.T) {
 	if matchesAnyDir("internal/core/a.go", []string{"/repo/internal/api"}, "/repo") {
 		t.Fatalf("expected no match")
+	}
+}
+
+func TestMatchesAnyDirModuleRoot(t *testing.T) {
+	if !matchesAnyDir("/repo/main.go", []string{"/repo"}, "/repo") {
+		t.Fatalf("expected match for module root")
+	}
+}
+
+func TestNormalizeCoverageFileNoModulePath(t *testing.T) {
+	path := normalizeCoverageFile("internal/api/handler.go", "", "/repo")
+	if path != filepath.Join("/repo", "internal", "api", "handler.go") {
+		t.Fatalf("unexpected normalized path: %s", path)
+	}
+}
+
+func TestModuleRelativePathNoRoot(t *testing.T) {
+	if got := moduleRelativePath("/repo/main.go", ""); got != filepath.Clean("/repo/main.go") {
+		t.Fatalf("expected clean path, got %s", got)
+	}
+}
+
+func TestAggregateWithModulePath(t *testing.T) {
+	moduleRoot := "/repo"
+	modulePath := "github.com/felixgeelhaar/coverctl"
+	files := map[string]domain.CoverageStat{
+		"github.com/felixgeelhaar/coverctl/cmd/coverctl/main.go": {Covered: 8, Total: 10},
+	}
+	domainDirs := map[string][]string{
+		"cmd": {filepath.Join(moduleRoot, "cmd/coverctl")},
+	}
+	result := AggregateByDomain(files, domainDirs, nil, moduleRoot, modulePath)
+	if got := result["cmd"]; got.Total != 10 || got.Covered != 8 {
+		t.Fatalf("expected cmd to aggregate coverage, got %+v", got)
 	}
 }
