@@ -1,23 +1,36 @@
 # coverctl
 
-**Declarative, domain-aware coverage enforcement for Go teams.**
+**Domain-aware Go coverage enforcement via CLI.**
 
 ![Go](https://img.shields.io/badge/language-Go-00ADD8) ![coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen) ![build](https://img.shields.io/github/actions/workflow/status/felixgeelhaar/coverctl/go.yml?branch=main&label=ci&logo=github)
 
-coverctl wraps `go test` with `-covermode=atomic`, groups packages into configurable domains, and fails CI when a domain’s coverage drops below policy. It ships with strict DDD layers, TDD guidance, JSON/text output, and an autodetect flow so teams can guard architectural boundaries.
+## What it solves
 
-## Quick start
-1. `go build ./...` to build `cmd/coverctl`.
-2. Run `coverctl detect --write-config` to scaffold `.coverctl.yaml` (or hand-edit per `schemas/coverctl.schema.json`).
-3. Run `coverctl check --config .coverctl.yaml` in CI; use `-o json` when you need machine-readable reports.
+Go’s native coverage reporting lacks policy enforcement and architectural context. `coverctl` addresses that by:
 
-## CLI commands
-- `coverctl check` (defaults to text, `-o json` for structured output).
-- `coverctl run` only generates coverage artifacts (`--profile` overrides `.cover/coverage.out`).
-- `coverctl detect` infers domains (`cmd/`, `internal/`, `pkg/`, with autodetected subdomains under `internal/`).
-- `coverctl report --profile .cover/coverage.out` evaluates an existing profile without rerunning tests.
+- modeling logical **domains** (packages or folder bundles) with per-domain minimums,
+- running `go test` with `-covermode=atomic` and the configured `-coverpkg` set,
+- aggregating coverage per domain, applying policy, and failing early when thresholds break,
+- supporting both human-readable reports and machine-readable JSON output,
+- providing `detect` to infer domains and reduce onboarding effort.
 
-## Configuration sample
+## Architecture & usage
+
+The CLI sits in `cmd/coverctl`. Business rules live in `internal/domain`, orchestration lives in `internal/application`, and adapters (config, Go tooling, reporters, autodetect) live under `internal/infrastructure`. This strict DDD split keeps domain invariants central and makes TDD easy.
+
+1. Build: `go build ./...` (CLI appears at `cmd/coverctl`).
+2. Configure: `coverctl detect --write-config` or edit `.coverctl.yaml` manually (schema in `schemas/coverctl.schema.json`).
+3. Enforce: `coverctl check --config .coverctl.yaml` (CI should fail when policy breaks; use `-o json` for automation).
+
+## CLI reference
+
+- `coverctl check`: run coverage, aggregate domains, evaluate policy; default output is text, `-o json` emits machine-readable payloads and warnings.
+- `coverctl run`: rerun coverage only and produce the profile artifact (`--profile` overrides `.cover/coverage.out`).
+- `coverctl detect`: infer domains from `cmd/`, `internal/`, `pkg/` and, optionally, persist `.coverctl.yaml`.
+- `coverctl report --profile <path>`: evaluate an existing coverage profile without running tests (useful for CI artifacts).
+
+## Configuration example
+
 ```yaml
 policy:
   default:
@@ -32,23 +45,16 @@ exclude:
   - internal/generated/*
 ```
 
-Use `schemas/coverctl.schema.json` to validate authoring. Autodetect writes a similar policy with defaults tuned to directories that exist.
+Use `schemas/coverctl.schema.json` to validate config files and ensure domain definitions match actual packages.
 
-## Repository conventions
-- **Modeling**: strict DDD split between `internal/domain`, `internal/application`, `internal/infrastructure`.
-- **Development**: TDD-first. Add tests before behaviors, keep coverage > 80% (`go test ./... -cover`).
-- **Review**: Conventional commits (e.g., `feat: add autodetect report`); PRs should describe behavior changes and include CLI output samples for coverage-reporting features.
-- **Support**: Issue templates live under `.github/ISSUE_TEMPLATE`; CI runs via `.github/workflows/go.yml`.
+## Testing & TDD
 
-## Testing
-- `go test ./...`
-- `go test ./... -cover`
-
-## Tags
-Suggested repository topics: `go`, `coverage`, `domain-driven-design`, `tdd`, `cli`.
+- Unit tests rely on Go’s `testing` package with table-driven assertions for domain aggregation and policy evaluation.
+- Keep coverage above 80%: `go test ./... -cover`.
+- Prefer writing tests first (TDD) for new domain logic so invariants remain centered in the domain layer.
 
 ## Releases
-- We use [Relicta](https://github.com/relicta-tech/relicta) (`relicta.config.yaml`) to calculate semantic versions, update `CHANGELOG.md`, and publish GitHub releases. Run `relicta release` locally (use `--dry-run` to preview) or rely on `.github/workflows/release.yml` triggered by `v*` tags.
-- Releases follow conventional commits, require approval, and default to the GitHub plugin publishing non-draft, non-prerelease assets.
-- Each release includes built CLI tarballs/zips (`dist/coverctl-*-amd64.*`) attached to the GitHub release via Relicta’s GitHub plugin.
-- The release workflow consumes a `RELICTA_TOKEN` secret with contents/write, workflows/write, and packages/write permissions (or use the default `GITHUB_TOKEN`) so Relicta can tag, update the changelog, and attach the binaries.
+
+- Releases use [Relicta](https://github.com/relicta-tech/relicta) with `relicta.config.yaml`, so tagging, changelog updates, and GitHub release publishing are automated.
+- `.github/workflows/release.yml` builds CLI binaries (`dist/*.tar.gz`, `.zip`), runs `relicta release --yes`, and publishes the binaries via the GitHub plugin.
+- The release workflow expects a `RELICTA_TOKEN` secret (fine-grained token with contents/write, workflows/write, packages/write; the default `GITHUB_TOKEN` works too) so Relicta can bump versions, push tags, update `CHANGELOG.md`, and attach assets.
