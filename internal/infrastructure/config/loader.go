@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 
@@ -14,6 +15,7 @@ import (
 type Loader struct{}
 
 type fileConfig struct {
+	Version int        `yaml:"version"`
 	Policy  filePolicy `yaml:"policy"`
 	Exclude []string   `yaml:"exclude"`
 }
@@ -54,6 +56,12 @@ func (l Loader) Load(path string) (application.Config, error) {
 	if err := yaml.Unmarshal(raw, &cfg); err != nil {
 		return application.Config{}, err
 	}
+	if cfg.Version == 0 {
+		cfg.Version = 1
+	}
+	if cfg.Version != 1 {
+		return application.Config{}, fmt.Errorf("unsupported config version: %d", cfg.Version)
+	}
 
 	policy := domain.Policy{
 		DefaultMin: cfg.Policy.Default.Min,
@@ -69,13 +77,19 @@ func (l Loader) Load(path string) (application.Config, error) {
 	}
 
 	return application.Config{
+		Version: cfg.Version,
 		Policy:  policy,
 		Exclude: cfg.Exclude,
 	}, nil
 }
 
 func Write(w io.Writer, cfg application.Config) error {
+	version := cfg.Version
+	if version == 0 {
+		version = 1
+	}
 	out := fileConfig{
+		Version: version,
 		Policy: filePolicy{
 			Default: fileDefault{Min: cfg.Policy.DefaultMin},
 			Domains: make([]fileDomain, 0, len(cfg.Policy.Domains)),

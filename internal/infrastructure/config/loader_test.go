@@ -12,7 +12,7 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	content := "policy:\n  default:\n    min: 75\n  domains:\n    - name: core\n      match: [\"./internal/core/...\"]\n      min: 85\nexclude:\n  - internal/generated/*\n"
+	content := "version: 1\npolicy:\n  default:\n    min: 75\n  domains:\n    - name: core\n      match: [\"./internal/core/...\"]\n      min: 85\nexclude:\n  - internal/generated/*\n"
 	tmp := t.TempDir()
 	path := filepath.Join(tmp, ".coverctl.yaml")
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
@@ -22,6 +22,9 @@ func TestLoadConfig(t *testing.T) {
 	cfg, err := Loader{}.Load(path)
 	if err != nil {
 		t.Fatalf("load: %v", err)
+	}
+	if cfg.Version != 1 {
+		t.Fatalf("expected version 1")
 	}
 	if cfg.Policy.DefaultMin != 75 {
 		t.Fatalf("expected default min 75")
@@ -45,6 +48,7 @@ func TestWriteConfig(t *testing.T) {
 func dummyConfig() application.Config {
 	min := 85.0
 	return application.Config{
+		Version: 1,
 		Policy: domain.Policy{
 			DefaultMin: 80,
 			Domains: []domain.Domain{{
@@ -90,5 +94,17 @@ func TestLoadInvalidYAML(t *testing.T) {
 	}
 	if _, err := (Loader{}).Load(path); err == nil {
 		t.Fatalf("expected error")
+	}
+}
+
+func TestLoadUnsupportedVersion(t *testing.T) {
+	content := "version: 2\npolicy:\n  default:\n    min: 75\n  domains:\n    - name: core\n      match: [\"./internal/core/...\"]\n"
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, ".coverctl.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	if _, err := (Loader{}).Load(path); err == nil {
+		t.Fatalf("expected version error")
 	}
 }

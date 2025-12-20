@@ -23,7 +23,7 @@ func (d Detector) Detect() (application.Config, error) {
 
 	domains := detectDomains(root)
 	policy := domain.Policy{DefaultMin: 80, Domains: domains}
-	return application.Config{Policy: policy}, nil
+	return application.Config{Version: 1, Policy: policy}, nil
 }
 
 func detectDomains(root string) []domain.Domain {

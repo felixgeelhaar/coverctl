@@ -128,6 +128,7 @@ func TestInitWizardViewConfirmShowsExcludes(t *testing.T) {
 
 func minimalConfig() application.Config {
 	return application.Config{
+		Version: 1,
 		Policy: domain.Policy{
 			DefaultMin: 80,
 			Domains:    []domain.Domain{{Name: "module", Match: []string{"./..."}}},

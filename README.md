@@ -47,6 +47,7 @@ Text output (the default) shows domain coverage, required thresholds, and status
 The schema lives in `schemas/coverctl.schema.json`. A policy looks like:
 
 ```yaml
+version: 1
 policy:
   default:
     min: 75

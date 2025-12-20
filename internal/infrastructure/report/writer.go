@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"text/tabwriter"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
+	"github.com/mattn/go-isatty"
 )
 
 type Writer struct{}
@@ -39,8 +42,20 @@ func (Writer) Write(w io.Writer, result domain.Result, format application.Output
 func writeText(w io.Writer, result domain.Result) error {
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
 	_, _ = fmt.Fprintln(tw, "Domain\tCoverage\tRequired\tStatus")
+	colorize := colorEnabled(w)
+	passStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#16A34A")).Bold(true)
+	failStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#DC2626")).Bold(true)
 	for _, d := range result.Domains {
-		_, _ = fmt.Fprintf(tw, "%s\t%.1f%%\t%.1f%%\t%s\n", d.Domain, d.Percent, d.Required, d.Status)
+		status := string(d.Status)
+		if colorize {
+			switch d.Status {
+			case domain.StatusPass:
+				status = passStyle.Render(status)
+			case domain.StatusFail:
+				status = failStyle.Render(status)
+			}
+		}
+		_, _ = fmt.Fprintf(tw, "%s\t%.1f%%\t%.1f%%\t%s\n", d.Domain, d.Percent, d.Required, status)
 	}
 	if err := tw.Flush(); err != nil {
 		return err
@@ -52,4 +67,15 @@ func writeText(w io.Writer, result domain.Result) error {
 		}
 	}
 	return nil
+}
+
+func colorEnabled(w io.Writer) bool {
+	if os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+	file, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	return isatty.IsTerminal(file.Fd()) || isatty.IsCygwinTerminal(file.Fd())
 }

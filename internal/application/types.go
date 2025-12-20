@@ -19,6 +19,7 @@ var ErrConfigNotFound = errors.New("config not found")
 
 // Config represents validated, application-ready configuration.
 type Config struct {
+	Version int
 	Policy  domain.Policy
 	Exclude []string
 }

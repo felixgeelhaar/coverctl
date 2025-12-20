@@ -29,7 +29,7 @@ func TestOutputValueSet(t *testing.T) {
 
 func TestWriteConfigFile(t *testing.T) {
 	min := 80.0
-	cfg := application.Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
+	cfg := application.Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	if err := writeConfigFile(path, cfg, os.Stdout, false); err != nil {
 		t.Fatalf("write: %v", err)
@@ -131,6 +131,7 @@ func TestRunReportSuccess(t *testing.T) {
 func TestRunIgnore(t *testing.T) {
 	var out bytes.Buffer
 	cfg := application.Config{
+		Version: 1,
 		Exclude: []string{"internal/generated/proto/*"},
 	}
 	domains := []domain.Domain{{Name: "proto", Match: []string{"./internal/generated/proto/..."}}}
@@ -240,7 +241,7 @@ func TestRunInitWizardError(t *testing.T) {
 
 func TestWriteConfigFileStdout(t *testing.T) {
 	min := 80.0
-	cfg := application.Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
+	cfg := application.Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
 	var out bytes.Buffer
 	if err := writeConfigFile("-", cfg, &out, true); err != nil {
 		t.Fatalf("write to stdout: %v", err)
@@ -280,6 +281,7 @@ var errSentinel = errors.New("sentinel")
 
 func minimalConfig() application.Config {
 	return application.Config{
+		Version: 1,
 		Policy: domain.Policy{
 			DefaultMin: 80,
 			Domains:    []domain.Domain{{Name: "module", Match: []string{"./..."}}},

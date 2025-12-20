@@ -81,7 +81,7 @@ func (f *fakeReporter) Write(w io.Writer, result domain.Result, format OutputFor
 
 func TestServiceCheckPass(t *testing.T) {
 	min := 80.0
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
 	reporter := &fakeReporter{}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
@@ -103,7 +103,7 @@ func TestServiceCheckPass(t *testing.T) {
 
 func TestServiceCheckFail(t *testing.T) {
 	min := 90.0
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}
 	reporter := &fakeReporter{}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
@@ -124,7 +124,7 @@ func TestServiceCheckFail(t *testing.T) {
 }
 
 func TestServiceCheckWarnings(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{
 		{Name: "core", Match: []string{"./internal/core/..."}},
 		{Name: "api", Match: []string{"./internal/api/..."}}}}}
 	reporter := &fakeReporter{}
@@ -154,7 +154,7 @@ func TestServiceCheckWarnings(t *testing.T) {
 }
 
 func TestServiceReportUsesAutodetect(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	reporter := &fakeReporter{}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: false},
@@ -174,7 +174,7 @@ func TestServiceReportUsesAutodetect(t *testing.T) {
 }
 
 func TestServiceReportError(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		DomainResolver: fakeResolver{err: errors.New("resolver")},
@@ -198,7 +198,7 @@ func TestReporterWrites(t *testing.T) {
 }
 
 func TestServiceRunOnly(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		Autodetector:   fakeAutodetector{},
@@ -210,7 +210,7 @@ func TestServiceRunOnly(t *testing.T) {
 }
 
 func TestServiceRunOnlyError(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		Autodetector:   fakeAutodetector{},
@@ -222,7 +222,7 @@ func TestServiceRunOnlyError(t *testing.T) {
 }
 
 func TestServiceCheckRunnerError(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		Autodetector:   fakeAutodetector{},
@@ -238,7 +238,7 @@ func TestServiceCheckRunnerError(t *testing.T) {
 }
 
 func TestServiceCheckProfileParserError(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		DomainResolver: fakeResolver{dirs: map[string][]string{"module": {"/repo"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
@@ -253,7 +253,7 @@ func TestServiceCheckProfileParserError(t *testing.T) {
 }
 
 func TestServiceCheckResolveError(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		DomainResolver: fakeResolver{err: errSentinel},
@@ -268,7 +268,7 @@ func TestServiceCheckResolveError(t *testing.T) {
 }
 
 func TestServiceReportParserError(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		DomainResolver: fakeResolver{dirs: map[string][]string{"module": {"/repo"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
@@ -301,7 +301,7 @@ func TestLoadOrDetectExistsError(t *testing.T) {
 }
 
 func TestServiceDetectUsesAutodetector(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{
 		Autodetector: fakeAutodetector{cfg: cfg},
 	}
@@ -316,8 +316,8 @@ func TestServiceDetectUsesAutodetector(t *testing.T) {
 
 func TestLoadOrDetectFailsWithoutDomains(t *testing.T) {
 	svc := &Service{
-		ConfigLoader: fakeConfigLoader{exists: true, cfg: Config{Policy: domain.Policy{Domains: nil}}},
-		Autodetector: fakeAutodetector{cfg: Config{}},
+		ConfigLoader: fakeConfigLoader{exists: true, cfg: Config{Version: 1, Policy: domain.Policy{Domains: nil}}},
+		Autodetector: fakeAutodetector{cfg: Config{Version: 1}},
 	}
 	if _, _, err := svc.loadOrDetect(".coverctl.yaml"); err == nil {
 		t.Fatalf("expected error when no domains configured")
@@ -325,7 +325,7 @@ func TestLoadOrDetectFailsWithoutDomains(t *testing.T) {
 }
 
 func TestServiceDetect(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{Autodetector: fakeAutodetector{cfg: cfg}}
 	got, err := svc.Detect(context.Background(), DetectOptions{})
 	if err != nil {
@@ -337,7 +337,7 @@ func TestServiceDetect(t *testing.T) {
 }
 
 func TestServiceLoadOrDetectNoDomains(t *testing.T) {
-	cfg := Config{Policy: domain.Policy{DefaultMin: 80}}
+	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80}}
 	svc := &Service{
 		ConfigLoader: fakeConfigLoader{exists: true, cfg: cfg},
 	}

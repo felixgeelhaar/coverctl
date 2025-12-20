@@ -1,3 +1,4 @@
+version: 1
 policy:
   default:
     min: 80
@@ -5,6 +6,12 @@ policy:
     - name: cmd
       match:
         - "./cmd/coverctl/..."
+    - name: root
+      match:
+        - "./"
+    - name: cli
+      match:
+        - "./internal/cli/..."
     - name: application
       match:
         - "./internal/application/..."

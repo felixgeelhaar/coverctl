@@ -290,6 +290,7 @@ func (m *initWizardModel) stepLabel(label string, active bool) string {
 
 func (m *initWizardModel) toConfig() application.Config {
 	cfg := application.Config{
+		Version: 1,
 		Policy: domain.Policy{
 			DefaultMin: m.defaultMin,
 			Domains:    make([]domain.Domain, len(m.domains)),

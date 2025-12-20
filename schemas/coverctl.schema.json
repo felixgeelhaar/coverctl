@@ -3,6 +3,10 @@
   "title": "coverctl config",
   "type": "object",
   "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
     "policy": {
       "type": "object",
       "properties": {
@@ -33,5 +37,5 @@
       "items": {"type": "string"}
     }
   },
-  "required": ["policy"]
+  "required": ["version", "policy"]
 }
