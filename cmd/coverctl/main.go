@@ -185,8 +185,8 @@ Commands:
   run     Run coverage only, produce artifacts
   detect  Autodetect domains (use --write-config to save)
   ignore  Show configured excludes and ignore advice
-	init    Run autodetect plus the interactive wizard
-	report  Analyze an existing profile`)
+  init    Run autodetect plus the interactive wizard
+  report  Analyze an existing profile`)
 }
 
 func exitCode(err error, code int, stderr io.Writer) int {
