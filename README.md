@@ -16,7 +16,7 @@ git clone git@github.com:felixgeelhaar/coverctl.git
 cd coverctl
 go build ./...
 coverctl init --config .coverctl.yaml       # runs an interactive Bubble Tea wizard (use --no-interactive for automation)
-covercil detect --write-config              # inspect/domain output without writing
+coverctl detect --write-config              # inspect/domain output without writing
 coverctl check --config .coverctl.yaml      # enforce policy, add -o json for automation
 ```
 
