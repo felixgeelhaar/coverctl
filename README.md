@@ -15,8 +15,8 @@ coverctl wraps `go test` with the right `-covermode`, `-coverpkg`, and domain po
 git clone git@github.com:felixgeelhaar/coverctl.git
 cd coverctl
 go build ./...
-coverctl init --config .coverctl.yaml       # creates policy, use --force to overwrite
-covercil detect --write-config              # inspect/domain output without writing
+coverctl init --config .coverctl.yaml       # runs an interactive Bubble Tea wizard (use --no-interactive for automation)
+coverctl detect --write-config              # inspect/domain output without writing
 coverctl check --config .coverctl.yaml      # enforce policy, add -o json for automation
 ```
 
@@ -24,13 +24,22 @@ coverctl check --config .coverctl.yaml      # enforce policy, add -o json for au
 
 | Command | What it does | Notes |
 | --- | --- | --- |
-| `coverctl init` | Autodetect domains, write `.coverctl.yaml`, and ask for overrides | Always persists config; use `--force` to overwrite safely. |
+| `coverctl init` | Autodetect domains and launch the Bubble Tea wizard before writing `.coverctl.yaml` | Navigate with ↑/↓, adjust thresholds with ←/→ or +/-, and confirm to persist. Pass `--no-interactive` to skip the UI in scripts. |
 | `coverctl detect` | Preview domain policy and optionally write config | Pass `--write-config`/`--force` to persist identical config; omit to see the policy before writing. |
 | `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. |
 | `coverctl run` | Produce coverage artifacts without evaluating policy | Use `--profile` to customize output path. |
 | `coverctl report` | Evaluate an already generated profile | Consumes the same config + domains; ideal for CI artifacts or debugging. |
+| `coverctl ignore` | Show configured `exclude` patterns and the tracked domains | Use this to document generated folders (e.g., `internal/generated/proto/...`) that you wish to skip. |
 
-Text output shows domain coverage, required thresholds, and statuses. JSON adds warnings for overlap detection and is suitable for dashboards.
+Text output (the default) shows domain coverage, required thresholds, and statuses. JSON adds warnings for overlap detection and is suitable for dashboards when you pass `-o json`. Use `coverctl ignore` to review the `exclude` list, which is how generated folders such as proto artifacts can be omitted before running `coverctl check`.
+
+## Init wizard
+
+`coverctl init` now launches a short Bubble Tea wizard that reviews the detected domains, lets you adjust coverage minima with arrow keys or +/- shortcuts, and confirms the policy before persisting `.coverctl.yaml`. Use `--no-interactive` when you need to run the command in CI or scripted workflows and you just want to write the autodetected configuration.
+
+## Coverage policy
+
+`coverctl check` parses the profile produced by `go test -coverpkg=…` and assigns statements to the domains defined in `.coverctl.yaml`. Because the raw Go output aggregates every instrumented package—including helpers, generated files, and adapters you may already exclude—the percentage it reports (often ~18.5%) is not used directly. The policy enforces >80% coverage only within the scoped domains (`cmd/coverctl`, `internal/application`, etc.), so staying focused there while keeping generated folders listed in `exclude` prevents quality from falling through the cracks.
 
 ## Configuration
 

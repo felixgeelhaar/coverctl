@@ -37,6 +37,16 @@ func TestModuleRoot(t *testing.T) {
 	}
 }
 
+func TestModulePath(t *testing.T) {
+	path, err := (ModuleResolver{}).ModulePath(context.Background())
+	if err != nil {
+		t.Fatalf("module path: %v", err)
+	}
+	if path == "" {
+		t.Fatalf("expected module path")
+	}
+}
+
 func TestResolveDomains(t *testing.T) {
 	resolver := DomainResolver{Module: ModuleResolver{}}
 	result, err := resolver.Resolve(context.Background(), []domain.Domain{{
@@ -48,6 +58,22 @@ func TestResolveDomains(t *testing.T) {
 	}
 	if len(result["domain"]) == 0 {
 		t.Fatalf("expected domain directories")
+	}
+}
+
+func TestDomainResolverModulePath(t *testing.T) {
+	resolver := DomainResolver{Module: ModuleResolver{}}
+	if _, err := resolver.ModulePath(context.Background()); err != nil {
+		t.Fatalf("module path: %v", err)
+	}
+}
+
+func TestDomainResolverModuleRoot(t *testing.T) {
+	resolver := DomainResolver{Module: ModuleResolver{}}
+	if root, err := resolver.ModuleRoot(context.Background()); err != nil {
+		t.Fatalf("module root: %v", err)
+	} else if root == "" {
+		t.Fatalf("expected module root")
 	}
 }
 
@@ -100,5 +126,11 @@ func TestUnique(t *testing.T) {
 	out := unique(values)
 	if len(out) != 2 {
 		t.Fatalf("expected 2 unique values, got %d", len(out))
+	}
+}
+
+func TestRunCommand(t *testing.T) {
+	if err := runCommand(context.Background(), ".", []string{"env", "GOOS"}); err != nil {
+		t.Fatalf("runCommand: %v", err)
 	}
 }

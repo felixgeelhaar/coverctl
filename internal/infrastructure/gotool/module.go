@@ -26,3 +26,24 @@ func (m ModuleResolver) ModuleRoot(ctx context.Context) (string, error) {
 	}
 	return filepath.Dir(gomod), nil
 }
+
+func (m ModuleResolver) ModulePath(ctx context.Context) (string, error) {
+	moduleRoot, err := m.ModuleRoot(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	cmd := exec.CommandContext(ctx, "go", "list", "-m")
+	cmd.Dir = moduleRoot
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+	modulePath := strings.TrimSpace(out.String())
+	if modulePath == "" {
+		return "", errors.New("module path not found")
+	}
+	return modulePath, nil
+}

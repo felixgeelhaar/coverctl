@@ -67,6 +67,21 @@ func TestExistsMissing(t *testing.T) {
 	}
 }
 
+func TestExistsPresent(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "config.yaml")
+	if err := os.WriteFile(path, []byte("policy:\n"), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	ok, err := (Loader{}).Exists(path)
+	if err != nil {
+		t.Fatalf("exists: %v", err)
+	}
+	if !ok {
+		t.Fatalf("expected exists to be true")
+	}
+}
+
 func TestLoadInvalidYAML(t *testing.T) {
 	tmp := t.TempDir()
 	path := filepath.Join(tmp, ".coverctl.yaml")

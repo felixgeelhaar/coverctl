@@ -190,7 +190,7 @@ actionable error messages
 
 Machine-Readable
 
-JSON (default)
+JSON (via `-o json`; text is the default format)
 
 exit codes for CI
 

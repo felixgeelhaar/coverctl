@@ -41,3 +41,47 @@ func TestParseInvalid(t *testing.T) {
 		t.Fatalf("expected error")
 	}
 }
+
+func TestParseMissingFile(t *testing.T) {
+	if _, err := (Parser{}).Parse(filepath.Join(t.TempDir(), "missing")); err == nil {
+		t.Fatalf("expected error for missing file")
+	}
+}
+
+func TestParseBlankLine(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "coverage.out")
+	content := "mode: atomic\n\ninternal/core/foo.go:1.1,2.2 1 1\n"
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	if _, err := (Parser{}).Parse(path); err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+}
+
+func TestParseLineInvalidNumber(t *testing.T) {
+	if _, _, _, _, err := parseLine("foo.go:1.1,2.2 one 1"); err == nil {
+		t.Fatalf("expected error for invalid stmt count")
+	}
+	if _, _, _, _, err := parseLine("foo.go:1.1,2.2 1 one"); err == nil {
+		t.Fatalf("expected error for invalid count")
+	}
+}
+
+func TestParseRepeatedLineKeepsMax(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "coverage.out")
+	content := "mode: atomic\ninternal/core/foo.go:1.1,2.2 2 0\ninternal/core/foo.go:1.1,2.2 2 1\n"
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	stats, err := (Parser{}).Parse(path)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	stat := stats["internal/core/foo.go"]
+	if stat.Covered != 2 {
+		t.Fatalf("expected covered to be 2, got %d", stat.Covered)
+	}
+}

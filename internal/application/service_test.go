@@ -5,10 +5,14 @@ import (
 	"context"
 	"errors"
 	"io"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
+
+var errSentinel = errors.New("sentinel")
 
 type fakeConfigLoader struct {
 	exists    bool
@@ -36,6 +40,7 @@ type fakeResolver struct {
 	dirs       map[string][]string
 	moduleRoot string
 	err        error
+	modulePath string
 }
 
 func (f fakeResolver) Resolve(ctx context.Context, domains []domain.Domain) (map[string][]string, error) {
@@ -43,6 +48,10 @@ func (f fakeResolver) Resolve(ctx context.Context, domains []domain.Domain) (map
 }
 
 func (f fakeResolver) ModuleRoot(ctx context.Context) (string, error) { return f.moduleRoot, f.err }
+
+func (f fakeResolver) ModulePath(ctx context.Context) (string, error) {
+	return f.modulePath, f.err
+}
 
 type fakeRunner struct {
 	profile string
@@ -77,7 +86,7 @@ func TestServiceCheckPass(t *testing.T) {
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		Autodetector:   fakeAutodetector{},
-		DomainResolver: fakeResolver{dirs: map[string][]string{"core": {"/repo/internal/core"}}, moduleRoot: "/repo"},
+		DomainResolver: fakeResolver{dirs: map[string][]string{"core": {"/repo/internal/core"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
 		CoverageRunner: fakeRunner{profile: ".cover/coverage.out"},
 		ProfileParser:  fakeParser{stats: map[string]domain.CoverageStat{"internal/core/a.go": {Covered: 8, Total: 10}}},
 		Reporter:       reporter,
@@ -99,7 +108,7 @@ func TestServiceCheckFail(t *testing.T) {
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
 		Autodetector:   fakeAutodetector{},
-		DomainResolver: fakeResolver{dirs: map[string][]string{"core": {"/repo/internal/core"}}, moduleRoot: "/repo"},
+		DomainResolver: fakeResolver{dirs: map[string][]string{"core": {"/repo/internal/core"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
 		CoverageRunner: fakeRunner{profile: ".cover/coverage.out"},
 		ProfileParser:  fakeParser{stats: map[string]domain.CoverageStat{"internal/core/a.go": {Covered: 8, Total: 10}}},
 		Reporter:       reporter,
@@ -128,6 +137,7 @@ func TestServiceCheckWarnings(t *testing.T) {
 				"api":  {"/repo/internal/core"},
 			},
 			moduleRoot: "/repo",
+			modulePath: "github.com/felixgeelhaar/coverctl",
 		},
 		CoverageRunner: fakeRunner{profile: ".cover/coverage.out"},
 		ProfileParser:  fakeParser{stats: map[string]domain.CoverageStat{"internal/core/a.go": {Covered: 8, Total: 10}}},
@@ -149,7 +159,7 @@ func TestServiceReportUsesAutodetect(t *testing.T) {
 	svc := &Service{
 		ConfigLoader:   fakeConfigLoader{exists: false},
 		Autodetector:   fakeAutodetector{cfg: cfg},
-		DomainResolver: fakeResolver{dirs: map[string][]string{"module": {"/repo"}}, moduleRoot: "/repo"},
+		DomainResolver: fakeResolver{dirs: map[string][]string{"module": {"/repo"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
 		ProfileParser:  fakeParser{stats: map[string]domain.CoverageStat{"main.go": {Covered: 1, Total: 1}}},
 		Reporter:       reporter,
 		Out:            io.Discard,
@@ -199,6 +209,121 @@ func TestServiceRunOnly(t *testing.T) {
 	}
 }
 
+func TestServiceRunOnlyError(t *testing.T) {
+	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	svc := &Service{
+		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
+		Autodetector:   fakeAutodetector{},
+		CoverageRunner: fakeRunner{err: errSentinel},
+	}
+	if err := svc.RunOnly(context.Background(), RunOnlyOptions{ConfigPath: ".coverctl.yaml"}); err == nil {
+		t.Fatalf("expected error")
+	}
+}
+
+func TestServiceCheckRunnerError(t *testing.T) {
+	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	svc := &Service{
+		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
+		Autodetector:   fakeAutodetector{},
+		DomainResolver: fakeResolver{dirs: map[string][]string{"module": {"/repo"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
+		CoverageRunner: fakeRunner{err: errSentinel},
+		ProfileParser:  fakeParser{stats: map[string]domain.CoverageStat{}},
+		Reporter:       &fakeReporter{},
+		Out:            io.Discard,
+	}
+	if err := svc.Check(context.Background(), CheckOptions{ConfigPath: ".coverctl.yaml"}); err == nil {
+		t.Fatalf("expected runner error")
+	}
+}
+
+func TestServiceCheckProfileParserError(t *testing.T) {
+	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	svc := &Service{
+		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
+		DomainResolver: fakeResolver{dirs: map[string][]string{"module": {"/repo"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
+		CoverageRunner: fakeRunner{profile: ".cover/coverage.out"},
+		ProfileParser:  fakeParser{err: errSentinel},
+		Reporter:       &fakeReporter{},
+		Out:            io.Discard,
+	}
+	if err := svc.Check(context.Background(), CheckOptions{ConfigPath: ".coverctl.yaml"}); err == nil {
+		t.Fatalf("expected parser error")
+	}
+}
+
+func TestServiceCheckResolveError(t *testing.T) {
+	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	svc := &Service{
+		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
+		DomainResolver: fakeResolver{err: errSentinel},
+		CoverageRunner: fakeRunner{profile: ".cover/coverage.out"},
+		ProfileParser:  fakeParser{stats: map[string]domain.CoverageStat{}},
+		Reporter:       &fakeReporter{},
+		Out:            io.Discard,
+	}
+	if err := svc.Check(context.Background(), CheckOptions{ConfigPath: ".coverctl.yaml"}); err == nil {
+		t.Fatalf("expected resolve error")
+	}
+}
+
+func TestServiceReportParserError(t *testing.T) {
+	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	svc := &Service{
+		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
+		DomainResolver: fakeResolver{dirs: map[string][]string{"module": {"/repo"}}, moduleRoot: "/repo", modulePath: "github.com/felixgeelhaar/coverctl"},
+		ProfileParser:  fakeParser{err: errSentinel},
+		Reporter:       &fakeReporter{},
+		Out:            io.Discard,
+	}
+	if err := svc.Report(context.Background(), ReportOptions{ConfigPath: ".coverctl.yaml", Profile: "coverage.out"}); err == nil {
+		t.Fatalf("expected parser error")
+	}
+}
+
+func TestServiceDetectError(t *testing.T) {
+	svc := &Service{
+		Autodetector: fakeAutodetector{err: errSentinel},
+	}
+	if _, err := svc.Detect(context.Background(), DetectOptions{}); err == nil {
+		t.Fatalf("expected detect error")
+	}
+}
+
+func TestLoadOrDetectExistsError(t *testing.T) {
+	svc := &Service{
+		ConfigLoader: fakeConfigLoader{existsErr: errSentinel},
+		Autodetector: fakeAutodetector{},
+	}
+	if _, _, err := svc.loadOrDetect(".coverctl.yaml"); err == nil {
+		t.Fatalf("expected exists error")
+	}
+}
+
+func TestServiceDetectUsesAutodetector(t *testing.T) {
+	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
+	svc := &Service{
+		Autodetector: fakeAutodetector{cfg: cfg},
+	}
+	got, err := svc.Detect(context.Background(), DetectOptions{})
+	if err != nil {
+		t.Fatalf("detect: %v", err)
+	}
+	if got.Policy.DefaultMin != cfg.Policy.DefaultMin {
+		t.Fatalf("unexpected config: %+v", got)
+	}
+}
+
+func TestLoadOrDetectFailsWithoutDomains(t *testing.T) {
+	svc := &Service{
+		ConfigLoader: fakeConfigLoader{exists: true, cfg: Config{Policy: domain.Policy{Domains: nil}}},
+		Autodetector: fakeAutodetector{cfg: Config{}},
+	}
+	if _, _, err := svc.loadOrDetect(".coverctl.yaml"); err == nil {
+		t.Fatalf("expected error when no domains configured")
+	}
+}
+
 func TestServiceDetect(t *testing.T) {
 	cfg := Config{Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "module", Match: []string{"./..."}}}}}
 	svc := &Service{Autodetector: fakeAutodetector{cfg: cfg}}
@@ -218,5 +343,93 @@ func TestServiceLoadOrDetectNoDomains(t *testing.T) {
 	}
 	if err := svc.Check(context.Background(), CheckOptions{ConfigPath: ".coverctl.yaml"}); err == nil {
 		t.Fatalf("expected error for empty domains")
+	}
+}
+
+func TestAggregateByDomainNormalizesAndExcludes(t *testing.T) {
+	moduleRoot := filepath.Join(t.TempDir(), "repo")
+	modulePath := "github.com/felixgeelhaar/coverctl"
+	files := map[string]domain.CoverageStat{
+		modulePath + "/internal/core/a.go":                       {Covered: 2, Total: 3},
+		filepath.Join(moduleRoot, "internal", "ignored", "b.go"): {Covered: 1, Total: 1},
+	}
+	domainDirs := map[string][]string{
+		"core": {filepath.Join(moduleRoot, "internal", "core")},
+	}
+	result := AggregateByDomain(files, domainDirs, []string{"internal/ignored/*"}, moduleRoot, modulePath)
+	stat, ok := result["core"]
+	if !ok {
+		t.Fatalf("expected core domain coverage")
+	}
+	if stat.Covered != 2 || stat.Total != 3 {
+		t.Fatalf("unexpected core stats: %+v", stat)
+	}
+	if _, ok := result["ignored"]; ok {
+		t.Fatalf("excluded file should not contribute")
+	}
+}
+
+func TestExcludedPatterns(t *testing.T) {
+	if !excluded("internal/core/a.go", []string{"internal/core/*"}) {
+		t.Fatalf("expected match for pattern")
+	}
+	if excluded("internal/core/a.go", []string{"pkg/*"}) {
+		t.Fatalf("expected no match for unrelated pattern")
+	}
+}
+
+func TestMatchesAnyDirModuleRootAndRelatives(t *testing.T) {
+	moduleRoot := filepath.Join(t.TempDir(), "repo")
+	file := filepath.Join(moduleRoot, "internal", "core", "a.go")
+	dirs := []string{
+		filepath.Join(moduleRoot, "internal", "core"),
+		moduleRoot,
+	}
+	if !matchesAnyDir(file, dirs, moduleRoot) {
+		t.Fatalf("expected file to match directory list")
+	}
+}
+
+func TestNormalizeCoverageFileVariousCases(t *testing.T) {
+	moduleRoot := filepath.Join(t.TempDir(), "repo")
+	modulePath := "github.com/felixgeelhaar/coverctl"
+
+	if got := normalizeCoverageFile(modulePath, modulePath, moduleRoot); got != filepath.Clean(moduleRoot) {
+		t.Fatalf("expected module path to map to module root, got %s", got)
+	}
+	relFile := modulePath + "/internal/core/a.go"
+	expected := filepath.Join(moduleRoot, "internal", "core", "a.go")
+	if got := normalizeCoverageFile(relFile, modulePath, moduleRoot); got != expected {
+		t.Fatalf("expected normalized path %s, got %s", expected, got)
+	}
+	absFile := filepath.Join(moduleRoot, "internal", "pkg", "b.go")
+	if got := normalizeCoverageFile(absFile, "", moduleRoot); got != absFile {
+		t.Fatalf("expected absolute path to remain, got %s", got)
+	}
+}
+
+func TestModuleRelativePath(t *testing.T) {
+	moduleRoot := filepath.Join(t.TempDir(), "repo")
+	path := filepath.Join(moduleRoot, "internal", "core", "a.go")
+	if got := moduleRelativePath(path, moduleRoot); got != filepath.Join("internal", "core", "a.go") {
+		t.Fatalf("expected relative path")
+	}
+	outside := filepath.Join(filepath.Dir(moduleRoot), "other.go")
+	if got := moduleRelativePath(outside, moduleRoot); got != filepath.Clean(filepath.Join("..", "other.go")) {
+		t.Fatalf("expected clean outside path")
+	}
+}
+
+func TestDomainOverlapWarnings(t *testing.T) {
+	domainDirs := map[string][]string{
+		"core": {"/repo/internal/core"},
+		"api":  {"/repo/internal/core"},
+	}
+	warnings := domainOverlapWarnings(domainDirs)
+	if len(warnings) != 1 {
+		t.Fatalf("expected one warning, got %d", len(warnings))
+	}
+	if !strings.Contains(warnings[0], "api, core") {
+		t.Fatalf("unexpected warning message: %s", warnings[0])
 	}
 }
