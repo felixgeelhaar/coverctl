@@ -79,6 +79,6 @@ Autodetect writes a similar structure when you run `coverctl detect --write-conf
 
 ## Releases
 
-- Releases are automated with [Relicta](https://github.com/relicta-tech/relicta) via `relicta.config.yaml`.
+- Releases are automated with [Relicta (v2.6.1)](https://github.com/relicta-tech/relicta) via `relicta.config.yaml`.
 - `.github/workflows/release.yml` sets up Go, runs Relicta, and `pre_release_hook` (`scripts/build-artifacts.sh`) compiles Linux/macOS/Windows tarballs/zips that the GitHub plugin attaches as release assets.
 - The workflow prefers a `RELICTA_TOKEN` secret (contents: write, workflows: write, packages: write) but falls back to `GITHUB_TOKEN` so Relicta can tag, write `CHANGELOG.md`, and upload binaries.
