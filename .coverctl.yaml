@@ -1,0 +1,31 @@
+policy:
+  default:
+    min: 80
+  domains:
+    - name: cmd
+      match:
+        - "./cmd/coverctl/..."
+    - name: application
+      match:
+        - "./internal/application/..."
+    - name: domain
+      match:
+        - "./internal/domain/..."
+    - name: autodetect
+      match:
+        - "./internal/infrastructure/autodetect/..."
+    - name: config
+      match:
+        - "./internal/infrastructure/config/..."
+    - name: coverprofile
+      match:
+        - "./internal/infrastructure/coverprofile/..."
+    - name: gotool
+      match:
+        - "./internal/infrastructure/gotool/..."
+    - name: report
+      match:
+        - "./internal/infrastructure/report/..."
+    - name: wizard
+      match:
+        - "./internal/infrastructure/wizard/..."

@@ -1,40 +1,36 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This repository contains product/design documentation in `docs/` and an initial Go module scaffold aligned with strict DDD:
-- `cmd/coverctl/` for the CLI entrypoint (`main.go`).
-- `internal/domain/` for entities/value objects and policy evaluation.
-- `internal/application/` for use cases and orchestration.
-- `internal/infrastructure/` for adapters (config, go tool integration, profile parsing, reporting, autodetect).
-- `schemas/` for the configuration JSON schema and related assets.
+- `cmd/coverctl/` hosts the CLI entry point and wires infrastructure to application services.
+- `internal/domain/`, `internal/application/`, `internal/infrastructure/` follow DDD: domain models contain rules, application orchestrates use cases, infrastructure provides adapters (config, Go tooling, reporting, coverprofile parsing).
+- `schemas/` defines the `.coverctl.yaml` schema; relocate docs and fixtures near the packages they describe.
+- Keep generated folders (proto, mocks) tracked via the `exclude` list and review them with `coverctl ignore` before running policies.
 
 ## Build, Test, and Development Commands
-Use standard Go tooling at the module root:
-- `go test ./...` runs the full test suite.
-- `go test -covermode=atomic -coverpkg=./... -coverprofile=.cover/coverage.out ./...` generates coverage artifacts the tool is expected to consume.
-- `go test ./cmd/coverctl -run TestCLI` runs CLI-focused tests (if present).
+- `go test ./...` runs the full suite.
+- `go test -covermode=atomic -coverpkg=./cmd/... -coverpkg=./internal/... -coverprofile=.cover/coverage.out ./...` mirrors the `coverctl check` instrumentation.
+- `go run ./cmd/coverctl check` enforces the >80% policy for every tracked domain; repeat it after changing code or tests.
+- `go run ./cmd/coverctl init` launches the Bubble Tea wizard before writing `.coverctl.yaml`; pass `--no-interactive` for automation.
+- `go run ./cmd/coverctl ignore` lists the `exclude` patterns contributors already documented.
+- `relicta release --yes` (GitHub Action) builds the CLI artifact and publishes releases; see `relicta.config.yaml` for details.
 
 ## Coding Style & Naming Conventions
-- Strict DDD: separate `domain` (entities, value objects, domain services), `application` (use cases), and `infrastructure` (CLI, IO, Go tool calls); never let infrastructure depend on application/domain.
-- Model behavior in domain types (methods) instead of utility functions; keep invariants inside aggregates.
-- Interfaces live in the domain or application layer; infrastructure provides implementations via dependency injection.
-- Name packages after domain concepts (e.g., `policy`, `domains`, `report`) and keep cross-domain references explicit.
-- Go formatting: run `gofmt -w` on all `.go` files; keep imports grouped by standard/third-party/internal.
-- Package names should be short, lowercase, and match folder names.
-- Filenames: tests must use `*_test.go`; golden files should live near tests (e.g., `testdata/`).
+- Format with `gofmt`, keep imports grouped, and prefer short, lowercase package names that mirror directories.
+- Name domain concepts clearly (`PolicyEvaluator`, `CoverageReport`); use table-driven tests for branching logic.
+- Keep CLI flags in `kebab-case` (e.g., `--output json`) and document them in README plus `.coverctl.yaml`.
+- Inject infrastructure implementations via constructors so DDD boundaries stay intact.
 
 ## Testing Guidelines
-- Follow TDD: write or update tests before implementation changes.
-- Use the standard `testing` package.
-- Prefer table-driven tests for policy evaluation and domain resolution.
-- Add golden-file tests for coverage parsing and report formatting (see `docs/tdd.md`).
-- Maintain overall test coverage > 80%; add targeted tests for new logic or edge cases.
+- Follow TDD: extend or add tests before production code changes. Consult `docs/tdd.md` for examples.
+- Use Go’s `testing` package; keep fixtures under `testdata/` and name files `*_test.go`.
+- Target >80% coverage for each domain in `.coverctl.yaml`. Run `go run ./cmd/coverctl check` until every slice passes.
 
 ## Commit & Pull Request Guidelines
-- No commit history is available in this repository, so no existing convention can be inferred.
-- Suggested convention: Conventional Commits (e.g., `feat: add domain autodetection`).
-- PRs should include: a clear description, linked issue (if any), and example output for CLI/report changes.
+- Use Conventional Commits (`feat:`, `fix:`, `test:`) so release automation can categorize changes.
+- PRs need a description, linked issue or PRD reference, tests run (especially `coverctl check`), and any relevant CLI output.
+- Keep `main` protected; merge through PRs only once CI and policy checks succeed.
 
-## Security & Configuration Notes
-- The tool is expected to be deterministic and offline: no network calls and no telemetry.
-- Configuration should be loaded from `.coverctl.yaml`; keep schema changes in `schemas/` aligned with code.
+## Release & Automation Notes
+- Relicta v2.6.1 drives releases; install via the GitHub action and keep `relicta.config.yaml` aligned with CLI artifacts.
+- Store the token as `RELICTA_TOKEN` with repo and workflow scopes; avoid `GITHUB_` prefixes.
+- Relicta pushes tags only when they do not exist yet; do not tag manually before a release run.
