@@ -46,3 +46,7 @@ Use `schemas/coverctl.schema.json` to validate authoring. Autodetect writes a si
 
 ## Tags
 Suggested repository topics: `go`, `coverage`, `domain-driven-design`, `tdd`, `cli`.
+
+## Releases
+- We use [Relicta](https://github.com/relicta-tech/relicta) (`relicta.config.yaml`) to calculate semantic versions, update `CHANGELOG.md`, and publish GitHub releases. Run `relicta release` locally (use `--dry-run` to preview) or rely on `.github/workflows/release.yml` triggered by `v*` tags.
+- Releases follow conventional commits, require approval, and default to the GitHub plugin publishing non-draft, non-prerelease assets.

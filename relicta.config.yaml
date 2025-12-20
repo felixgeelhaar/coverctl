@@ -1,0 +1,25 @@
+versioning:
+  strategy: conventional
+  tag_prefix: v
+  git_tag: true
+  git_push: true
+
+changelog:
+  file: CHANGELOG.md
+  format: keep-a-changelog
+  repository_url: https://github.com/felixgeelhaar/coverctl
+
+ai:
+  enabled: false
+
+plugins:
+  - name: github
+    enabled: true
+    config:
+      draft: false
+      prerelease: false
+
+workflow:
+  require_approval: true
+  allowed_branches:
+    - main
