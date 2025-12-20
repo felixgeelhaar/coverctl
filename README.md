@@ -44,7 +44,7 @@ Text output (the default) shows domain coverage, required thresholds, and status
 
 ## Configuration
 
-The schema lives in `schemas/coverctl.schema.json`. A policy looks like:
+The schema lives in `schemas/coverctl.schema.json`. Configs are versioned; set `version: 1` today and keep it in place so future schema upgrades can be detected safely. A policy looks like:
 
 ```yaml
 version: 1
