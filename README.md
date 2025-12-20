@@ -1,19 +1,23 @@
 # coverctl
 
-Declarative, domain-steered coverage validation for Go. The tool runs `go test` with `-covermode=atomic`, resolves coverage domains, and enforces policy thresholds per the PRD/TDD guidance.
+**Declarative, domain-aware coverage enforcement for Go teams.**
 
-## Getting started
-1. `go build ./...` builds the CLI (`cmd/coverctl`).
-2. Write a `.coverctl.yaml` or run `coverctl detect --write-config` to scaffold domains and policy.
-3. Run `coverctl check --config .coverctl.yaml` in CI to enforce coverage policy.
+![Go](https://img.shields.io/badge/language-Go-00ADD8) ![coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen) ![build](https://img.shields.io/github/actions/workflow/status/felixgeelhaar/coverctl/go.yml?branch=main&label=ci&logo=github)
+
+coverctl wraps `go test` with `-covermode=atomic`, groups packages into configurable domains, and fails CI when a domain’s coverage drops below policy. It ships with strict DDD layers, TDD guidance, JSON/text output, and an autodetect flow so teams can guard architectural boundaries.
+
+## Quick start
+1. `go build ./...` to build `cmd/coverctl`.
+2. Run `coverctl detect --write-config` to scaffold `.coverctl.yaml` (or hand-edit per `schemas/coverctl.schema.json`).
+3. Run `coverctl check --config .coverctl.yaml` in CI; use `-o json` when you need machine-readable reports.
 
 ## CLI commands
-- `coverctl check` (default output: text; use `-o json` for machine-readable).
-- `coverctl run` only produces coverage artifacts (`-profile` overrides `.cover/coverage.out`).
-- `coverctl detect` infers domains from `cmd/`, `internal/`, `pkg/`; add `--write-config` to persist `.coverctl.yaml`.
+- `coverctl check` (defaults to text, `-o json` for structured output).
+- `coverctl run` only generates coverage artifacts (`--profile` overrides `.cover/coverage.out`).
+- `coverctl detect` infers domains (`cmd/`, `internal/`, `pkg/`, with autodetected subdomains under `internal/`).
 - `coverctl report --profile .cover/coverage.out` evaluates an existing profile without rerunning tests.
 
-## Configuration example
+## Configuration sample
 ```yaml
 policy:
   default:
@@ -27,16 +31,18 @@ policy:
 exclude:
   - internal/generated/*
 ```
-Use `schemas/coverctl.schema.json` for validation.
 
-## Modeling & development norms
-- Follow strict DDD: `domain/` (entities/policy), `application/` (use cases), `infrastructure/` (config, CLI, Go tooling).
-- Practice TDD: add or update tests before implementation; prefer table-driven coverage for policy/aggregation logic.
-- Keep repo coverage > 80% on `go test ./... -cover`.
+Use `schemas/coverctl.schema.json` to validate authoring. Autodetect writes a similar policy with defaults tuned to directories that exist.
+
+## Repository conventions
+- **Modeling**: strict DDD split between `internal/domain`, `internal/application`, `internal/infrastructure`.
+- **Development**: TDD-first. Add tests before behaviors, keep coverage > 80% (`go test ./... -cover`).
+- **Review**: Conventional commits (e.g., `feat: add autodetect report`); PRs should describe behavior changes and include CLI output samples for coverage-reporting features.
+- **Support**: Issue templates live under `.github/ISSUE_TEMPLATE`; CI runs via `.github/workflows/go.yml`.
 
 ## Testing
-- `go test ./...` (unit tests).
-- `go test ./... -cover` confirms coverage budget.
+- `go test ./...`
+- `go test ./... -cover`
 
-## Contribution
-Adhere to Conventional Commits (e.g., `feat: add autodetect report`). Provide PR descriptions, linked issues, and sample CLI output for changes affecting reports or policy behavior.
+## Tags
+Suggested repository topics: `go`, `coverage`, `domain-driven-design`, `tdd`, `cli`.

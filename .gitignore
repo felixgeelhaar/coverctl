@@ -1,0 +1,23 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, coverage reports
+*.test
+.cover
+*.out
+
+# Output of the go coverage tool
+coverage.out
+
+# Output when running go generate
+*.gen.go
+
+# Vendor directory
+vendor/
+
+# Sensitive files
+.env
