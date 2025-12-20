@@ -47,6 +47,10 @@ func (r DomainResolver) ModuleRoot(ctx context.Context) (string, error) {
 	return r.Module.ModuleRoot(ctx)
 }
 
+func (r DomainResolver) ModulePath(ctx context.Context) (string, error) {
+	return r.Module.ModulePath(ctx)
+}
+
 func goList(ctx context.Context, dir string, pattern string) ([]goPackage, error) {
 	cmd := exec.CommandContext(ctx, "go", "list", "-json", pattern)
 	cmd.Dir = dir
