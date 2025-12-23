@@ -1,0 +1,22 @@
+version: "2"
+
+run:
+  timeout: 5m
+  go: '1.22'
+
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - ineffassign
+    - misspell
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+linters-settings:
+  misspell:
+    locale: US

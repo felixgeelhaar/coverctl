@@ -28,17 +28,20 @@ type CheckOptions struct {
 	ConfigPath string
 	Output     OutputFormat
 	Profile    string
+	Domains    []string // Filter to specific domains (empty = all domains)
 }
 
 type RunOnlyOptions struct {
 	ConfigPath string
 	Profile    string
+	Domains    []string // Filter to specific domains (empty = all domains)
 }
 
 type ReportOptions struct {
 	ConfigPath string
 	Profile    string
 	Output     OutputFormat
+	Domains    []string // Filter to specific domains (empty = all domains)
 }
 
 type DetectOptions struct {
@@ -48,6 +51,12 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
 	if err != nil {
 		return err
+	}
+
+	// Filter domains if specific ones are requested
+	domains = filterDomainsByNames(domains, opts.Domains)
+	if len(domains) == 0 {
+		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
 	profile, err := s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile})
@@ -110,6 +119,8 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 
 	domainCoverage := AggregateByDomain(filteredCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath, annotations)
 	policy := cfg.Policy
+	// Use filtered domains for policy evaluation
+	policy.Domains = domains
 	if cfg.Diff.Enabled {
 		policy.Domains = filterPolicyDomains(policy.Domains, domainCoverage)
 	}
@@ -135,6 +146,13 @@ func (s *Service) RunOnly(ctx context.Context, opts RunOnlyOptions) error {
 	if err != nil {
 		return err
 	}
+
+	// Filter domains if specific ones are requested
+	domains = filterDomainsByNames(domains, opts.Domains)
+	if len(domains) == 0 {
+		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
+	}
+
 	_, err = s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile})
 	return err
 }
@@ -143,6 +161,12 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
 	if err != nil {
 		return err
+	}
+
+	// Filter domains if specific ones are requested
+	domains = filterDomainsByNames(domains, opts.Domains)
+	if len(domains) == 0 {
+		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
 	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
@@ -187,6 +211,8 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 
 	domainCoverage := AggregateByDomain(filteredCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath, annotations)
 	policy := cfg.Policy
+	// Use filtered domains for policy evaluation
+	policy.Domains = domains
 	if cfg.Diff.Enabled {
 		policy.Domains = filterPolicyDomains(policy.Domains, domainCoverage)
 	}
@@ -432,6 +458,25 @@ func filterPolicyDomains(domains []domain.Domain, coverage map[string]domain.Cov
 	filtered := make([]domain.Domain, 0, len(domains))
 	for _, d := range domains {
 		if stat, ok := coverage[d.Name]; ok && stat.Total > 0 {
+			filtered = append(filtered, d)
+		}
+	}
+	return filtered
+}
+
+// filterDomainsByNames filters domains to only those whose names match the given list.
+// If names is empty, all domains are returned unchanged.
+func filterDomainsByNames(domains []domain.Domain, names []string) []domain.Domain {
+	if len(names) == 0 {
+		return domains
+	}
+	nameSet := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		nameSet[name] = struct{}{}
+	}
+	filtered := make([]domain.Domain, 0, len(names))
+	for _, d := range domains {
+		if _, ok := nameSet[d.Name]; ok {
 			filtered = append(filtered, d)
 		}
 	}

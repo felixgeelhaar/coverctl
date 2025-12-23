@@ -288,3 +288,43 @@ func minimalConfig() application.Config {
 		},
 	}
 }
+
+func TestDomainListFlag(t *testing.T) {
+	var dl domainList
+
+	t.Run("empty string", func(t *testing.T) {
+		if dl.String() != "" {
+			t.Fatalf("expected empty string, got %s", dl.String())
+		}
+	})
+
+	t.Run("append single", func(t *testing.T) {
+		if err := dl.Set("core"); err != nil {
+			t.Fatalf("set: %v", err)
+		}
+		if len(dl) != 1 || dl[0] != "core" {
+			t.Fatalf("expected [core], got %v", dl)
+		}
+	})
+
+	t.Run("append multiple", func(t *testing.T) {
+		if err := dl.Set("api"); err != nil {
+			t.Fatalf("set: %v", err)
+		}
+		if len(dl) != 2 {
+			t.Fatalf("expected 2 domains, got %d", len(dl))
+		}
+		if dl.String() != "core,api" {
+			t.Fatalf("expected 'core,api', got %s", dl.String())
+		}
+	})
+}
+
+func TestRunCheckWithDomainFlag(t *testing.T) {
+	var out bytes.Buffer
+	// The domain flag should be parsed without error
+	code := Run([]string{"coverctl", "check", "--domain", "core", "--domain", "api"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+}

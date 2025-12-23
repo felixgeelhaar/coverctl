@@ -44,15 +44,19 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
 		output := outputFlags(fs)
 		profile := fs.String("profile", "", "Coverage profile output path")
+		var domains domainList
+		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
 		_ = fs.Parse(args[2:])
-		err := svc.Check(ctx, application.CheckOptions{ConfigPath: *configPath, Output: *output, Profile: *profile})
+		err := svc.Check(ctx, application.CheckOptions{ConfigPath: *configPath, Output: *output, Profile: *profile, Domains: domains})
 		return exitCode(err, 1, stderr)
 	case "run":
 		fs := flag.NewFlagSet("run", flag.ExitOnError)
 		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
 		profile := fs.String("profile", "", "Coverage profile output path")
+		var domains domainList
+		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
 		_ = fs.Parse(args[2:])
-		err := svc.RunOnly(ctx, application.RunOnlyOptions{ConfigPath: *configPath, Profile: *profile})
+		err := svc.RunOnly(ctx, application.RunOnlyOptions{ConfigPath: *configPath, Profile: *profile, Domains: domains})
 		return exitCode(err, 3, stderr)
 	case "detect":
 		fs := flag.NewFlagSet("detect", flag.ExitOnError)
@@ -79,8 +83,10 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
 		output := outputFlags(fs)
 		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
+		var domains domainList
+		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
 		_ = fs.Parse(args[2:])
-		err := svc.Report(ctx, application.ReportOptions{ConfigPath: *configPath, Output: *output, Profile: *profile})
+		err := svc.Report(ctx, application.ReportOptions{ConfigPath: *configPath, Output: *output, Profile: *profile, Domains: domains})
 		return exitCode(err, 3, stderr)
 	case "ignore":
 		fs := flag.NewFlagSet("ignore", flag.ExitOnError)
@@ -157,6 +163,16 @@ func (o *outputValue) Set(value string) error {
 	default:
 		return fmt.Errorf("invalid output format: %s", value)
 	}
+}
+
+// domainList implements flag.Value for repeatable --domain flags
+type domainList []string
+
+func (d *domainList) String() string { return strings.Join(*d, ",") }
+
+func (d *domainList) Set(value string) error {
+	*d = append(*d, value)
+	return nil
 }
 
 func writeConfigFile(path string, cfg application.Config, stdout io.Writer, force bool) error {

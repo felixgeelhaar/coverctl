@@ -110,3 +110,214 @@ func TestWriteFileRulesJSON(t *testing.T) {
 		t.Fatalf("expected files field")
 	}
 }
+
+func TestWriteUnsupportedFormat(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{Passed: true}
+	err := (Writer{}).Write(buf, res, application.OutputFormat("xml"))
+	if err == nil {
+		t.Fatal("expected error for unsupported format")
+	}
+	if !strings.Contains(err.Error(), "unsupported output format") {
+		t.Fatalf("expected unsupported format error, got: %v", err)
+	}
+}
+
+func TestWriteEmptyFormat(t *testing.T) {
+	// Empty format should default to text
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Domains: []domain.DomainResult{{
+			Domain:   "core",
+			Percent:  85.0,
+			Required: 80,
+			Status:   domain.StatusPass,
+		}},
+	}
+	if err := (Writer{}).Write(buf, res, ""); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	// Should output text format (contains domain name without JSON structure)
+	if !strings.Contains(buf.String(), "core") {
+		t.Fatalf("expected domain in text output")
+	}
+	if strings.Contains(buf.String(), "{") {
+		t.Fatalf("expected text output, not JSON")
+	}
+}
+
+func TestWriteEmptyDomains(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed:  true,
+		Domains: []domain.DomainResult{},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputText); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	// Should still have header
+	if !strings.Contains(buf.String(), "Domain") {
+		t.Fatalf("expected header in output")
+	}
+}
+
+func TestWriteEmptyDomainsJSON(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed:  true,
+		Domains: []domain.DomainResult{},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputJSON); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	// Should have empty domains array
+	if !strings.Contains(buf.String(), "\"domains\": []") {
+		t.Fatalf("expected empty domains array in JSON")
+	}
+}
+
+func TestWriteCombinedOutput(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: false,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Percent: 85.0, Required: 80, Status: domain.StatusPass},
+			{Domain: "api", Percent: 70.0, Required: 75, Status: domain.StatusFail},
+		},
+		Files: []domain.FileResult{
+			{File: "core/main.go", Percent: 90.0, Required: 85, Status: domain.StatusPass},
+			{File: "api/handler.go", Percent: 60.0, Required: 80, Status: domain.StatusFail},
+		},
+		Warnings: []string{
+			"shared directory used by core and api",
+			"domain 'utils' has no matched packages",
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputText); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	// Check domains
+	if !strings.Contains(output, "core") {
+		t.Fatal("expected core domain")
+	}
+	if !strings.Contains(output, "api") {
+		t.Fatal("expected api domain")
+	}
+	// Check file rules section
+	if !strings.Contains(output, "File rules:") {
+		t.Fatal("expected File rules section")
+	}
+	if !strings.Contains(output, "core/main.go") {
+		t.Fatal("expected core/main.go file")
+	}
+	// Check warnings section
+	if !strings.Contains(output, "Warnings:") {
+		t.Fatal("expected Warnings section")
+	}
+	if !strings.Contains(output, "shared directory") {
+		t.Fatal("expected shared directory warning")
+	}
+	if !strings.Contains(output, "no matched packages") {
+		t.Fatal("expected no matched packages warning")
+	}
+}
+
+func TestWriteCombinedOutputJSON(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: false,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Percent: 85.0, Required: 80, Status: domain.StatusPass},
+		},
+		Files: []domain.FileResult{
+			{File: "core/main.go", Percent: 90.0, Required: 85, Status: domain.StatusPass},
+		},
+		Warnings: []string{"test warning"},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputJSON); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	// Check all sections are present
+	if !strings.Contains(output, "\"domains\"") {
+		t.Fatal("expected domains field")
+	}
+	if !strings.Contains(output, "\"files\"") {
+		t.Fatal("expected files field")
+	}
+	if !strings.Contains(output, "\"warnings\"") {
+		t.Fatal("expected warnings field")
+	}
+	if !strings.Contains(output, "\"summary\"") {
+		t.Fatal("expected summary field")
+	}
+	if !strings.Contains(output, "\"pass\": false") {
+		t.Fatal("expected pass: false")
+	}
+}
+
+func TestWriteMultipleDomainsText(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Percent: 95.0, Required: 80, Status: domain.StatusPass},
+			{Domain: "api", Percent: 85.0, Required: 80, Status: domain.StatusPass},
+			{Domain: "cli", Percent: 82.0, Required: 80, Status: domain.StatusPass},
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputText); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	// All domains should be present
+	if !strings.Contains(output, "core") {
+		t.Fatal("expected core domain")
+	}
+	if !strings.Contains(output, "api") {
+		t.Fatal("expected api domain")
+	}
+	if !strings.Contains(output, "cli") {
+		t.Fatal("expected cli domain")
+	}
+	// Verify percentages are formatted correctly
+	if !strings.Contains(output, "95.0%") {
+		t.Fatal("expected 95.0%")
+	}
+}
+
+func TestWriteFailStatus(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: false,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Percent: 70.0, Required: 80, Status: domain.StatusFail},
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputText); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	if !strings.Contains(output, "FAIL") {
+		t.Fatal("expected FAIL status in output")
+	}
+}
+
+func TestWritePassStatus(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Percent: 90.0, Required: 80, Status: domain.StatusPass},
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputText); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	if !strings.Contains(output, "PASS") {
+		t.Fatal("expected PASS status in output")
+	}
+}

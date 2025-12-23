@@ -2,6 +2,7 @@ package gotool
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -170,5 +171,243 @@ func TestUnique(t *testing.T) {
 func TestRunCommand(t *testing.T) {
 	if err := runCommand(context.Background(), ".", []string{"env", "GOOS"}); err != nil {
 		t.Fatalf("runCommand: %v", err)
+	}
+}
+
+func TestRunnerRunExecError(t *testing.T) {
+	tmp := t.TempDir()
+	runner := Runner{
+		Module: ModuleResolver{},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			return errors.New("go test compilation failed")
+		},
+	}
+	_, err := runner.Run(context.Background(), application.RunOptions{
+		ProfilePath: filepath.Join(tmp, "coverage.out"),
+	})
+	if err == nil {
+		t.Fatal("expected exec error")
+	}
+	if !strings.Contains(err.Error(), "go test failed") {
+		t.Fatalf("expected wrapped error, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "compilation failed") {
+		t.Fatalf("expected original error in message, got: %v", err)
+	}
+}
+
+func TestRunnerRunIntegrationNoPackages(t *testing.T) {
+	tmp := t.TempDir()
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			// Return empty package list
+			return []byte("\n"), nil
+		},
+	}
+	_, err := runner.RunIntegration(context.Background(), application.IntegrationOptions{
+		CoverDir: filepath.Join(tmp, "covdata"),
+		Profile:  filepath.Join(tmp, "integration.out"),
+	})
+	if err == nil {
+		t.Fatal("expected error for no packages")
+	}
+	if !strings.Contains(err.Error(), "no packages resolved") {
+		t.Fatalf("expected no packages error, got: %v", err)
+	}
+}
+
+func TestRunnerRunIntegrationGoListError(t *testing.T) {
+	tmp := t.TempDir()
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			return nil, errors.New("go list: no matching packages")
+		},
+	}
+	_, err := runner.RunIntegration(context.Background(), application.IntegrationOptions{
+		CoverDir: filepath.Join(tmp, "covdata"),
+		Profile:  filepath.Join(tmp, "integration.out"),
+	})
+	if err == nil {
+		t.Fatal("expected go list error")
+	}
+	if !strings.Contains(err.Error(), "go list failed") {
+		t.Fatalf("expected go list failed error, got: %v", err)
+	}
+}
+
+func TestRunnerRunIntegrationBuildError(t *testing.T) {
+	tmp := t.TempDir()
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			return []byte("github.com/example/pkg\n"), nil
+		},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			if len(args) > 0 && args[0] == "test" {
+				return errors.New("build failed")
+			}
+			return nil
+		},
+	}
+	_, err := runner.RunIntegration(context.Background(), application.IntegrationOptions{
+		CoverDir: filepath.Join(tmp, "covdata"),
+		Profile:  filepath.Join(tmp, "integration.out"),
+	})
+	if err == nil {
+		t.Fatal("expected build error")
+	}
+	if !strings.Contains(err.Error(), "go test -c failed") {
+		t.Fatalf("expected go test -c failed error, got: %v", err)
+	}
+}
+
+func TestRunnerRunIntegrationExecEnvError(t *testing.T) {
+	tmp := t.TempDir()
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			return []byte("github.com/example/pkg\n"), nil
+		},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			return nil
+		},
+		ExecEnv: func(ctx context.Context, dir string, env []string, cmd string, args []string) error {
+			return errors.New("integration test binary crashed")
+		},
+	}
+	_, err := runner.RunIntegration(context.Background(), application.IntegrationOptions{
+		CoverDir: filepath.Join(tmp, "covdata"),
+		Profile:  filepath.Join(tmp, "integration.out"),
+	})
+	if err == nil {
+		t.Fatal("expected exec env error")
+	}
+	if !strings.Contains(err.Error(), "integration test failed") {
+		t.Fatalf("expected integration test failed error, got: %v", err)
+	}
+}
+
+func TestRunnerRunIntegrationCovdataError(t *testing.T) {
+	tmp := t.TempDir()
+	callCount := 0
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			return []byte("github.com/example/pkg\n"), nil
+		},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			callCount++
+			if len(args) > 2 && args[0] == "tool" && args[1] == "covdata" {
+				return errors.New("covdata conversion failed")
+			}
+			return nil
+		},
+		ExecEnv: func(ctx context.Context, dir string, env []string, cmd string, args []string) error {
+			return nil
+		},
+	}
+	_, err := runner.RunIntegration(context.Background(), application.IntegrationOptions{
+		CoverDir: filepath.Join(tmp, "covdata"),
+		Profile:  filepath.Join(tmp, "integration.out"),
+	})
+	if err == nil {
+		t.Fatal("expected covdata error")
+	}
+	if !strings.Contains(err.Error(), "covdata textfmt failed") {
+		t.Fatalf("expected covdata textfmt failed error, got: %v", err)
+	}
+}
+
+func TestListPackagesEmptyPatterns(t *testing.T) {
+	tmp := t.TempDir()
+	var capturedArgs []string
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			capturedArgs = args
+			return []byte("github.com/example/pkg\n"), nil
+		},
+	}
+	pkgs, err := runner.listPackages(context.Background(), tmp, nil)
+	if err != nil {
+		t.Fatalf("list packages: %v", err)
+	}
+	if len(pkgs) != 1 {
+		t.Fatalf("expected 1 package, got %d", len(pkgs))
+	}
+	// Check that default pattern ./... was used
+	if len(capturedArgs) < 2 || capturedArgs[1] != "./..." {
+		t.Fatalf("expected default pattern ./..., got args: %v", capturedArgs)
+	}
+}
+
+func TestListPackagesWithPatterns(t *testing.T) {
+	tmp := t.TempDir()
+	var capturedArgs []string
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			capturedArgs = args
+			return []byte("github.com/example/cmd\n"), nil
+		},
+	}
+	pkgs, err := runner.listPackages(context.Background(), tmp, []string{"./cmd/..."})
+	if err != nil {
+		t.Fatalf("list packages: %v", err)
+	}
+	if len(pkgs) != 1 {
+		t.Fatalf("expected 1 package, got %d", len(pkgs))
+	}
+	// Check that provided pattern was used
+	if len(capturedArgs) < 2 || capturedArgs[1] != "./cmd/..." {
+		t.Fatalf("expected pattern ./cmd/..., got args: %v", capturedArgs)
+	}
+}
+
+func TestBuildCoverPkgEmptyMatch(t *testing.T) {
+	min := 80.0
+	domains := []domain.Domain{
+		{Name: "core", Match: []string{"", "./internal/core/..."}, Min: &min},
+	}
+	got := buildCoverPkg(domains)
+	if got != "./internal/core/..." {
+		t.Fatalf("expected empty match to be skipped, got %s", got)
+	}
+}
+
+func TestListPackagesGoListError(t *testing.T) {
+	tmp := t.TempDir()
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			return nil, errors.New("go list: invalid pattern")
+		},
+	}
+	_, err := runner.listPackages(context.Background(), tmp, []string{"./invalid/..."})
+	if err == nil {
+		t.Fatal("expected go list error")
+	}
+	if !strings.Contains(err.Error(), "go list failed") {
+		t.Fatalf("expected go list failed error, got: %v", err)
+	}
+}
+
+func TestListPackagesEmptyLines(t *testing.T) {
+	tmp := t.TempDir()
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			// Output with empty lines and whitespace
+			return []byte("github.com/example/pkg1\n  \n\ngithub.com/example/pkg2\n  "), nil
+		},
+	}
+	pkgs, err := runner.listPackages(context.Background(), tmp, nil)
+	if err != nil {
+		t.Fatalf("list packages: %v", err)
+	}
+	if len(pkgs) != 2 {
+		t.Fatalf("expected 2 packages, got %d: %v", len(pkgs), pkgs)
 	}
 }
