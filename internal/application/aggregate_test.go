@@ -100,10 +100,10 @@ func TestAggregateByDomainAnnotations(t *testing.T) {
 
 func TestAggregateByDomainWithDomainExcludes(t *testing.T) {
 	files := map[string]domain.CoverageStat{
-		"internal/core/handler.go": {Covered: 5, Total: 10},
+		"internal/core/handler.go":   {Covered: 5, Total: 10},
 		"internal/core/gen/proto.go": {Covered: 0, Total: 5},
-		"internal/api/server.go":    {Covered: 8, Total: 10},
-		"internal/api/gen/stub.go":  {Covered: 1, Total: 5},
+		"internal/api/server.go":     {Covered: 8, Total: 10},
+		"internal/api/gen/stub.go":   {Covered: 1, Total: 5},
 	}
 	moduleRoot := "/repo"
 	domainDirs := map[string][]string{

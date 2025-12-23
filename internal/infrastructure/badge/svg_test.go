@@ -34,10 +34,10 @@ func TestGenerateBadgeColors(t *testing.T) {
 		percent   float64
 		wantColor string
 	}{
-		{"low", 50, "#e05d44"},      // red
-		{"medium", 65, "#dfb317"},   // yellow
-		{"good", 80, "#97ca00"},     // light green
-		{"excellent", 90, "#4c1"},   // green
+		{"low", 50, "#e05d44"},    // red
+		{"medium", 65, "#dfb317"}, // yellow
+		{"good", 80, "#97ca00"},   // light green
+		{"excellent", 90, "#4c1"}, // green
 	}
 
 	for _, tc := range tests {

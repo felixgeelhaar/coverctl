@@ -233,20 +233,20 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		force := fs.Bool("force", false, "Overwrite config if it exists")
 		_ = fs.Parse(args[2:])
 
-		var strat application.SuggestStrategy
+		var suggestStrat application.SuggestStrategy
 		switch *strategy {
 		case "aggressive":
-			strat = application.SuggestAggressive
+			suggestStrat = application.SuggestAggressive
 		case "conservative":
-			strat = application.SuggestConservative
+			suggestStrat = application.SuggestConservative
 		default:
-			strat = application.SuggestCurrent
+			suggestStrat = application.SuggestCurrent
 		}
 
 		result, err := svc.Suggest(ctx, application.SuggestOptions{
 			ConfigPath:  *configPath,
 			ProfilePath: *profile,
-			Strategy:    strat,
+			Strategy:    suggestStrat,
 		})
 		if err != nil {
 			return exitCode(err, 3, stderr)

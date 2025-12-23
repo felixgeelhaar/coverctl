@@ -80,7 +80,7 @@ func Generate(w io.Writer, opts Options) error {
 		Width:          totalWidth,
 		LabelWidth:     labelWidth,
 		ValueWidth:     valueWidth,
-		LabelX:         labelWidth * 5,          // Centered in label section (scaled by 10)
+		LabelX:         labelWidth * 5,                   // Centered in label section (scaled by 10)
 		ValueX:         (labelWidth + valueWidth/2) * 10, // Centered in value section
 		LabelTextWidth: (len(opts.Label) * 7) * 10,
 		ValueTextWidth: (len(percentText) * 7) * 10,

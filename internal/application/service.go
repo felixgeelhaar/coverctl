@@ -635,11 +635,11 @@ func (s *Service) Badge(ctx context.Context, opts BadgeOptions) (BadgeResult, er
 
 // TrendResult contains trend analysis data.
 type TrendResult struct {
-	Current   float64
-	Previous  float64
-	Trend     domain.Trend
-	Entries   []domain.HistoryEntry
-	ByDomain  map[string]domain.Trend
+	Current  float64
+	Previous float64
+	Trend    domain.Trend
+	Entries  []domain.HistoryEntry
+	ByDomain map[string]domain.Trend
 }
 
 // Trend analyzes coverage trends over time.
