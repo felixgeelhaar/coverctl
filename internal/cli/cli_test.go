@@ -48,6 +48,13 @@ type fakeService struct {
 	ignoreErr     error
 	ignoreCfg     application.Config
 	ignoreDomains []domain.Domain
+	badgeErr      error
+	badgeResult   application.BadgeResult
+	trendErr      error
+	trendResult   application.TrendResult
+	recordErr     error
+	suggestErr    error
+	suggestResult application.SuggestResult
 }
 
 func (f fakeService) Check(_ context.Context, _ application.CheckOptions) error { return f.checkErr }
@@ -66,6 +73,33 @@ func (f fakeService) Ignore(_ context.Context, _ application.IgnoreOptions) (app
 		return application.Config{}, nil, f.ignoreErr
 	}
 	return f.ignoreCfg, f.ignoreDomains, nil
+}
+func (f fakeService) Badge(_ context.Context, _ application.BadgeOptions) (application.BadgeResult, error) {
+	if f.badgeErr != nil {
+		return application.BadgeResult{}, f.badgeErr
+	}
+	return f.badgeResult, nil
+}
+func (f fakeService) Trend(_ context.Context, _ application.TrendOptions, _ application.HistoryStore) (application.TrendResult, error) {
+	if f.trendErr != nil {
+		return application.TrendResult{}, f.trendErr
+	}
+	return f.trendResult, nil
+}
+func (f fakeService) Record(_ context.Context, _ application.RecordOptions, _ application.HistoryStore) error {
+	return f.recordErr
+}
+func (f fakeService) Suggest(_ context.Context, _ application.SuggestOptions) (application.SuggestResult, error) {
+	if f.suggestErr != nil {
+		return application.SuggestResult{}, f.suggestErr
+	}
+	return f.suggestResult, nil
+}
+func (f fakeService) Watch(_ context.Context, _ application.WatchOptions, _ application.FileWatcher, _ application.WatchCallback) error {
+	return nil
+}
+func (f fakeService) Debt(_ context.Context, _ application.DebtOptions) (application.DebtResult, error) {
+	return application.DebtResult{HealthScore: 100}, nil
 }
 
 func TestRunUsage(t *testing.T) {
@@ -324,6 +358,118 @@ func TestRunCheckWithDomainFlag(t *testing.T) {
 	var out bytes.Buffer
 	// The domain flag should be parsed without error
 	code := Run([]string{"coverctl", "check", "--domain", "core", "--domain", "api"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+}
+
+func TestRunBadge(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "coverage.svg")
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "badge", "--output", outputPath}, &out, &out, fakeService{badgeResult: application.BadgeResult{Percent: 85.5}})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if _, err := os.Stat(outputPath); err != nil {
+		t.Fatalf("expected badge file: %v", err)
+	}
+	if !strings.Contains(out.String(), "Badge written") {
+		t.Fatalf("expected success message")
+	}
+}
+
+func TestRunBadgeError(t *testing.T) {
+	dir := t.TempDir()
+	outputPath := filepath.Join(dir, "coverage.svg")
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "badge", "--output", outputPath}, &out, &out, fakeService{badgeErr: errSentinel})
+	if code != 3 {
+		t.Fatalf("expected exit 3, got %d", code)
+	}
+}
+
+func TestRunTrend(t *testing.T) {
+	var out bytes.Buffer
+	trendResult := application.TrendResult{
+		Current:  85.0,
+		Previous: 80.0,
+		Trend:    domain.Trend{Direction: domain.TrendUp, Delta: 5.0},
+		Entries:  []domain.HistoryEntry{{Overall: 80.0}},
+		ByDomain: map[string]domain.Trend{
+			"core": {Direction: domain.TrendUp, Delta: 3.0},
+		},
+	}
+	code := Run([]string{"coverctl", "trend"}, &out, &out, fakeService{trendResult: trendResult})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !strings.Contains(out.String(), "Coverage Trend") {
+		t.Fatalf("expected trend output, got: %s", out.String())
+	}
+}
+
+func TestRunTrendError(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "trend"}, &out, &out, fakeService{trendErr: errSentinel})
+	if code != 3 {
+		t.Fatalf("expected exit 3, got %d", code)
+	}
+}
+
+func TestRunRecord(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "record"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !strings.Contains(out.String(), "Coverage recorded") {
+		t.Fatalf("expected record success message, got: %s", out.String())
+	}
+}
+
+func TestRunRecordError(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "record"}, &out, &out, fakeService{recordErr: errSentinel})
+	if code != 3 {
+		t.Fatalf("expected exit 3, got %d", code)
+	}
+}
+
+func TestRunSuggest(t *testing.T) {
+	var out bytes.Buffer
+	suggestResult := application.SuggestResult{
+		Suggestions: []application.Suggestion{
+			{Domain: "core", CurrentPercent: 85.0, CurrentMin: 80.0, SuggestedMin: 83.0, Reason: "based on current coverage"},
+		},
+		Config: minimalConfig(),
+	}
+	code := Run([]string{"coverctl", "suggest"}, &out, &out, fakeService{suggestResult: suggestResult})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !strings.Contains(out.String(), "Threshold Suggestions") {
+		t.Fatalf("expected suggestion output, got: %s", out.String())
+	}
+}
+
+func TestRunSuggestError(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "suggest"}, &out, &out, fakeService{suggestErr: errSentinel})
+	if code != 3 {
+		t.Fatalf("expected exit 3, got %d", code)
+	}
+}
+
+func TestRunSuggestWithStrategy(t *testing.T) {
+	var out bytes.Buffer
+	suggestResult := application.SuggestResult{
+		Suggestions: []application.Suggestion{
+			{Domain: "core", CurrentPercent: 85.0, CurrentMin: 80.0, SuggestedMin: 90.0, Reason: "aggressive target"},
+		},
+		Config: minimalConfig(),
+	}
+	code := Run([]string{"coverctl", "suggest", "--strategy", "aggressive"}, &out, &out, fakeService{suggestResult: suggestResult})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
