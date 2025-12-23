@@ -16,6 +16,6 @@ formatters:
     - gofmt
     - goimports
 
-linters-settings:
+settings:
   misspell:
     locale: US
