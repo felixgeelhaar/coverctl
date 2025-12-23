@@ -1,0 +1,227 @@
+---
+title: Build Flags
+description: Customize test execution with build and test flags
+---
+
+coverctl supports common Go test flags for customizing test execution. These flags are available on the `check`, `run`, and `watch` commands.
+
+## Available Flags
+
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--tags` | Build tags | `--tags integration,e2e` |
+| `--race` | Enable race detector | `--race` |
+| `--short` | Skip long-running tests | `--short` |
+| `-v` | Verbose test output | `-v` |
+| `--run` | Run tests matching pattern | `--run TestFoo` |
+| `--timeout` | Test timeout | `--timeout 30m` |
+| `--test-arg` | Additional go test argument | `--test-arg=-count=1` |
+
+## Build Tags
+
+Run tests with specific build tags:
+
+```bash
+# Run integration tests
+coverctl check --tags integration
+
+# Multiple tags
+coverctl check --tags integration,e2e
+
+# Unit tests only (exclude integration)
+coverctl check --tags !integration
+```
+
+### Example: Integration Tests
+
+```go
+//go:build integration
+
+package mypackage_test
+
+func TestIntegration(t *testing.T) {
+    // This test only runs with --tags integration
+}
+```
+
+```bash
+coverctl check --tags integration --timeout 30m
+```
+
+## Race Detection
+
+Enable the Go race detector:
+
+```bash
+coverctl check --race
+```
+
+:::caution
+Race detection increases test time significantly. Use with extended timeouts:
+```bash
+coverctl check --race --timeout 20m
+```
+:::
+
+## Short Mode
+
+Skip long-running tests marked with `t.Short()`:
+
+```bash
+coverctl check --short
+```
+
+### Example: Skipping Slow Tests
+
+```go
+func TestSlow(t *testing.T) {
+    if testing.Short() {
+        t.Skip("skipping slow test")
+    }
+    // Long-running test code
+}
+```
+
+## Verbose Output
+
+Show detailed test output:
+
+```bash
+coverctl check -v
+```
+
+Useful for debugging test failures.
+
+## Run Pattern
+
+Run only tests matching a regex pattern:
+
+```bash
+# Run specific test
+coverctl check --run TestValidate
+
+# Run tests matching pattern
+coverctl check --run "TestUser.*"
+
+# Run subtests
+coverctl check --run "TestValidate/empty_input"
+```
+
+## Timeout
+
+Set test execution timeout:
+
+```bash
+# 30 minutes
+coverctl check --timeout 30m
+
+# 1 hour
+coverctl check --timeout 1h
+
+# 90 seconds
+coverctl check --timeout 90s
+```
+
+Default Go timeout is 10 minutes. Increase for:
+- Integration tests
+- Tests with external dependencies
+- Tests with race detection
+
+## Additional Test Arguments
+
+Pass extra arguments directly to `go test`:
+
+```bash
+# Disable test caching
+coverctl check --test-arg=-count=1
+
+# Set parallelism
+coverctl check --test-arg=-parallel=4
+
+# Multiple arguments
+coverctl check --test-arg=-count=1 --test-arg=-parallel=4
+
+# Enable CPU profiling
+coverctl check --test-arg=-cpuprofile=cpu.out
+```
+
+## Common Workflows
+
+### Development: Fast Feedback
+
+```bash
+# Quick unit tests only
+coverctl watch --short -d core
+```
+
+### CI: Comprehensive Testing
+
+```bash
+# Full test suite with race detection
+coverctl check --race --timeout 30m --ci
+```
+
+### Integration Tests
+
+```bash
+# Run integration tests with extended timeout
+coverctl check --tags integration --timeout 1h -v
+```
+
+### Debugging Failures
+
+```bash
+# Verbose output for specific test
+coverctl check --run TestFailing -v --test-arg=-count=1
+```
+
+### Parallel Execution
+
+```bash
+# Limit parallel test execution
+coverctl check --test-arg=-parallel=2
+```
+
+## Combining Flags
+
+Flags can be combined for complex scenarios:
+
+```bash
+# Integration tests with race detection, verbose, extended timeout
+coverctl check \
+  --tags integration \
+  --race \
+  -v \
+  --timeout 1h \
+  --test-arg=-parallel=4
+```
+
+## CI Examples
+
+### GitHub Actions: Integration Tests
+
+```yaml
+- name: Run integration tests
+  run: |
+    coverctl check \
+      --tags integration \
+      --timeout 30m \
+      --ci
+```
+
+### GitHub Actions: Race Detection
+
+```yaml
+- name: Run with race detector
+  run: |
+    coverctl check \
+      --race \
+      --timeout 20m \
+      --ci
+```
+
+## See Also
+
+- [check](/coverctl/cli/check/) - Check command reference
+- [run](/coverctl/cli/run/) - Run command reference
+- [watch](/coverctl/cli/watch/) - Watch command reference

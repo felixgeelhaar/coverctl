@@ -1,0 +1,154 @@
+---
+title: Domains
+description: Configure coverage domains
+---
+
+Domains are logical groupings of packages with shared coverage requirements. They allow you to enforce different coverage thresholds for different parts of your codebase.
+
+## Domain Configuration
+
+Each domain has a name, match patterns, and a minimum coverage threshold:
+
+```yaml
+policy:
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+```
+
+## Match Patterns
+
+Match patterns use Go's package path syntax:
+
+| Pattern | Matches |
+|---------|---------|
+| `./internal/core/...` | All packages under `internal/core/` |
+| `./cmd/...` | All packages under `cmd/` |
+| `./pkg/utils` | Only the `pkg/utils` package |
+| `./internal/*/service` | `service` packages one level deep |
+
+### Examples
+
+```yaml
+domains:
+  # Match all subpackages
+  - name: core
+    match: ["./internal/core/..."]
+    min: 85
+
+  # Match multiple paths
+  - name: api
+    match:
+      - "./internal/api/..."
+      - "./internal/handlers/..."
+    min: 80
+
+  # Match specific packages
+  - name: utils
+    match:
+      - "./pkg/utils"
+      - "./pkg/helpers"
+    min: 70
+```
+
+## Excluding Files
+
+Use the `exclude` field to skip files from coverage analysis:
+
+```yaml
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+  - "**/*_test.go"
+  - "**/testdata/**"
+```
+
+### Glob Patterns
+
+| Pattern | Matches |
+|---------|---------|
+| `**/generated/**` | Any file under a `generated` directory |
+| `**/*_mock.go` | Any file ending in `_mock.go` |
+| `internal/legacy/*` | Files directly in `internal/legacy/` |
+
+## Auto-Detection
+
+coverctl can automatically detect domains from your project structure:
+
+```bash
+# Preview detected domains
+coverctl detect --dry-run
+
+# Write config
+coverctl detect
+```
+
+### Detection Rules
+
+| Directory | Detected Domain |
+|-----------|-----------------|
+| `cmd/` | CLI entry points |
+| `internal/core/` | Core business logic |
+| `internal/domain/` | Domain layer |
+| `internal/application/` | Application services |
+| `internal/infrastructure/` | Infrastructure adapters |
+| `internal/api/` | API layer |
+| `pkg/` | Public packages |
+
+Directories named `generated`, `mocks`, `testdata`, or `vendor` are automatically excluded.
+
+## Domain Overlap
+
+When a file matches multiple domains, it's assigned to the first matching domain. Order your domains from most specific to least specific:
+
+```yaml
+domains:
+  # More specific first
+  - name: core-critical
+    match: ["./internal/core/critical/..."]
+    min: 95
+
+  # Less specific second
+  - name: core
+    match: ["./internal/core/..."]
+    min: 85
+```
+
+## Code Annotations
+
+With `annotations.enabled: true`, you can override domain assignment in code:
+
+```go
+// coverctl:domain=critical
+package validator
+
+func Validate() error {
+    // This file belongs to "critical" domain
+}
+```
+
+### Ignoring Files
+
+```go
+// coverctl:ignore
+package generated
+
+// This file is excluded from coverage
+```
+
+## Best Practices
+
+1. **Start with auto-detection**: Use `coverctl detect --dry-run` to see suggested domains
+2. **Group by criticality**: Higher thresholds for core business logic
+3. **Use meaningful names**: Domain names appear in reports
+4. **Keep excludes minimal**: Only exclude truly non-testable code
+5. **Review overlaps**: Check for unintended domain assignments
+
+## See Also
+
+- [Policies](/coverctl/configuration/policies/) - Set coverage thresholds
+- [Advanced](/coverctl/configuration/advanced/) - Annotations and more

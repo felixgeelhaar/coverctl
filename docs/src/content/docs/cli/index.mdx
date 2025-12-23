@@ -1,0 +1,103 @@
+---
+title: CLI Overview
+description: coverctl command-line interface reference
+---
+
+coverctl provides a comprehensive CLI for managing test coverage in Go projects.
+
+## Global Flags
+
+These flags work with all commands:
+
+| Flag | Description |
+|------|-------------|
+| `-q, --quiet` | Suppress non-essential output |
+| `--no-color` | Disable colored output |
+| `--ci` | CI mode: quiet + no-color + GitHub Actions annotations |
+| `-h, --help` | Show help for any command |
+
+## Commands
+
+### Core Commands
+
+| Command | Description |
+|---------|-------------|
+| [`check`](/coverctl/cli/check/) | Run coverage and enforce policy |
+| [`run`](/coverctl/cli/run/) | Run coverage without policy enforcement |
+| [`watch`](/coverctl/cli/watch/) | Watch for changes and re-run coverage |
+| [`report`](/coverctl/cli/report/) | Analyze an existing coverage profile |
+
+### Setup Commands
+
+| Command | Description |
+|---------|-------------|
+| [`init`](/coverctl/cli/init/) | Interactive setup wizard |
+| `detect` | Auto-detect domains and write config |
+
+### Analysis Commands
+
+| Command | Description |
+|---------|-------------|
+| `badge` | Generate SVG coverage badge |
+| `trend` | Show coverage trends over time |
+| `record` | Record coverage to history |
+| `suggest` | Suggest optimal coverage thresholds |
+| `debt` | Show coverage debt report |
+| `ignore` | Show configured excludes |
+
+See [Other Commands](/coverctl/cli/other/) for details on analysis commands.
+
+## Common Flags
+
+Most commands accept these flags:
+
+| Flag | Description |
+|------|-------------|
+| `-c, --config` | Config file path (default: `.coverctl.yaml`) |
+| `-p, --profile` | Coverage profile path |
+| `-d, --domain` | Filter to specific domain (repeatable) |
+| `-o, --output` | Output format: `text`, `json`, `html` |
+
+## Build/Test Flags
+
+The `check`, `run`, and `watch` commands support Go test flags:
+
+| Flag | Description |
+|------|-------------|
+| `--tags` | Build tags (e.g., `integration,e2e`) |
+| `--race` | Enable race detector |
+| `--short` | Skip long-running tests |
+| `-v` | Verbose test output |
+| `--run` | Run only tests matching pattern |
+| `--timeout` | Test timeout (e.g., `10m`, `1h`) |
+| `--test-arg` | Additional go test argument (repeatable) |
+
+See [Build Flags Guide](/coverctl/guides/build-flags/) for examples.
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Policy violation or coverage below threshold |
+| `2` | Invalid arguments or configuration error |
+| `3` | Test or coverage generation failure |
+
+## Examples
+
+```bash
+# Basic coverage check
+coverctl check
+
+# Check specific domains with JSON output
+coverctl check -d core -d api -o json
+
+# Run with integration test tags
+coverctl check --tags integration --timeout 30m
+
+# Generate HTML report
+coverctl report -o html > coverage.html
+
+# Watch mode during development
+coverctl watch -d core
+```

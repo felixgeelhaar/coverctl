@@ -1,0 +1,182 @@
+---
+title: report
+description: Analyze an existing coverage profile
+---
+
+The `report` command analyzes a pre-generated coverage profile and evaluates policies. Use this when you have coverage data from a previous run or CI artifact.
+
+## Usage
+
+```bash
+coverctl report [flags]
+```
+
+## Flags
+
+### Configuration
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile path | `.cover/coverage.out` |
+| `-d, --domain` | Filter to specific domain (repeatable) | all domains |
+| `-o, --output` | Output format: `text`, `json`, `html` | `text` |
+
+### Analysis Options
+
+| Flag | Description |
+|------|-------------|
+| `--uncovered` | Show only files with 0% coverage |
+| `--diff <ref>` | Show coverage for files changed since git ref |
+| `--merge <profile>` | Merge additional coverage profile (repeatable) |
+| `--show-delta` | Show coverage change from previous run |
+| `--history` | History file path for delta display |
+
+## Examples
+
+### Basic Usage
+
+```bash
+# Analyze default profile
+coverctl report
+
+# Analyze specific profile
+coverctl report -p coverage.out
+```
+
+### Output Formats
+
+```bash
+# JSON output for CI/parsing
+coverctl report -o json
+
+# HTML report
+coverctl report -o html > coverage.html
+```
+
+### Filter Files
+
+```bash
+# Show only uncovered files
+coverctl report --uncovered
+
+# Show coverage for changed files only
+coverctl report --diff origin/main
+```
+
+### Merge Profiles
+
+```bash
+# Merge unit and integration profiles
+coverctl report --merge integration.out --merge e2e.out
+```
+
+### Coverage Delta
+
+```bash
+# Show change from previous run
+coverctl report --show-delta
+
+# Use custom history file
+coverctl report --show-delta --history .coverage-history.json
+```
+
+## Output Formats
+
+### Text (default)
+
+```
+Domain     Coverage  Required  Status
+─────────────────────────────────────
+core         87.3%      85%    PASS
+api          81.2%      80%    PASS
+cli          76.4%      75%    PASS
+─────────────────────────────────────
+Overall      82.1%      75%    PASS
+```
+
+### JSON
+
+```json
+{
+  "passed": true,
+  "domains": [
+    {
+      "name": "core",
+      "covered": 1234,
+      "total": 1414,
+      "percent": 87.3,
+      "required": 85,
+      "status": "pass"
+    }
+  ],
+  "files": [
+    {
+      "file": "internal/core/service.go",
+      "covered": 45,
+      "total": 50,
+      "percent": 90.0
+    }
+  ]
+}
+```
+
+### HTML
+
+Generates a visual report with:
+- Domain summary table
+- Per-file coverage breakdown
+- Color-coded status indicators
+- Sortable columns
+
+```bash
+coverctl report -o html > coverage.html
+open coverage.html
+```
+
+## Use Cases
+
+### CI Artifact Analysis
+
+```bash
+# Download coverage artifact
+curl -O https://ci.example.com/artifacts/coverage.out
+
+# Analyze without running tests
+coverctl report -p coverage.out -o json
+```
+
+### Diff-Based Review
+
+```bash
+# Show coverage for files in PR
+coverctl report --diff origin/main
+
+# Combined with HTML output
+coverctl report --diff origin/main -o html > pr-coverage.html
+```
+
+### Profile Merging
+
+When you have separate coverage profiles (unit, integration, e2e):
+
+```bash
+coverctl report \
+  -p unit.out \
+  --merge integration.out \
+  --merge e2e.out
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Report generated successfully |
+| `1` | Policy violation detected |
+| `2` | Invalid configuration or arguments |
+| `3` | Profile parsing failed |
+
+## See Also
+
+- [check](/coverctl/cli/check/) - Run tests and check coverage
+- [Configuration](/coverctl/configuration/) - Policy configuration

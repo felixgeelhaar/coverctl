@@ -1,0 +1,211 @@
+---
+title: Contributing
+description: How to contribute to coverctl
+---
+
+Thank you for your interest in contributing to coverctl! This guide will help you get started.
+
+## Development Setup
+
+### Prerequisites
+
+- Go 1.24 or later
+- Git
+- Make (optional)
+
+### Clone and Build
+
+```bash
+git clone https://github.com/felixgeelhaar/coverctl.git
+cd coverctl
+go build ./...
+```
+
+### Run Tests
+
+```bash
+go test ./... -cover
+```
+
+### Run Linter
+
+```bash
+golangci-lint run
+```
+
+## Development Workflow
+
+### 1. Create a Branch
+
+```bash
+git checkout -b feature/your-feature
+```
+
+### 2. Make Changes
+
+Follow the [architecture guidelines](/coverctl/architecture/).
+
+### 3. Write Tests
+
+Practice TDD - write tests before implementation:
+
+```go
+func TestNewFeature(t *testing.T) {
+    // Arrange
+    input := "test"
+
+    // Act
+    result := NewFeature(input)
+
+    // Assert
+    if result != expected {
+        t.Errorf("got %v, want %v", result, expected)
+    }
+}
+```
+
+### 4. Verify Coverage
+
+```bash
+# Run coverctl on itself
+./coverctl check
+```
+
+Maintain ≥80% coverage.
+
+### 5. Commit Changes
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```bash
+git commit -m "feat: add new validation option"
+git commit -m "fix: handle empty domain list"
+git commit -m "docs: update CLI reference"
+```
+
+### 6. Create Pull Request
+
+- Fill out the PR template
+- Link related issues
+- Wait for CI to pass
+- Request review
+
+## Code Style
+
+### Go Guidelines
+
+- Follow [Effective Go](https://go.dev/doc/effective_go)
+- Use `gofmt` for formatting
+- Run `golangci-lint` before committing
+
+### Naming Conventions
+
+```go
+// Exported types: PascalCase
+type CoverageResult struct {}
+
+// Unexported types: camelCase
+type internalState struct {}
+
+// Methods: verb phrases
+func (s *Service) CalculateCoverage() {}
+
+// Interfaces: -er suffix when possible
+type Runner interface {}
+type Parser interface {}
+```
+
+### Error Handling
+
+```go
+// Wrap errors with context
+if err != nil {
+    return fmt.Errorf("parse config: %w", err)
+}
+
+// Use sentinel errors for expected conditions
+var ErrConfigNotFound = errors.New("config not found")
+```
+
+## Testing Guidelines
+
+### Table-Driven Tests
+
+```go
+func TestEvaluate(t *testing.T) {
+    tests := []struct {
+        name     string
+        policy   Policy
+        coverage map[string]CoverageStat
+        want     Result
+    }{
+        {
+            name:   "all domains pass",
+            policy: Policy{Default: DefaultPolicy{Min: 80}},
+            // ...
+        },
+        {
+            name:   "one domain fails",
+            // ...
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := Evaluate(tt.policy, tt.coverage)
+            if !reflect.DeepEqual(got, tt.want) {
+                t.Errorf("got %+v, want %+v", got, tt.want)
+            }
+        })
+    }
+}
+```
+
+### Mock Interfaces
+
+```go
+type mockRunner struct {
+    runFunc func(ctx context.Context, opts RunOptions) (string, error)
+}
+
+func (m *mockRunner) Run(ctx context.Context, opts RunOptions) (string, error) {
+    return m.runFunc(ctx, opts)
+}
+```
+
+## Pull Request Process
+
+1. **CI Must Pass**: All tests, linting, and coverage checks
+2. **Review Required**: At least one maintainer approval
+3. **Squash Merge**: PRs are squashed to keep history clean
+4. **Conventional Commits**: PR title follows conventional commit format
+
+## Commit Types
+
+| Type | Description |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation only |
+| `style` | Formatting, no code change |
+| `refactor` | Code restructuring |
+| `test` | Adding tests |
+| `chore` | Maintenance tasks |
+
+## Release Process
+
+Releases are automated via Relicta:
+
+1. Commits to `main` trigger version analysis
+2. Conventional commits determine version bump
+3. Tags are created automatically
+4. GitHub releases include binaries for all platforms
+
+## Getting Help
+
+- **Issues**: [GitHub Issues](https://github.com/felixgeelhaar/coverctl/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/felixgeelhaar/coverctl/discussions)
+
+## License
+
+coverctl is MIT licensed. By contributing, you agree to license your contributions under the same license.

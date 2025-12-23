@@ -1,0 +1,69 @@
+---
+title: Installation
+description: How to install coverctl
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Requirements
+
+- **Go 1.24+** (for module support and coverage features)
+- **Git** (for diff-based coverage features)
+
+## Install from Source
+
+The recommended way to install coverctl is using `go install`:
+
+```bash
+go install github.com/felixgeelhaar/coverctl@latest
+```
+
+This installs the latest release to your `$GOPATH/bin` directory.
+
+## Install a Specific Version
+
+```bash
+go install github.com/felixgeelhaar/coverctl@v1.4.0
+```
+
+## Verify Installation
+
+```bash
+coverctl version
+```
+
+You should see output like:
+
+```
+coverctl v1.4.0 (abc1234) built 2024-12-23
+```
+
+## Shell Completions
+
+coverctl supports shell completions for bash, zsh, and fish.
+
+<Tabs>
+  <TabItem label="Bash">
+    ```bash
+    # Add to ~/.bashrc
+    eval "$(coverctl completion bash)"
+    ```
+  </TabItem>
+  <TabItem label="Zsh">
+    ```bash
+    # Add to ~/.zshrc
+    eval "$(coverctl completion zsh)"
+    ```
+  </TabItem>
+  <TabItem label="Fish">
+    ```bash
+    # Add to ~/.config/fish/config.fish
+    coverctl completion fish | source
+    ```
+  </TabItem>
+</Tabs>
+
+## Next Steps
+
+- [Quick Start](/coverctl/quick-start/) - Create your first configuration
+- [CLI Reference](/coverctl/cli/) - Learn about all available commands

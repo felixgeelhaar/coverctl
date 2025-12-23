@@ -1,0 +1,122 @@
+---
+title: Quick Start
+description: Get started with coverctl in 5 minutes
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+This guide will help you set up coverctl in your Go project and run your first coverage check.
+
+## Prerequisites
+
+- A Go project with tests
+- Go 1.24 or later installed
+- coverctl installed ([Installation Guide](/coverctl/installation/))
+
+## Setup
+
+<Steps>
+
+1. **Navigate to your project**
+
+   ```bash
+   cd your-go-project
+   ```
+
+2. **Initialize coverctl**
+
+   Run the interactive setup wizard:
+
+   ```bash
+   coverctl init
+   ```
+
+   The wizard will:
+   - Auto-detect domains from your project structure
+   - Let you adjust coverage thresholds with arrow keys
+   - Create `.coverctl.yaml` configuration
+
+   :::tip
+   Use `coverctl init --no-interactive` in CI/CD pipelines to skip the wizard.
+   :::
+
+3. **Run coverage check**
+
+   ```bash
+   coverctl check
+   ```
+
+   This will:
+   - Run `go test` with coverage instrumentation
+   - Evaluate coverage per domain
+   - Report pass/fail status for each domain
+
+4. **Review results**
+
+   ```
+   Domain     Coverage  Required  Status
+   ─────────────────────────────────────
+   core         87.3%      85%    PASS
+   api          81.2%      80%    PASS
+   cli          76.4%      75%    PASS
+   ─────────────────────────────────────
+   Overall      82.1%      75%    PASS
+   ```
+
+</Steps>
+
+## Example Configuration
+
+After running `coverctl init`, you'll have a `.coverctl.yaml` file:
+
+```yaml
+version: 1
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+    - name: cli
+      match: ["./cmd/..."]
+      min: 75
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+```
+
+## Common Workflows
+
+### Development Mode
+
+Use watch mode for continuous feedback while developing:
+
+```bash
+coverctl watch
+```
+
+### CI Pipeline
+
+Run with JSON output and strict thresholds:
+
+```bash
+coverctl check -o json --fail-under 80
+```
+
+### Generate HTML Report
+
+Create a visual coverage report:
+
+```bash
+coverctl report -o html > coverage.html
+```
+
+## Next Steps
+
+- [CLI Reference](/coverctl/cli/) - Learn all available commands
+- [Configuration](/coverctl/configuration/) - Customize your coverage policy
+- [CI Integration](/coverctl/guides/ci-integration/) - Set up GitHub Actions

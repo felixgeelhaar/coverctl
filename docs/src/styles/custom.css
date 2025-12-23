@@ -1,0 +1,37 @@
+/* Custom styles for coverctl documentation */
+
+:root {
+  --sl-color-accent-low: #1a4d1a;
+  --sl-color-accent: #2d8a2d;
+  --sl-color-accent-high: #4ade4a;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #eceef2;
+  --sl-color-gray-2: #c0c2c7;
+  --sl-color-gray-3: #888b96;
+  --sl-color-gray-4: #545861;
+  --sl-color-gray-5: #353841;
+  --sl-color-gray-6: #24272f;
+  --sl-color-black: #17181c;
+}
+
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #1a4d1a;
+  --sl-color-accent: #4ade4a;
+  --sl-color-accent-high: #7ef87e;
+}
+
+/* Code block styling */
+.expressive-code {
+  --ec-codeFontFml: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Hero section */
+.hero {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+/* Badge styling */
+.sl-badge {
+  font-weight: 600;
+}

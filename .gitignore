@@ -30,3 +30,8 @@ vendor/
 
 # Local binary
 /coverctl
+
+# Documentation build artifacts
+docs/node_modules/
+docs/dist/
+docs/.astro/

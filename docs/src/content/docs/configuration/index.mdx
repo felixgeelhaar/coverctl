@@ -1,0 +1,182 @@
+---
+title: Configuration
+description: coverctl configuration file reference
+---
+
+coverctl uses a YAML configuration file (default: `.coverctl.yaml`) to define coverage policies.
+
+## File Location
+
+By default, coverctl looks for `.coverctl.yaml` in the current directory. Use `-c` or `--config` to specify a different path:
+
+```bash
+coverctl check -c config/coverage.yaml
+```
+
+## Basic Structure
+
+```yaml
+version: 1
+
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+
+exclude:
+  - "**/generated/**"
+```
+
+## Configuration Options
+
+### version
+
+**Required.** Schema version for future compatibility.
+
+```yaml
+version: 1
+```
+
+### policy
+
+Coverage policy configuration. See [Policies](/coverctl/configuration/policies/).
+
+```yaml
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+```
+
+### exclude
+
+Glob patterns for files to exclude from coverage. See [Domains](/coverctl/configuration/domains/).
+
+```yaml
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+  - "**/*_test.go"
+```
+
+### files
+
+Per-file coverage rules. See [Policies](/coverctl/configuration/policies/).
+
+```yaml
+files:
+  - match: ["internal/core/*.go"]
+    min: 90
+```
+
+### diff
+
+Diff-based coverage mode. See [Advanced](/coverctl/configuration/advanced/).
+
+```yaml
+diff:
+  enabled: true
+  base: origin/main
+```
+
+### integration
+
+Integration test coverage. See [Advanced](/coverctl/configuration/advanced/).
+
+```yaml
+integration:
+  enabled: true
+  packages: ["./internal/integration/..."]
+  run_args: ["-test.run", "TestIntegration"]
+```
+
+### merge
+
+Profile merging. See [Advanced](/coverctl/configuration/advanced/).
+
+```yaml
+merge:
+  profiles:
+    - ".cover/unit.out"
+    - ".cover/integration.out"
+```
+
+### annotations
+
+Code annotation support. See [Advanced](/coverctl/configuration/advanced/).
+
+```yaml
+annotations:
+  enabled: true
+```
+
+## Complete Example
+
+```yaml
+version: 1
+
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+    - name: infrastructure
+      match: ["./internal/infrastructure/..."]
+      min: 70
+    - name: cli
+      match: ["./cmd/..."]
+      min: 75
+
+files:
+  - match: ["internal/core/critical/*.go"]
+    min: 95
+
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+  - "**/testdata/**"
+
+diff:
+  enabled: false
+  base: origin/main
+
+integration:
+  enabled: false
+  packages: ["./internal/integration/..."]
+  run_args: []
+  cover_dir: ".cover/integration"
+  profile: ".cover/integration.out"
+
+merge:
+  profiles: []
+
+annotations:
+  enabled: true
+```
+
+## Schema Validation
+
+A JSON schema is available at `schemas/coverctl.schema.json` for editor integration:
+
+```yaml
+# yaml-language-server: $schema=./schemas/coverctl.schema.json
+version: 1
+...
+```
+
+## Next Steps
+
+- [Domains](/coverctl/configuration/domains/) - Configure domain matching
+- [Policies](/coverctl/configuration/policies/) - Set coverage thresholds
+- [Advanced](/coverctl/configuration/advanced/) - Integration tests, diff mode, and more

@@ -1,0 +1,277 @@
+---
+title: CI Integration
+description: Set up coverctl in GitHub Actions and other CI systems
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide shows how to integrate coverctl into your CI/CD pipeline.
+
+## GitHub Actions
+
+### Basic Setup
+
+```yaml
+# .github/workflows/coverage.yml
+name: Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install coverctl
+        run: go install github.com/felixgeelhaar/coverctl@latest
+
+      - name: Run coverage check
+        run: coverctl check --ci
+```
+
+### With Caching
+
+```yaml
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Install coverctl
+        run: go install github.com/felixgeelhaar/coverctl@latest
+
+      - name: Run coverage check
+        run: coverctl check --ci --fail-under 80
+```
+
+### Pull Request Comments
+
+Post coverage results as PR comments:
+
+```yaml
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install coverctl
+        run: go install github.com/felixgeelhaar/coverctl@latest
+
+      - name: Run coverage
+        id: coverage
+        run: |
+          coverctl check -o json > coverage.json
+          echo "result=$(cat coverage.json)" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = JSON.parse('${{ steps.coverage.outputs.result }}');
+            const body = `## Coverage Report
+            | Domain | Coverage | Required | Status |
+            |--------|----------|----------|--------|
+            ${coverage.domains.map(d =>
+              `| ${d.name} | ${d.percent.toFixed(1)}% | ${d.required}% | ${d.status === 'pass' ? '✅' : '❌'} |`
+            ).join('\n')}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+```
+
+### Diff-Based Coverage for PRs
+
+Only check coverage on changed files:
+
+```yaml
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for diff
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install coverctl
+        run: go install github.com/felixgeelhaar/coverctl@latest
+
+      - name: Run diff coverage
+        run: coverctl check --ci --diff origin/${{ github.base_ref }}
+```
+
+### Coverage Badge
+
+Generate and commit a coverage badge:
+
+```yaml
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install coverctl
+        run: go install github.com/felixgeelhaar/coverctl@latest
+
+      - name: Generate badge
+        run: |
+          coverctl run
+          coverctl badge -o docs/coverage.svg
+
+      - name: Commit badge
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add docs/coverage.svg
+          git diff --quiet --cached || git commit -m "Update coverage badge"
+          git push
+```
+
+### Record Coverage History
+
+Track coverage over time:
+
+```yaml
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install coverctl
+        run: go install github.com/felixgeelhaar/coverctl@latest
+
+      - name: Run and record coverage
+        run: |
+          coverctl check
+          coverctl record --commit ${{ github.sha }} --branch main
+
+      - name: Commit history
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .cover/history.json
+          git diff --quiet --cached || git commit -m "Update coverage history"
+          git push
+```
+
+## Other CI Systems
+
+<Tabs>
+  <TabItem label="GitLab CI">
+    ```yaml
+    # .gitlab-ci.yml
+    coverage:
+      image: golang:1.24
+      script:
+        - go install github.com/felixgeelhaar/coverctl@latest
+        - coverctl check --ci --fail-under 80
+      coverage: '/Overall\s+(\d+\.\d+)%/'
+    ```
+  </TabItem>
+  <TabItem label="CircleCI">
+    ```yaml
+    # .circleci/config.yml
+    version: 2.1
+    jobs:
+      coverage:
+        docker:
+          - image: cimg/go:1.24
+        steps:
+          - checkout
+          - run:
+              name: Install coverctl
+              command: go install github.com/felixgeelhaar/coverctl@latest
+          - run:
+              name: Run coverage
+              command: coverctl check --ci
+    ```
+  </TabItem>
+  <TabItem label="Jenkins">
+    ```groovy
+    // Jenkinsfile
+    pipeline {
+      agent {
+        docker { image 'golang:1.24' }
+      }
+      stages {
+        stage('Coverage') {
+          steps {
+            sh 'go install github.com/felixgeelhaar/coverctl@latest'
+            sh 'coverctl check --ci --fail-under 80'
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## CI Flags
+
+| Flag | Description |
+|------|-------------|
+| `--ci` | CI mode: quiet output + GitHub Actions annotations |
+| `--quiet` | Suppress non-essential output |
+| `--no-color` | Disable colored output |
+| `--fail-under N` | Fail if coverage below N% |
+| `--ratchet` | Fail if coverage decreases |
+| `-o json` | JSON output for parsing |
+
+## Best Practices
+
+1. **Use `--ci` flag**: Enables GitHub Actions annotations
+2. **Set `--fail-under`**: Enforce minimum thresholds
+3. **Use `--ratchet` on main**: Prevent regression
+4. **Cache Go modules**: Speed up CI runs
+5. **Use diff mode for PRs**: Focus on changed code
+
+## See Also
+
+- [Build Flags](/coverctl/guides/build-flags/) - Customize test execution
+- [Configuration](/coverctl/configuration/) - Policy configuration

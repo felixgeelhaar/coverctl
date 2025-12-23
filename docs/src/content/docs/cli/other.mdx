@@ -1,0 +1,301 @@
+---
+title: Other Commands
+description: Badge, trend, record, suggest, debt, and more
+---
+
+This page covers additional coverctl commands for badges, trends, and coverage analysis.
+
+## badge
+
+Generate an SVG coverage badge for your README.
+
+```bash
+coverctl badge [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile path | `.cover/coverage.out` |
+| `-o, --output` | Output file path | `coverage.svg` |
+| `--label` | Badge label text | `coverage` |
+| `--style` | Badge style: `flat`, `flat-square` | `flat` |
+
+### Examples
+
+```bash
+# Generate default badge
+coverctl badge
+
+# Custom style and label
+coverctl badge --style flat-square --label "test coverage"
+
+# Custom output path
+coverctl badge -o docs/badge.svg
+```
+
+---
+
+## trend
+
+Show coverage trends over time using recorded history.
+
+```bash
+coverctl trend [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile path | `.cover/coverage.out` |
+| `--history` | History file path | `.cover/history.json` |
+| `-o, --output` | Output format: `text`, `json` | `text` |
+
+### Example
+
+```bash
+# Show coverage trend
+coverctl trend
+
+# JSON output
+coverctl trend -o json
+```
+
+### Output
+
+```
+Coverage Trend (last 10 entries)
+────────────────────────────────
+Date         Commit    Coverage  Change
+2024-12-23   abc1234     82.1%   +0.5%
+2024-12-22   def5678     81.6%   +1.2%
+2024-12-21   ghi9012     80.4%   -0.3%
+...
+```
+
+---
+
+## record
+
+Record current coverage to history for trend analysis.
+
+```bash
+coverctl record [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile path | `.cover/coverage.out` |
+| `--history` | History file path | `.cover/history.json` |
+| `--commit` | Git commit SHA | auto-detected |
+| `--branch` | Git branch name | auto-detected |
+
+### Examples
+
+```bash
+# Record with auto-detected git info
+coverctl record
+
+# Explicit commit and branch
+coverctl record --commit abc1234 --branch main
+```
+
+### CI Integration
+
+```yaml
+# .github/workflows/coverage.yml
+- name: Record coverage
+  run: |
+    coverctl check
+    coverctl record --commit ${{ github.sha }} --branch ${{ github.ref_name }}
+```
+
+---
+
+## suggest
+
+Suggest optimal coverage thresholds based on current coverage.
+
+```bash
+coverctl suggest [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile path | `.cover/coverage.out` |
+| `--strategy` | Strategy: `current`, `aggressive`, `conservative` | `current` |
+
+### Strategies
+
+| Strategy | Description |
+|----------|-------------|
+| `current` | Set thresholds slightly below current coverage |
+| `aggressive` | Push for higher thresholds |
+| `conservative` | Lower thresholds for gradual improvement |
+
+### Example
+
+```bash
+# Get suggestions
+coverctl suggest
+
+# Aggressive strategy
+coverctl suggest --strategy aggressive
+```
+
+### Output
+
+```
+Suggested Thresholds
+────────────────────
+Domain   Current  Suggested  Reason
+core       87.3%       85%   Slightly below current (buffer for variance)
+api        81.2%       80%   Slightly below current
+cli        76.4%       75%   Slightly below current
+```
+
+---
+
+## debt
+
+Show coverage debt report identifying files that need more tests.
+
+```bash
+coverctl debt [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile path | `.cover/coverage.out` |
+| `-o, --output` | Output format: `text`, `json` | `text` |
+
+### Example
+
+```bash
+coverctl debt
+```
+
+### Output
+
+```
+Coverage Debt Report
+────────────────────
+File                           Current  Required  Shortfall
+internal/core/validator.go       65.2%      85%     -19.8%
+internal/api/handler.go          72.1%      80%      -7.9%
+────────────────────
+Total Debt: 27.7%
+Health Score: 73/100
+```
+
+---
+
+## ignore
+
+Show configured exclude patterns and ignored files.
+
+```bash
+coverctl ignore [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+
+### Example
+
+```bash
+coverctl ignore
+```
+
+### Output
+
+```
+Configured Excludes
+───────────────────
+- **/generated/**
+- **/mocks/**
+- internal/testdata/*
+
+Ignored Files (matching excludes)
+─────────────────────────────────
+- internal/generated/proto/api.pb.go
+- internal/mocks/service_mock.go
+```
+
+---
+
+## detect
+
+Auto-detect domains and write configuration.
+
+```bash
+coverctl detect [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `--dry-run` | Preview config without writing | `false` |
+| `-f, --force` | Overwrite existing config | `false` |
+
+### Examples
+
+```bash
+# Preview detected domains
+coverctl detect --dry-run
+
+# Write config
+coverctl detect
+
+# Overwrite existing
+coverctl detect --force
+```
+
+---
+
+## version
+
+Show version information.
+
+```bash
+coverctl version
+```
+
+### Output
+
+```
+coverctl v1.4.0 (abc1234) built 2024-12-23
+```
+
+---
+
+## help
+
+Show help for any command.
+
+```bash
+coverctl help [command]
+
+# Examples
+coverctl help
+coverctl help check
+coverctl check --help
+```

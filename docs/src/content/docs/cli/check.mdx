@@ -1,0 +1,142 @@
+---
+title: check
+description: Run coverage and enforce policy
+---
+
+The `check` command runs tests with coverage instrumentation, evaluates coverage per domain, and enforces policy thresholds.
+
+## Usage
+
+```bash
+coverctl check [flags]
+```
+
+**Alias:** `coverctl c`
+
+## Flags
+
+### Configuration
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile output path | `.cover/coverage.out` |
+| `-d, --domain` | Filter to specific domain (repeatable) | all domains |
+| `-o, --output` | Output format: `text`, `json`, `html` | `text` |
+
+### Policy Enforcement
+
+| Flag | Description |
+|------|-------------|
+| `--fail-under N` | Fail if overall coverage is below N percent |
+| `--ratchet` | Fail if coverage decreases from previous recorded value |
+| `--validate` | Validate config file without running tests |
+| `--show-delta` | Show coverage change from previous run |
+| `--history` | History file path for delta display |
+
+### Build/Test Flags
+
+| Flag | Description |
+|------|-------------|
+| `--tags` | Build tags (e.g., `integration,e2e`) |
+| `--race` | Enable race detector |
+| `--short` | Skip long-running tests |
+| `-v` | Verbose test output |
+| `--run` | Run only tests matching pattern |
+| `--timeout` | Test timeout (e.g., `10m`, `1h`) |
+| `--test-arg` | Additional go test argument (repeatable) |
+
+## Examples
+
+### Basic Usage
+
+```bash
+# Run coverage check with default config
+coverctl check
+
+# Use custom config file
+coverctl check -c my-config.yaml
+
+# Check specific domains
+coverctl check -d core -d api
+```
+
+### CI Pipeline
+
+```bash
+# Fail if coverage below 80%
+coverctl check --fail-under 80
+
+# Prevent coverage regression
+coverctl check --ratchet
+
+# JSON output for parsing
+coverctl check -o json --ci
+```
+
+### Integration Tests
+
+```bash
+# Run with integration build tag
+coverctl check --tags integration
+
+# Extended timeout for slow tests
+coverctl check --tags integration --timeout 30m
+
+# With race detector
+coverctl check --race --timeout 20m
+```
+
+### Validation Only
+
+```bash
+# Check config syntax without running tests
+coverctl check --validate
+```
+
+## Output
+
+### Text Output (default)
+
+```
+Domain     Coverage  Required  Status
+─────────────────────────────────────
+core         87.3%      85%    PASS
+api          81.2%      80%    PASS
+cli          76.4%      75%    PASS
+─────────────────────────────────────
+Overall      82.1%      75%    PASS
+```
+
+### JSON Output
+
+```json
+{
+  "passed": true,
+  "domains": [
+    {
+      "name": "core",
+      "covered": 1234,
+      "total": 1414,
+      "percent": 87.3,
+      "required": 85,
+      "status": "pass"
+    }
+  ]
+}
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | All policy checks passed |
+| `1` | Policy violation (coverage below threshold) |
+| `2` | Invalid configuration or arguments |
+| `3` | Test execution failed |
+
+## See Also
+
+- [run](/coverctl/cli/run/) - Run coverage without policy enforcement
+- [report](/coverctl/cli/report/) - Analyze existing coverage profile
+- [Configuration](/coverctl/configuration/) - Configure coverage policies

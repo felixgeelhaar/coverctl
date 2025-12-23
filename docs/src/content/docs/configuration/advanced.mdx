@@ -1,0 +1,270 @@
+---
+title: Advanced Configuration
+description: Integration tests, diff mode, profile merging, and annotations
+---
+
+This page covers advanced configuration options for complex workflows.
+
+## Integration Test Coverage
+
+For projects with separate integration tests, coverctl can build test binaries and run them with `GOCOVERDIR`:
+
+```yaml
+integration:
+  enabled: true
+  packages: ["./internal/integration/..."]
+  run_args: ["-test.run", "TestIntegration"]
+  cover_dir: ".cover/integration"
+  profile: ".cover/integration.out"
+```
+
+### Options
+
+| Field | Description | Default |
+|-------|-------------|---------|
+| `enabled` | Enable integration test coverage | `false` |
+| `packages` | Package patterns to build | `["./..."]` |
+| `run_args` | Arguments passed to test binary | `[]` |
+| `cover_dir` | Directory for raw coverage data | `.cover/integration` |
+| `profile` | Output profile path | `.cover/integration.out` |
+
+### How It Works
+
+1. Builds test binaries with `go test -c -covermode=atomic`
+2. Runs binaries with `GOCOVERDIR` environment variable
+3. Converts raw data to profile with `go tool covdata`
+4. Merges with unit test coverage
+
+### Example
+
+```yaml
+integration:
+  enabled: true
+  packages:
+    - "./test/integration/..."
+    - "./test/e2e/..."
+  run_args:
+    - "-test.run"
+    - "TestIntegration"
+    - "-test.v"
+  cover_dir: ".cover/integration-data"
+  profile: ".cover/integration.out"
+```
+
+---
+
+## Diff-Based Coverage
+
+Only check coverage for files changed since a git ref:
+
+```yaml
+diff:
+  enabled: true
+  base: origin/main
+```
+
+### Options
+
+| Field | Description | Default |
+|-------|-------------|---------|
+| `enabled` | Enable diff-based filtering | `false` |
+| `base` | Git ref to compare against | `origin/main` |
+
+### Use Cases
+
+- **Pull requests**: Only check files in the PR
+- **Feature branches**: Focus on changed code
+- **Incremental improvement**: Don't fail on legacy code
+
+### CLI Override
+
+```bash
+# Override config diff setting
+coverctl report --diff origin/develop
+```
+
+### Example Workflow
+
+```yaml
+# .coverctl.yaml
+diff:
+  enabled: false  # Disabled by default
+  base: origin/main
+
+# CI for PRs enables diff mode
+# coverctl check --diff origin/main
+```
+
+---
+
+## Profile Merging
+
+Combine multiple coverage profiles into a single analysis:
+
+```yaml
+merge:
+  profiles:
+    - ".cover/unit.out"
+    - ".cover/integration.out"
+    - ".cover/e2e.out"
+```
+
+### CLI Merging
+
+```bash
+coverctl report \
+  -p unit.out \
+  --merge integration.out \
+  --merge e2e.out
+```
+
+### Merge Behavior
+
+- Profiles are merged by file and line
+- Higher coverage wins (if both profiles cover a line, it's counted as covered)
+- All profiles must use the same coverage mode (`atomic` or `set`)
+
+---
+
+## Code Annotations
+
+Enable in-code annotations to override coverage behavior:
+
+```yaml
+annotations:
+  enabled: true
+```
+
+### Ignore Annotation
+
+Exclude a file from coverage:
+
+```go
+// coverctl:ignore
+package generated
+
+// This entire file is excluded from coverage analysis
+```
+
+### Domain Annotation
+
+Assign a file to a specific domain:
+
+```go
+// coverctl:domain=critical
+package validator
+
+// This file is assigned to the "critical" domain
+// regardless of its path
+```
+
+### Annotation Placement
+
+Annotations must be at the package level (before the `package` declaration):
+
+```go
+// coverctl:ignore
+// coverctl:domain=core
+package mypackage
+
+import "fmt"
+```
+
+---
+
+## Complete Advanced Example
+
+```yaml
+version: 1
+
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+
+files:
+  - match: ["internal/core/payments/*.go"]
+    min: 95
+
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+
+# Diff-based coverage for PRs
+diff:
+  enabled: false
+  base: origin/main
+
+# Integration test coverage
+integration:
+  enabled: true
+  packages: ["./test/integration/..."]
+  run_args: ["-test.v"]
+  cover_dir: ".cover/integration"
+  profile: ".cover/integration.out"
+
+# Merge unit and integration profiles
+merge:
+  profiles:
+    - ".cover/integration.out"
+
+# Enable code annotations
+annotations:
+  enabled: true
+```
+
+---
+
+## Environment-Specific Configs
+
+Use different configs for different environments:
+
+```bash
+# Development: lenient
+coverctl check -c .coverctl.dev.yaml
+
+# CI: strict
+coverctl check -c .coverctl.ci.yaml
+```
+
+### Development Config
+
+```yaml
+# .coverctl.dev.yaml
+version: 1
+policy:
+  default:
+    min: 50
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 70
+```
+
+### CI Config
+
+```yaml
+# .coverctl.ci.yaml
+version: 1
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+diff:
+  enabled: true
+  base: origin/main
+```
+
+## See Also
+
+- [CI Integration](/coverctl/guides/ci-integration/) - GitHub Actions setup
+- [Build Flags](/coverctl/guides/build-flags/) - Test customization

@@ -1,0 +1,82 @@
+---
+title: coverctl
+description: Domain-aware test coverage enforcement for Go teams
+template: splash
+hero:
+  tagline: Enforce coverage policies at the domain level, not just the module level. Built with DDD principles and TDD-first validation.
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: Get Started
+      link: /coverctl/installation/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/felixgeelhaar/coverctl
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why coverctl?
+
+Traditional coverage tools report a single percentage for your entire module. But real codebases have domains with different criticality levels. Your core business logic needs stricter coverage than utility functions.
+
+**coverctl** solves this by letting you define coverage policies per domain, enforcing them in CI, and providing actionable feedback when policies fail.
+
+<CardGrid stagger>
+  <Card title="Domain-Aware" icon="puzzle">
+    Define coverage thresholds per domain (core, api, infrastructure). Each domain gets its own minimum requirement.
+  </Card>
+  <Card title="CI-Ready" icon="github">
+    Built for automation. JSON output, GitHub Actions annotations, and exit codes that work with any CI system.
+  </Card>
+  <Card title="Auto-Detection" icon="magnifier">
+    Automatically discovers domains from your project structure. Interactive wizard or `--no-interactive` for scripts.
+  </Card>
+  <Card title="Flexible Output" icon="document">
+    Text, JSON, or HTML reports. Coverage badges, trend analysis, and debt tracking included.
+  </Card>
+</CardGrid>
+
+## Quick Example
+
+```bash
+# Install coverctl
+go install github.com/felixgeelhaar/coverctl@latest
+
+# Initialize configuration
+coverctl init
+
+# Run coverage with policy enforcement
+coverctl check
+```
+
+## Sample Configuration
+
+```yaml
+version: 1
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+exclude:
+  - internal/generated/*
+```
+
+## Features at a Glance
+
+- **Policy Enforcement**: Set minimum coverage per domain
+- **Build Flags**: Pass `--tags`, `--race`, `--timeout` to customize test runs
+- **Watch Mode**: Continuous coverage during development
+- **CI Integration**: `--fail-under`, `--ratchet` prevent coverage regression
+- **HTML Reports**: Visual coverage reports with `-o html`
+- **Coverage Badges**: Generate SVG badges for README files
+- **Trend Analysis**: Track coverage over time
+- **Debt Reports**: Identify files that need more tests

@@ -1,0 +1,175 @@
+---
+title: Policies
+description: Configure coverage thresholds
+---
+
+Policies define the minimum coverage requirements for your project. coverctl supports domain-level and file-level policies.
+
+## Policy Structure
+
+```yaml
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+```
+
+## Default Policy
+
+The default policy applies to any code not matched by a specific domain:
+
+```yaml
+policy:
+  default:
+    min: 75
+```
+
+If a file doesn't match any domain, it must meet the default minimum.
+
+## Domain Policies
+
+Each domain can have its own coverage requirement:
+
+```yaml
+policy:
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+    - name: utils
+      match: ["./pkg/utils/..."]
+      min: 60
+```
+
+### Policy Evaluation
+
+1. Files are matched to domains based on `match` patterns
+2. Coverage is calculated per domain
+3. Each domain is compared against its `min` threshold
+4. If any domain fails, the overall check fails
+
+## File-Level Policies
+
+For granular control, define per-file rules:
+
+```yaml
+files:
+  - match: ["internal/core/critical/*.go"]
+    min: 95
+  - match: ["internal/api/handlers/*.go"]
+    min: 85
+```
+
+File rules take precedence over domain rules.
+
+### Use Cases
+
+- **Critical paths**: Require 95%+ coverage for payment processing
+- **Legacy code**: Allow lower thresholds during migration
+- **Generated code**: Exclude entirely or require 0%
+
+## CLI Policy Enforcement
+
+### fail-under
+
+Fail if overall coverage is below a threshold:
+
+```bash
+coverctl check --fail-under 80
+```
+
+This is additive to config policies—both must pass.
+
+### ratchet
+
+Prevent coverage regression:
+
+```bash
+coverctl check --ratchet
+```
+
+Fails if current coverage is lower than the last recorded value.
+
+### Combined
+
+```bash
+# Must be above 80% AND not decrease
+coverctl check --fail-under 80 --ratchet
+```
+
+## Threshold Guidelines
+
+| Code Type | Suggested Threshold |
+|-----------|---------------------|
+| Core business logic | 85-95% |
+| API handlers | 80-90% |
+| Utilities/helpers | 70-80% |
+| CLI/presentation | 60-75% |
+| Generated code | Excluded |
+
+## Suggested Thresholds
+
+Use `coverctl suggest` to get recommendations:
+
+```bash
+# Based on current coverage
+coverctl suggest
+
+# Push for higher thresholds
+coverctl suggest --strategy aggressive
+
+# More relaxed thresholds
+coverctl suggest --strategy conservative
+```
+
+### Output
+
+```
+Suggested Thresholds
+────────────────────
+Domain   Current  Suggested  Reason
+core       87.3%       85%   Buffer for variance
+api        81.2%       80%   Slightly below current
+cli        76.4%       75%   Slightly below current
+```
+
+## Best Practices
+
+1. **Start conservative**: Begin with achievable thresholds
+2. **Ratchet up**: Use `--ratchet` to prevent regression, then increase thresholds
+3. **Review debt**: Use `coverctl debt` to find improvement opportunities
+4. **Exclude wisely**: Don't exclude code just to pass; write tests instead
+5. **CI enforcement**: Use `--fail-under` and `--ratchet` in CI pipelines
+
+## Example: Gradual Improvement
+
+```yaml
+# Week 1: Start with current coverage - 5%
+policy:
+  default:
+    min: 70
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 80
+
+# Week 4: Increase after adding tests
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+```
+
+## See Also
+
+- [Domains](/coverctl/configuration/domains/) - Domain configuration
+- [CI Integration](/coverctl/guides/ci-integration/) - Enforce policies in CI

@@ -1,0 +1,123 @@
+---
+title: init
+description: Interactive setup wizard
+---
+
+The `init` command launches an interactive wizard to configure coverctl for your project. It auto-detects domains and lets you customize coverage thresholds.
+
+## Usage
+
+```bash
+coverctl init [flags]
+```
+
+**Alias:** `coverctl i`
+
+## Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-f, --force` | Overwrite existing config file | `false` |
+| `--no-interactive` | Skip wizard, write auto-detected config | `false` |
+
+## Interactive Wizard
+
+The wizard provides a terminal UI built with [Bubble Tea](https://github.com/charmbracelet/bubbletea):
+
+1. **Domain Detection**: Automatically discovers domains from project structure
+2. **Threshold Adjustment**: Use arrow keys or +/- to adjust coverage minimums
+3. **Confirmation**: Review and confirm before writing config
+
+### Navigation
+
+| Key | Action |
+|-----|--------|
+| `↑/↓` | Move between domains |
+| `←/→` | Decrease/increase threshold |
+| `+/-` | Adjust threshold by 5% |
+| `Enter` | Confirm and write config |
+| `Esc/q` | Cancel |
+
+## Examples
+
+### Interactive Setup
+
+```bash
+# Launch the wizard
+coverctl init
+```
+
+### CI/Script Mode
+
+```bash
+# Skip wizard, use auto-detected values
+coverctl init --no-interactive
+
+# Overwrite existing config
+coverctl init --no-interactive --force
+```
+
+### Custom Config Path
+
+```bash
+# Write to custom location
+coverctl init -c custom-config.yaml
+```
+
+## Domain Detection
+
+The wizard automatically detects domains based on your project structure:
+
+| Directory | Detected Domain |
+|-----------|-----------------|
+| `cmd/` | Command-line entry points |
+| `internal/core/` | Core business logic |
+| `internal/api/` | API layer |
+| `internal/infrastructure/` | Infrastructure adapters |
+| `pkg/` | Public packages |
+
+Directories named `generated`, `mocks`, or `testdata` are automatically excluded.
+
+## Generated Config
+
+After running `init`, you'll have a `.coverctl.yaml` file:
+
+```yaml
+version: 1
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+    - name: cli
+      match: ["./cmd/..."]
+      min: 75
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+```
+
+## Related Commands
+
+### detect
+
+For non-interactive domain detection:
+
+```bash
+# Preview detected domains
+coverctl detect --dry-run
+
+# Write config directly
+coverctl detect
+```
+
+## See Also
+
+- [Configuration](/coverctl/configuration/) - Configuration reference
+- [Domains](/coverctl/configuration/domains/) - Domain configuration

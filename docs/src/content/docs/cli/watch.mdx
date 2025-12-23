@@ -1,0 +1,141 @@
+---
+title: watch
+description: Watch for file changes and re-run coverage
+---
+
+The `watch` command monitors your project for file changes and automatically re-runs coverage checks. Ideal for development workflows where you want continuous feedback.
+
+## Usage
+
+```bash
+coverctl watch [flags]
+```
+
+**Alias:** `coverctl w`
+
+## Flags
+
+### Configuration
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile output path | `.cover/coverage.out` |
+| `-d, --domain` | Filter to specific domain (repeatable) | all domains |
+
+### Build/Test Flags
+
+| Flag | Description |
+|------|-------------|
+| `--tags` | Build tags (e.g., `integration,e2e`) |
+| `--race` | Enable race detector |
+| `--short` | Skip long-running tests |
+| `-v` | Verbose test output |
+| `--run` | Run only tests matching pattern |
+| `--timeout` | Test timeout (e.g., `10m`, `1h`) |
+| `--test-arg` | Additional go test argument (repeatable) |
+
+## Examples
+
+### Basic Usage
+
+```bash
+# Start watching all domains
+coverctl watch
+
+# Watch specific domain
+coverctl watch -d core
+```
+
+### Development Workflow
+
+```bash
+# Watch with verbose output
+coverctl watch -v
+
+# Watch with short tests only (faster feedback)
+coverctl watch --short
+```
+
+### Integration Testing
+
+```bash
+# Watch integration tests
+coverctl watch --tags integration
+
+# Watch with extended timeout
+coverctl watch --tags integration --timeout 5m
+```
+
+## Behavior
+
+1. **Initial Run**: Runs coverage check immediately on start
+2. **File Watching**: Monitors `.go` files in the project
+3. **Debouncing**: Waits briefly after changes to batch rapid edits
+4. **Re-run**: Runs coverage check after changes are detected
+5. **Clear**: Clears terminal before each run for clean output
+
+## Watched Files
+
+The watcher monitors:
+- All `.go` files in the project
+- The configuration file (`.coverctl.yaml`)
+
+Changes to these files trigger a re-run.
+
+## Output
+
+```
+Watching for changes... (Ctrl+C to stop)
+
+─────────────────────────────────────
+Running coverage check...
+─────────────────────────────────────
+
+Domain     Coverage  Required  Status
+─────────────────────────────────────
+core         87.3%      85%    PASS
+─────────────────────────────────────
+
+Watching for changes...
+
+─────────────────────────────────────
+File changed: internal/core/service.go
+Running coverage check...
+─────────────────────────────────────
+```
+
+## Tips
+
+### Filter to Specific Domain
+
+For faster feedback during development, watch only the domain you're working on:
+
+```bash
+coverctl watch -d core
+```
+
+### Use Short Flag
+
+Skip slow tests for rapid iteration:
+
+```bash
+coverctl watch --short
+```
+
+### Combine with Verbose
+
+See detailed test output:
+
+```bash
+coverctl watch -v -d core
+```
+
+## Exit
+
+Press `Ctrl+C` to stop watching.
+
+## See Also
+
+- [check](/coverctl/cli/check/) - Single coverage check
+- [run](/coverctl/cli/run/) - Generate coverage profile only

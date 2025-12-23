@@ -1,0 +1,116 @@
+---
+title: run
+description: Run coverage without policy enforcement
+---
+
+The `run` command runs tests with coverage instrumentation and generates a coverage profile, but does not evaluate policies. Use this when you only need the coverage data.
+
+## Usage
+
+```bash
+coverctl run [flags]
+```
+
+**Alias:** `coverctl r`
+
+## Flags
+
+### Configuration
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile output path | `.cover/coverage.out` |
+| `-d, --domain` | Filter to specific domain (repeatable) | all domains |
+
+### Build/Test Flags
+
+| Flag | Description |
+|------|-------------|
+| `--tags` | Build tags (e.g., `integration,e2e`) |
+| `--race` | Enable race detector |
+| `--short` | Skip long-running tests |
+| `-v` | Verbose test output |
+| `--run` | Run only tests matching pattern |
+| `--timeout` | Test timeout (e.g., `10m`, `1h`) |
+| `--test-arg` | Additional go test argument (repeatable) |
+
+## Examples
+
+### Basic Usage
+
+```bash
+# Generate coverage profile
+coverctl run
+
+# Custom output path
+coverctl run -p coverage.out
+
+# Run only specific domains
+coverctl run -d core -d api
+```
+
+### Integration Tests
+
+```bash
+# Run with integration build tag
+coverctl run --tags integration
+
+# Verbose output with extended timeout
+coverctl run --tags integration -v --timeout 30m
+```
+
+### Advanced Options
+
+```bash
+# Run specific tests with race detector
+coverctl run --run TestCriticalPath --race
+
+# Pass extra arguments to go test
+coverctl run --test-arg=-count=1 --test-arg=-parallel=4
+```
+
+## Output
+
+The command generates a coverage profile file (default: `.cover/coverage.out`) in Go's standard coverage format.
+
+```
+mode: atomic
+github.com/user/project/internal/core/service.go:15.42,17.2 1 5
+github.com/user/project/internal/core/service.go:19.52,23.16 3 2
+...
+```
+
+## Use Cases
+
+### Generate Profile for External Tools
+
+```bash
+# Generate profile for go tool cover
+coverctl run -p coverage.out
+go tool cover -html=coverage.out -o coverage.html
+```
+
+### CI Artifact Generation
+
+```bash
+# Generate profile without policy enforcement
+coverctl run -p artifacts/coverage.out
+
+# Later, analyze with report command
+coverctl report -p artifacts/coverage.out
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Coverage profile generated successfully |
+| `2` | Invalid configuration or arguments |
+| `3` | Test execution failed |
+
+## See Also
+
+- [check](/coverctl/cli/check/) - Run coverage with policy enforcement
+- [report](/coverctl/cli/report/) - Analyze existing coverage profile
+- [watch](/coverctl/cli/watch/) - Continuous coverage during development
