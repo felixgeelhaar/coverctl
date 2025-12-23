@@ -31,20 +31,27 @@ type CheckOptions struct {
 	Profile      string
 	Domains      []string     // Filter to specific domains (empty = all domains)
 	HistoryStore HistoryStore // Optional: for delta calculation
+	FailUnder    *float64     // Optional: fail if overall coverage is below this threshold
+	Ratchet      bool         // Fail if coverage decreases from previous recorded value
+	BuildFlags   BuildFlags   // Build and test flags
 }
 
 type RunOnlyOptions struct {
 	ConfigPath string
 	Profile    string
-	Domains    []string // Filter to specific domains (empty = all domains)
+	Domains    []string   // Filter to specific domains (empty = all domains)
+	BuildFlags BuildFlags // Build and test flags
 }
 
 type ReportOptions struct {
-	ConfigPath   string
-	Profile      string
-	Output       OutputFormat
-	Domains      []string     // Filter to specific domains (empty = all domains)
-	HistoryStore HistoryStore // Optional: for delta calculation
+	ConfigPath    string
+	Profile       string
+	Output        OutputFormat
+	Domains       []string       // Filter to specific domains (empty = all domains)
+	HistoryStore  HistoryStore   // Optional: for delta calculation
+	ShowUncovered bool           // Show only files with 0% coverage
+	DiffRef       string         // Git ref for diff-based filtering (overrides config)
+	MergeProfiles []string       // Additional profile files to merge
 }
 
 type DetectOptions struct {
@@ -62,7 +69,7 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
-	profile, err := s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile})
+	profile, err := s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile, BuildFlags: opts.BuildFlags})
 	if err != nil {
 		return err
 	}
@@ -80,11 +87,12 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 	profiles := []string{profile}
 	if cfg.Integration.Enabled {
 		integrationProfile, err := s.CoverageRunner.RunIntegration(ctx, IntegrationOptions{
-			Domains:  domains,
-			Packages: cfg.Integration.Packages,
-			RunArgs:  cfg.Integration.RunArgs,
-			CoverDir: cfg.Integration.CoverDir,
-			Profile:  cfg.Integration.Profile,
+			Domains:    domains,
+			Packages:   cfg.Integration.Packages,
+			RunArgs:    cfg.Integration.RunArgs,
+			CoverDir:   cfg.Integration.CoverDir,
+			Profile:    cfg.Integration.Profile,
+			BuildFlags: opts.BuildFlags,
 		})
 		if err != nil {
 			return err
@@ -147,6 +155,27 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 	if err := s.Reporter.Write(s.Out, result, opts.Output); err != nil {
 		return err
 	}
+
+	// Check fail-under threshold if specified
+	if opts.FailUnder != nil {
+		overallPercent := calculateOverallPercent(result)
+		if overallPercent < *opts.FailUnder {
+			return fmt.Errorf("coverage %.1f%% is below --fail-under threshold of %.1f%%", overallPercent, *opts.FailUnder)
+		}
+	}
+
+	// Check ratchet: coverage must not decrease from previous value
+	if opts.Ratchet && opts.HistoryStore != nil {
+		hist, err := opts.HistoryStore.Load()
+		if err == nil && len(hist.Entries) > 0 {
+			previousPercent := hist.Entries[len(hist.Entries)-1].Overall
+			currentPercent := calculateOverallPercent(result)
+			if currentPercent < previousPercent {
+				return fmt.Errorf("coverage decreased from %.1f%% to %.1f%% (--ratchet prevents regression)", previousPercent, currentPercent)
+			}
+		}
+	}
+
 	if !result.Passed {
 		return fmt.Errorf("policy violation")
 	}
@@ -165,7 +194,7 @@ func (s *Service) RunOnly(ctx context.Context, opts RunOnlyOptions) error {
 		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
-	_, err = s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile})
+	_, err = s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile, BuildFlags: opts.BuildFlags})
 	return err
 }
 
@@ -195,6 +224,10 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	if len(cfg.Merge.Profiles) > 0 {
 		profiles = append(profiles, cfg.Merge.Profiles...)
 	}
+	// Add CLI-specified merge profiles
+	if len(opts.MergeProfiles) > 0 {
+		profiles = append(profiles, opts.MergeProfiles...)
+	}
 	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
 	if err != nil {
 		return err
@@ -205,12 +238,24 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	if err != nil {
 		return err
 	}
-	changedFiles, err := s.diffFiles(ctx, cfg)
+
+	// Handle --uncovered flag: show only files with 0% coverage
+	if opts.ShowUncovered {
+		return s.reportUncovered(normalizedCoverage, cfg.Exclude, annotations, opts.Output)
+	}
+
+	// Handle --diff flag: override config diff setting
+	diffCfg := cfg.Diff
+	if opts.DiffRef != "" {
+		diffCfg.Enabled = true
+		diffCfg.Base = opts.DiffRef
+	}
+	changedFiles, err := s.diffFilesWithConfig(ctx, diffCfg)
 	if err != nil {
 		return err
 	}
 	filteredCoverage := filterCoverageByFiles(normalizedCoverage, changedFiles)
-	if cfg.Diff.Enabled && len(filteredCoverage) == 0 {
+	if diffCfg.Enabled && len(filteredCoverage) == 0 {
 		result := domain.Result{Passed: true}
 		result.Warnings = []string{"no files matched diff-based coverage check"}
 		return s.Reporter.Write(s.Out, result, opts.Output)
@@ -226,7 +271,7 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	policy := cfg.Policy
 	// Use filtered domains for policy evaluation
 	policy.Domains = domains
-	if cfg.Diff.Enabled {
+	if diffCfg.Enabled {
 		policy.Domains = filterPolicyDomains(policy.Domains, domainCoverage)
 	}
 	result := domain.Evaluate(policy, domainCoverage)
@@ -246,6 +291,61 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	}
 
 	return s.Reporter.Write(s.Out, result, opts.Output)
+}
+
+// reportUncovered generates a report of files with 0% coverage.
+func (s *Service) reportUncovered(files map[string]domain.CoverageStat, exclude []string, annotations map[string]Annotation, format OutputFormat) error {
+	var uncoveredFiles []domain.FileResult
+	for file, stat := range files {
+		if excluded(file, exclude) {
+			continue
+		}
+		if ann, ok := annotations[file]; ok && ann.Ignore {
+			continue
+		}
+		percent := 0.0
+		if stat.Total > 0 {
+			percent = round1((float64(stat.Covered) / float64(stat.Total)) * 100)
+		}
+		if percent == 0 && stat.Total > 0 {
+			uncoveredFiles = append(uncoveredFiles, domain.FileResult{
+				File:     file,
+				Covered:  stat.Covered,
+				Total:    stat.Total,
+				Percent:  0,
+				Required: 0,
+				Status:   domain.StatusFail,
+			})
+		}
+	}
+	sort.Slice(uncoveredFiles, func(i, j int) bool {
+		return uncoveredFiles[i].File < uncoveredFiles[j].File
+	})
+
+	result := domain.Result{
+		Passed: len(uncoveredFiles) == 0,
+		Files:  uncoveredFiles,
+	}
+	if len(uncoveredFiles) > 0 {
+		result.Warnings = []string{fmt.Sprintf("%d files have 0%% coverage", len(uncoveredFiles))}
+	}
+	return s.Reporter.Write(s.Out, result, format)
+}
+
+// diffFilesWithConfig gets changed files using the given diff configuration.
+func (s *Service) diffFilesWithConfig(ctx context.Context, cfg DiffConfig) (map[string]struct{}, error) {
+	if !cfg.Enabled || s.DiffProvider == nil {
+		return nil, nil
+	}
+	files, err := s.DiffProvider.ChangedFiles(ctx, cfg.Base)
+	if err != nil {
+		return nil, err
+	}
+	allow := make(map[string]struct{}, len(files))
+	for _, file := range files {
+		allow[filepath.ToSlash(filepath.Clean(file))] = struct{}{}
+	}
+	return allow, nil
 }
 
 func (s *Service) Detect(ctx context.Context, opts DetectOptions) (Config, error) {
@@ -571,6 +671,19 @@ func buildDomainExcludes(domains []domain.Domain) map[string][]string {
 		}
 	}
 	return result
+}
+
+// calculateOverallPercent computes the weighted average coverage from domain results
+func calculateOverallPercent(result domain.Result) float64 {
+	var totalCovered, totalLines int
+	for _, dr := range result.Domains {
+		totalCovered += dr.Covered
+		totalLines += dr.Total
+	}
+	if totalLines == 0 {
+		return 0
+	}
+	return float64(totalCovered) / float64(totalLines) * 100
 }
 
 // BadgeResult contains the data needed to generate a coverage badge.
@@ -1115,6 +1228,7 @@ func (s *Service) Watch(ctx context.Context, opts WatchOptions, watcher FileWatc
 		ConfigPath: opts.ConfigPath,
 		Profile:    opts.Profile,
 		Domains:    opts.Domains,
+		BuildFlags: opts.BuildFlags,
 	}
 
 	// Run immediately on start

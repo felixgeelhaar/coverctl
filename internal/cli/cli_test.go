@@ -134,15 +134,18 @@ func TestRunCheckError(t *testing.T) {
 	}
 }
 
-func TestRunDetectWriteConfig(t *testing.T) {
+func TestRunDetectWritesConfig(t *testing.T) {
 	var out bytes.Buffer
 	path := filepath.Join(t.TempDir(), ".coverctl.yaml")
-	code := Run([]string{"coverctl", "detect", "--write-config", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "detect", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
 	if _, err := os.Stat(path); err != nil {
 		t.Fatalf("expected config file: %v", err)
+	}
+	if !strings.Contains(out.String(), "Config written to") {
+		t.Fatalf("expected success message, got: %s", out.String())
 	}
 }
 
@@ -292,14 +295,14 @@ func TestOutputValueString(t *testing.T) {
 	}
 }
 
-func TestRunDetectStdout(t *testing.T) {
+func TestRunDetectDryRun(t *testing.T) {
 	var out bytes.Buffer
-	code := Run([]string{"coverctl", "detect"}, &out, &out, fakeService{detectCfg: minimalConfig()})
+	code := Run([]string{"coverctl", "detect", "--dry-run"}, &out, &out, fakeService{detectCfg: minimalConfig()})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
 	if !strings.Contains(out.String(), "policy:") {
-		t.Fatalf("expected config output")
+		t.Fatalf("expected config output, got: %s", out.String())
 	}
 }
 
@@ -482,5 +485,205 @@ func TestRunWatch(t *testing.T) {
 	code := Run([]string{"coverctl", "watch"}, &out, &out, fakeService{})
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
+	}
+}
+
+func TestVersion(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "version"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !strings.Contains(out.String(), "coverctl version") {
+		t.Fatalf("expected version output, got: %s", out.String())
+	}
+}
+
+func TestVersionFlag(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "--version"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !strings.Contains(out.String(), "coverctl version") {
+		t.Fatalf("expected version output, got: %s", out.String())
+	}
+}
+
+func TestHelpFlag(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "--help"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !strings.Contains(out.String(), "coverctl - Domain-driven") {
+		t.Fatalf("expected help output, got: %s", out.String())
+	}
+}
+
+func TestHelpCommand(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "help", "check"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !strings.Contains(out.String(), "coverctl check - Run coverage") {
+		t.Fatalf("expected check help, got: %s", out.String())
+	}
+}
+
+func TestCommandAliases(t *testing.T) {
+	t.Run("c for check", func(t *testing.T) {
+		var out bytes.Buffer
+		code := Run([]string{"coverctl", "c"}, &out, &out, fakeService{})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+	})
+
+	t.Run("r for run", func(t *testing.T) {
+		var out bytes.Buffer
+		code := Run([]string{"coverctl", "r"}, &out, &out, fakeService{})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+	})
+
+	t.Run("w for watch", func(t *testing.T) {
+		var out bytes.Buffer
+		code := Run([]string{"coverctl", "w"}, &out, &out, fakeService{})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+	})
+
+	t.Run("i for init", func(t *testing.T) {
+		dir := t.TempDir()
+		var out bytes.Buffer
+		path := filepath.Join(dir, ".coverctl.yaml")
+		code := Run([]string{"coverctl", "i", "--config", path, "--no-interactive"}, &out, &out, fakeService{detectCfg: minimalConfig()})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+	})
+}
+
+func TestShortFlags(t *testing.T) {
+	var out bytes.Buffer
+	// Test -c short flag for --config
+	code := Run([]string{"coverctl", "check", "-c", ".coverctl.yaml"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+}
+
+func TestGlobalQuietFlag(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".coverctl.yaml")
+
+	t.Run("--quiet suppresses output", func(t *testing.T) {
+		var out bytes.Buffer
+		code := Run([]string{"coverctl", "--quiet", "detect", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+		// In quiet mode, "Config written to" message should be suppressed
+		if strings.Contains(out.String(), "Config written to") {
+			t.Fatalf("expected quiet output, got: %s", out.String())
+		}
+	})
+
+	t.Run("-q short flag", func(t *testing.T) {
+		var out bytes.Buffer
+		path := filepath.Join(dir, "test2.yaml")
+		code := Run([]string{"coverctl", "-q", "detect", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+		if strings.Contains(out.String(), "Config written to") {
+			t.Fatalf("expected quiet output, got: %s", out.String())
+		}
+	})
+}
+
+func TestGlobalCIFlag(t *testing.T) {
+	t.Run("--ci outputs GitHub Actions annotations", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := Run([]string{"coverctl", "--ci", "check"}, &stdout, &stderr, fakeService{checkErr: errors.New("coverage failed")})
+		if code == 0 {
+			t.Fatalf("expected non-zero exit, got %d", code)
+		}
+		// In CI mode, errors should be formatted as GitHub Actions annotations
+		if !strings.Contains(stderr.String(), "::error::") {
+			t.Fatalf("expected GitHub Actions annotation, got: %s", stderr.String())
+		}
+	})
+
+	t.Run("--ci implies quiet", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, ".coverctl.yaml")
+		var out bytes.Buffer
+		code := Run([]string{"coverctl", "--ci", "detect", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+		if strings.Contains(out.String(), "Config written to") {
+			t.Fatalf("expected quiet output in CI mode, got: %s", out.String())
+		}
+	})
+}
+
+func TestGlobalNoColorFlag(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "--no-color", "check"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+}
+
+func TestGlobalFlagsParsing(t *testing.T) {
+	t.Run("global flags before command", func(t *testing.T) {
+		var out bytes.Buffer
+		code := Run([]string{"coverctl", "--quiet", "--no-color", "version"}, &out, &out, fakeService{})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+		if !strings.Contains(out.String(), "coverctl version") {
+			t.Fatalf("expected version output, got: %s", out.String())
+		}
+	})
+
+	t.Run("multiple global flags", func(t *testing.T) {
+		dir := t.TempDir()
+		path := filepath.Join(dir, ".coverctl.yaml")
+		var out bytes.Buffer
+		code := Run([]string{"coverctl", "-q", "--no-color", "detect", "--config", path}, &out, &out, fakeService{detectCfg: minimalConfig()})
+		if code != 0 {
+			t.Fatalf("expected exit 0, got %d", code)
+		}
+	})
+}
+
+func TestCompletion(t *testing.T) {
+	shells := []string{"bash", "zsh", "fish"}
+	for _, shell := range shells {
+		t.Run(shell, func(t *testing.T) {
+			var out bytes.Buffer
+			code := Run([]string{"coverctl", "completion", shell}, &out, &out, fakeService{})
+			if code != 0 {
+				t.Fatalf("expected exit 0, got %d", code)
+			}
+			if out.Len() == 0 {
+				t.Fatalf("expected completion output for %s", shell)
+			}
+		})
+	}
+}
+
+func TestCompletionUnknownShell(t *testing.T) {
+	var out bytes.Buffer
+	code := Run([]string{"coverctl", "completion", "powershell"}, &out, &out, fakeService{})
+	if code != 2 {
+		t.Fatalf("expected exit 2, got %d", code)
 	}
 }

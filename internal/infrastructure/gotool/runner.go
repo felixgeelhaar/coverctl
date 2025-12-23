@@ -42,6 +42,9 @@ func (r Runner) Run(ctx context.Context, opts application.RunOptions) (string, e
 	if coverpkg != "" {
 		args = append(args, "-coverpkg="+coverpkg)
 	}
+
+	// Add build flags
+	args = appendBuildFlags(args, opts.BuildFlags)
 	args = append(args, "./...")
 
 	execFn := r.Exec
@@ -119,6 +122,13 @@ func (r Runner) RunIntegration(ctx context.Context, opts application.Integration
 		if coverpkg != "" {
 			args = append(args, "-coverpkg="+coverpkg)
 		}
+		// Add build flags (only build-time flags for -c)
+		if opts.BuildFlags.Tags != "" {
+			args = append(args, "-tags="+opts.BuildFlags.Tags)
+		}
+		if opts.BuildFlags.Race {
+			args = append(args, "-race")
+		}
 		args = append(args, pkg)
 		if err := execFn(ctx, moduleRoot, args); err != nil {
 			return "", fmt.Errorf("go test -c failed: %w", err)
@@ -133,6 +143,31 @@ func (r Runner) RunIntegration(ctx context.Context, opts application.Integration
 		return "", fmt.Errorf("covdata textfmt failed: %w", err)
 	}
 	return profilePath, nil
+}
+
+// appendBuildFlags adds build flags to the go test args slice
+func appendBuildFlags(args []string, flags application.BuildFlags) []string {
+	if flags.Tags != "" {
+		args = append(args, "-tags="+flags.Tags)
+	}
+	if flags.Race {
+		args = append(args, "-race")
+	}
+	if flags.Short {
+		args = append(args, "-short")
+	}
+	if flags.Verbose {
+		args = append(args, "-v")
+	}
+	if flags.Run != "" {
+		args = append(args, "-run="+flags.Run)
+	}
+	if flags.Timeout != "" {
+		args = append(args, "-timeout="+flags.Timeout)
+	}
+	// Add any additional test args
+	args = append(args, flags.TestArgs...)
+	return args
 }
 
 func (r Runner) listPackages(ctx context.Context, moduleRoot string, patterns []string) ([]string, error) {

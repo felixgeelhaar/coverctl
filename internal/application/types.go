@@ -93,14 +93,27 @@ type Reporter interface {
 type RunOptions struct {
 	Domains     []domain.Domain
 	ProfilePath string
+	BuildFlags  BuildFlags // Build and test flags
+}
+
+// BuildFlags contains options passed to go test
+type BuildFlags struct {
+	Tags     string   // Build tags (e.g., "integration,e2e")
+	Race     bool     // Enable race detector
+	Short    bool     // Skip long-running tests
+	Verbose  bool     // Verbose test output
+	Run      string   // Run only tests matching pattern
+	Timeout  string   // Test timeout (e.g., "10m", "1h")
+	TestArgs []string // Additional arguments passed to go test
 }
 
 type IntegrationOptions struct {
-	Domains  []domain.Domain
-	Packages []string
-	RunArgs  []string
-	CoverDir string
-	Profile  string
+	Domains    []domain.Domain
+	Packages   []string
+	RunArgs    []string
+	CoverDir   string
+	Profile    string
+	BuildFlags BuildFlags // Build and test flags
 }
 
 type Annotation struct {
@@ -179,7 +192,8 @@ type WatchOptions struct {
 	ConfigPath string
 	Profile    string
 	Domains    []string
-	Clear      bool // Clear terminal before each run
+	Clear      bool       // Clear terminal before each run
+	BuildFlags BuildFlags // Build and test flags
 }
 
 // DebtOptions configures the coverage debt report.
