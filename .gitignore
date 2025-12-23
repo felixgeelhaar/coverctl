@@ -25,5 +25,8 @@ vendor/
 # Claude Code local files
 .claude/
 
+# Relicta local files
+.relicta/
+
 # Local binary
 /coverctl
