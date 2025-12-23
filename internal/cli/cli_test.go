@@ -247,7 +247,7 @@ func TestRunInitInteractiveCancelled(t *testing.T) {
 	if _, err := os.Stat(path); err == nil {
 		t.Fatalf("config should not exist when wizard cancels")
 	}
-	if !strings.Contains(out.String(), "Init cancelled") {
+	if !strings.Contains(out.String(), "Init canceled") {
 		t.Fatalf("expected cancellation message: %s", out.String())
 	}
 }

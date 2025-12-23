@@ -153,7 +153,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 				return exitCode(err, 5, stderr)
 			}
 			if !confirmed {
-				fmt.Fprintln(stdout, "Init cancelled; no configuration written.")
+				fmt.Fprintln(stdout, "Init canceled; no configuration written.")
 				return 0
 			}
 		}
