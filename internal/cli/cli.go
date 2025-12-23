@@ -76,16 +76,21 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		fs := flag.NewFlagSet("run", flag.ExitOnError)
 		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
 		profile := fs.String("profile", "", "Coverage profile output path")
-		watch := fs.Bool("watch", false, "Watch for file changes and re-run coverage")
 		var domains domainList
 		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
 		_ = fs.Parse(args[2:])
 
-		if *watch {
-			return runWatch(ctx, stdout, stderr, svc, *configPath, *profile, domains)
-		}
 		err := svc.RunOnly(ctx, application.RunOnlyOptions{ConfigPath: *configPath, Profile: *profile, Domains: domains})
 		return exitCode(err, 3, stderr)
+	case "watch":
+		fs := flag.NewFlagSet("watch", flag.ExitOnError)
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		profile := fs.String("profile", "", "Coverage profile output path")
+		var domains domainList
+		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
+		_ = fs.Parse(args[2:])
+
+		return runWatch(ctx, stdout, stderr, svc, *configPath, *profile, domains)
 	case "detect":
 		fs := flag.NewFlagSet("detect", flag.ExitOnError)
 		writeConfig := fs.Bool("write-config", false, "Write detected config to .coverctl.yaml")
@@ -351,6 +356,7 @@ func usage(w io.Writer) {
 Commands:
   check   Run coverage and enforce policy
   run     Run coverage only, produce artifacts
+  watch   Watch for file changes and re-run coverage
   detect  Autodetect domains (use --write-config to save)
   ignore  Show configured excludes and ignore advice
   init    Run autodetect plus the interactive wizard

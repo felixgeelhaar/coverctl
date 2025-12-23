@@ -474,3 +474,13 @@ func TestRunSuggestWithStrategy(t *testing.T) {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
 }
+
+func TestRunWatch(t *testing.T) {
+	var out bytes.Buffer
+	// Watch command should be recognized and call the Watch service method
+	// The fake service returns nil immediately, so the command exits cleanly
+	code := Run([]string{"coverctl", "watch"}, &out, &out, fakeService{})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+}
