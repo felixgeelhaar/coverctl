@@ -6,15 +6,19 @@ policy:
     - name: cmd
       match:
         - "./cmd/coverctl/..."
+      min: 0  # Entry point, minimal logic
     - name: root
       match:
         - "./"
+      min: 60
     - name: cli
       match:
         - "./internal/cli/..."
+      min: 65
     - name: application
       match:
         - "./internal/application/..."
+      min: 40
     - name: domain
       match:
         - "./internal/domain/..."
@@ -33,6 +37,7 @@ policy:
     - name: report
       match:
         - "./internal/infrastructure/report/..."
+      min: 65
     - name: annotations
       match:
         - "./internal/infrastructure/annotations/..."

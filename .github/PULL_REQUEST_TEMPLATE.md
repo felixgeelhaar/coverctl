@@ -1,7 +1,18 @@
 ## Summary
-- Describe the change at a high level
-- Include any related issues/references
+Brief description of the changes.
+
+## Changes
+-
 
 ## Testing
-- `go test ./...`
-- `go test ./... -cover`
+- [ ] Tests pass locally (`go test ./...`)
+- [ ] Lint passes (`golangci-lint run ./...`)
+- [ ] Coverage check passes (`./coverctl check`)
+
+## Related Issues
+Fixes #
+
+## Checklist
+- [ ] Code follows the project's style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated (if applicable)
