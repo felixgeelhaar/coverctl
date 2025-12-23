@@ -10,12 +10,11 @@ linters:
     - staticcheck
     - ineffassign
     - misspell
+  settings:
+    misspell:
+      locale: US
 
 formatters:
   enable:
     - gofmt
     - goimports
-
-settings:
-  misspell:
-    locale: US
