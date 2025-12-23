@@ -38,3 +38,94 @@ func TestCoveragePercent(t *testing.T) {
 		t.Fatalf("expected 0, got %f", got)
 	}
 }
+
+func TestEvaluateWarnThreshold(t *testing.T) {
+	min := 80.0
+	warn := 90.0
+	policy := Policy{
+		DefaultMin: 75,
+		Domains: []Domain{
+			{Name: "core", Min: &min, Warn: &warn},
+		},
+	}
+	// Coverage is above min but below warn
+	coverage := map[string]CoverageStat{
+		"core": {Covered: 85, Total: 100},
+	}
+
+	result := Evaluate(policy, coverage)
+	if !result.Passed {
+		t.Fatal("expected policy to pass (above min)")
+	}
+	if result.Domains[0].Status != StatusWarn {
+		t.Fatalf("expected warn status, got %s", result.Domains[0].Status)
+	}
+}
+
+func TestEvaluateWarnThresholdPassAboveWarn(t *testing.T) {
+	min := 80.0
+	warn := 85.0
+	policy := Policy{
+		DefaultMin: 75,
+		Domains: []Domain{
+			{Name: "core", Min: &min, Warn: &warn},
+		},
+	}
+	// Coverage is above both min and warn
+	coverage := map[string]CoverageStat{
+		"core": {Covered: 90, Total: 100},
+	}
+
+	result := Evaluate(policy, coverage)
+	if !result.Passed {
+		t.Fatal("expected policy to pass")
+	}
+	if result.Domains[0].Status != StatusPass {
+		t.Fatalf("expected pass status, got %s", result.Domains[0].Status)
+	}
+}
+
+func TestEvaluateWarnThresholdFailBelowMin(t *testing.T) {
+	min := 80.0
+	warn := 90.0
+	policy := Policy{
+		DefaultMin: 75,
+		Domains: []Domain{
+			{Name: "core", Min: &min, Warn: &warn},
+		},
+	}
+	// Coverage is below min
+	coverage := map[string]CoverageStat{
+		"core": {Covered: 70, Total: 100},
+	}
+
+	result := Evaluate(policy, coverage)
+	if result.Passed {
+		t.Fatal("expected policy to fail (below min)")
+	}
+	if result.Domains[0].Status != StatusFail {
+		t.Fatalf("expected fail status, got %s", result.Domains[0].Status)
+	}
+}
+
+func TestEvaluateNoWarnThreshold(t *testing.T) {
+	min := 80.0
+	policy := Policy{
+		DefaultMin: 75,
+		Domains: []Domain{
+			{Name: "core", Min: &min}, // No warn set
+		},
+	}
+	// Coverage is above min - should just pass without warn
+	coverage := map[string]CoverageStat{
+		"core": {Covered: 85, Total: 100},
+	}
+
+	result := Evaluate(policy, coverage)
+	if !result.Passed {
+		t.Fatal("expected policy to pass")
+	}
+	if result.Domains[0].Status != StatusPass {
+		t.Fatalf("expected pass status, got %s", result.Domains[0].Status)
+	}
+}

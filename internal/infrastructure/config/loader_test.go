@@ -305,6 +305,53 @@ func TestWriteWithVersion0DefaultsTo1(t *testing.T) {
 	}
 }
 
+func TestLoadWithWarnThreshold(t *testing.T) {
+	content := "version: 1\npolicy:\n  default:\n    min: 75\n  domains:\n    - name: core\n      match: [\"./internal/core/...\"]\n      min: 80\n      warn: 90\n"
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, ".coverctl.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	cfg, err := (Loader{}).Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if len(cfg.Policy.Domains) != 1 {
+		t.Fatal("expected 1 domain")
+	}
+	if cfg.Policy.Domains[0].Warn == nil {
+		t.Fatal("expected warn threshold to be set")
+	}
+	if *cfg.Policy.Domains[0].Warn != 90 {
+		t.Fatalf("expected warn 90, got %f", *cfg.Policy.Domains[0].Warn)
+	}
+}
+
+func TestWriteWithWarnThreshold(t *testing.T) {
+	min := 80.0
+	warn := 90.0
+	cfg := application.Config{
+		Version: 1,
+		Policy: domain.Policy{
+			DefaultMin: 75,
+			Domains: []domain.Domain{{
+				Name:  "core",
+				Match: []string{"./internal/core/..."},
+				Min:   &min,
+				Warn:  &warn,
+			}},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Write(&buf, cfg); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	content := buf.String()
+	if !strings.Contains(content, "warn: 90") {
+		t.Fatalf("expected 'warn: 90' in output, got:\n%s", content)
+	}
+}
+
 func TestWriteWithIntegration(t *testing.T) {
 	cfg := application.Config{
 		Version: 1,
@@ -329,5 +376,65 @@ func TestWriteWithIntegration(t *testing.T) {
 	}
 	if !strings.Contains(content, "cover_dir:") {
 		t.Fatal("expected cover_dir in output")
+	}
+}
+
+func TestLoadWithDomainExcludes(t *testing.T) {
+	content := `version: 1
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 80
+      exclude:
+        - "internal/core/gen/*"
+        - "internal/core/mocks/*"
+`
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, ".coverctl.yaml")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	cfg, err := (Loader{}).Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if len(cfg.Policy.Domains) != 1 {
+		t.Fatal("expected 1 domain")
+	}
+	if len(cfg.Policy.Domains[0].Exclude) != 2 {
+		t.Fatalf("expected 2 exclude patterns, got %d", len(cfg.Policy.Domains[0].Exclude))
+	}
+	if cfg.Policy.Domains[0].Exclude[0] != "internal/core/gen/*" {
+		t.Fatalf("expected first exclude 'internal/core/gen/*', got %q", cfg.Policy.Domains[0].Exclude[0])
+	}
+}
+
+func TestWriteWithDomainExcludes(t *testing.T) {
+	min := 80.0
+	cfg := application.Config{
+		Version: 1,
+		Policy: domain.Policy{
+			DefaultMin: 75,
+			Domains: []domain.Domain{{
+				Name:    "core",
+				Match:   []string{"./internal/core/..."},
+				Min:     &min,
+				Exclude: []string{"internal/core/gen/*"},
+			}},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Write(&buf, cfg); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	content := buf.String()
+	if !strings.Contains(content, "exclude:") {
+		t.Fatalf("expected 'exclude:' in output, got:\n%s", content)
+	}
+	if !strings.Contains(content, "internal/core/gen/*") {
+		t.Fatalf("expected exclude pattern in output, got:\n%s", content)
 	}
 }

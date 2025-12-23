@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
@@ -25,10 +26,11 @@ type Service struct {
 }
 
 type CheckOptions struct {
-	ConfigPath string
-	Output     OutputFormat
-	Profile    string
-	Domains    []string // Filter to specific domains (empty = all domains)
+	ConfigPath   string
+	Output       OutputFormat
+	Profile      string
+	Domains      []string     // Filter to specific domains (empty = all domains)
+	HistoryStore HistoryStore // Optional: for delta calculation
 }
 
 type RunOnlyOptions struct {
@@ -38,10 +40,11 @@ type RunOnlyOptions struct {
 }
 
 type ReportOptions struct {
-	ConfigPath string
-	Profile    string
-	Output     OutputFormat
-	Domains    []string // Filter to specific domains (empty = all domains)
+	ConfigPath   string
+	Profile      string
+	Output       OutputFormat
+	Domains      []string     // Filter to specific domains (empty = all domains)
+	HistoryStore HistoryStore // Optional: for delta calculation
 }
 
 type DetectOptions struct {
@@ -117,7 +120,8 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 		return err
 	}
 
-	domainCoverage := AggregateByDomain(filteredCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath, annotations)
+	domainExcludes := buildDomainExcludes(domains)
+	domainCoverage := AggregateByDomainWithExcludes(filteredCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
 	policy := cfg.Policy
 	// Use filtered domains for policy evaluation
 	policy.Domains = domains
@@ -130,6 +134,14 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 	result.Files = fileResults
 	if !filesPassed {
 		result.Passed = false
+	}
+
+	// Apply deltas from history if available
+	if opts.HistoryStore != nil {
+		history, err := opts.HistoryStore.Load()
+		if err == nil {
+			applyDeltas(&result, history)
+		}
 	}
 
 	if err := s.Reporter.Write(s.Out, result, opts.Output); err != nil {
@@ -209,7 +221,8 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 		return err
 	}
 
-	domainCoverage := AggregateByDomain(filteredCoverage, domainDirs, cfg.Exclude, moduleRoot, modulePath, annotations)
+	domainExcludes := buildDomainExcludes(domains)
+	domainCoverage := AggregateByDomainWithExcludes(filteredCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
 	policy := cfg.Policy
 	// Use filtered domains for policy evaluation
 	policy.Domains = domains
@@ -222,6 +235,14 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	result.Files = fileResults
 	if !filesPassed {
 		result.Passed = false
+	}
+
+	// Apply deltas from history if available
+	if opts.HistoryStore != nil {
+		history, err := opts.HistoryStore.Load()
+		if err == nil {
+			applyDeltas(&result, history)
+		}
 	}
 
 	return s.Reporter.Write(s.Out, result, opts.Output)
@@ -271,6 +292,12 @@ func (s *Service) loadOrDetect(configPath string) (Config, []domain.Domain, erro
 
 // AggregateByDomain matches files to domain directories and aggregates coverage.
 func AggregateByDomain(files map[string]domain.CoverageStat, domainDirs map[string][]string, exclude []string, moduleRoot, modulePath string, annotations map[string]Annotation) map[string]domain.CoverageStat {
+	return AggregateByDomainWithExcludes(files, domainDirs, exclude, nil, moduleRoot, modulePath, annotations)
+}
+
+// AggregateByDomainWithExcludes matches files to domain directories and aggregates coverage,
+// supporting both global excludes and per-domain excludes.
+func AggregateByDomainWithExcludes(files map[string]domain.CoverageStat, domainDirs map[string][]string, exclude []string, domainExcludes map[string][]string, moduleRoot, modulePath string, annotations map[string]Annotation) map[string]domain.CoverageStat {
 	result := make(map[string]domain.CoverageStat, len(domainDirs))
 
 	for file, stat := range files {
@@ -293,6 +320,12 @@ func AggregateByDomain(files map[string]domain.CoverageStat, domainDirs map[stri
 		}
 		for domainName, dirs := range domainDirs {
 			if matchesAnyDir(normalized, dirs, moduleRoot) {
+				// Check domain-specific excludes
+				if domainExcludes != nil {
+					if excludePatterns, ok := domainExcludes[domainName]; ok && excluded(relPath, excludePatterns) {
+						continue
+					}
+				}
 				agg := result[domainName]
 				agg.Covered += stat.Covered
 				agg.Total += stat.Total
@@ -527,4 +560,585 @@ func domainOverlapWarnings(domainDirs map[string][]string) []string {
 	}
 	sort.Strings(warnings)
 	return warnings
+}
+
+// buildDomainExcludes creates a map of domain name to exclude patterns from domain configs.
+func buildDomainExcludes(domains []domain.Domain) map[string][]string {
+	result := make(map[string][]string)
+	for _, d := range domains {
+		if len(d.Exclude) > 0 {
+			result[d.Name] = d.Exclude
+		}
+	}
+	return result
+}
+
+// BadgeResult contains the data needed to generate a coverage badge.
+type BadgeResult struct {
+	Percent float64
+}
+
+// Badge calculates overall coverage for badge generation.
+func (s *Service) Badge(ctx context.Context, opts BadgeOptions) (BadgeResult, error) {
+	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return BadgeResult{}, err
+	}
+
+	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
+	if err != nil {
+		return BadgeResult{}, err
+	}
+
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return BadgeResult{}, err
+	}
+
+	profiles := []string{opts.ProfilePath}
+	if len(cfg.Merge.Profiles) > 0 {
+		profiles = append(profiles, cfg.Merge.Profiles...)
+	}
+	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
+	if err != nil {
+		return BadgeResult{}, err
+	}
+
+	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
+	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
+	if err != nil {
+		return BadgeResult{}, err
+	}
+
+	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
+	if err != nil {
+		return BadgeResult{}, err
+	}
+
+	domainExcludes := buildDomainExcludes(domains)
+	domainCoverage := AggregateByDomainWithExcludes(normalizedCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
+
+	// Calculate overall coverage across all domains
+	var totalCovered, totalStatements int
+	for _, stat := range domainCoverage {
+		totalCovered += stat.Covered
+		totalStatements += stat.Total
+	}
+
+	percent := 0.0
+	if totalStatements > 0 {
+		percent = round1((float64(totalCovered) / float64(totalStatements)) * 100)
+	}
+
+	return BadgeResult{Percent: percent}, nil
+}
+
+// TrendResult contains trend analysis data.
+type TrendResult struct {
+	Current  float64
+	Previous float64
+	Trend    domain.Trend
+	Entries  []domain.HistoryEntry
+	ByDomain map[string]domain.Trend
+}
+
+// Trend analyzes coverage trends over time.
+func (s *Service) Trend(ctx context.Context, opts TrendOptions, store HistoryStore) (TrendResult, error) {
+	history, err := store.Load()
+	if err != nil {
+		return TrendResult{}, err
+	}
+
+	if len(history.Entries) == 0 {
+		return TrendResult{}, fmt.Errorf("no history data available; run 'coverctl record' after coverage runs")
+	}
+
+	// Get current coverage
+	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return TrendResult{}, err
+	}
+
+	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
+	if err != nil {
+		return TrendResult{}, err
+	}
+
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return TrendResult{}, err
+	}
+
+	profiles := []string{opts.ProfilePath}
+	if len(cfg.Merge.Profiles) > 0 {
+		profiles = append(profiles, cfg.Merge.Profiles...)
+	}
+	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
+	if err != nil {
+		return TrendResult{}, err
+	}
+
+	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
+	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
+	if err != nil {
+		return TrendResult{}, err
+	}
+
+	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
+	if err != nil {
+		return TrendResult{}, err
+	}
+
+	domainExcludes := buildDomainExcludes(domains)
+	domainCoverage := AggregateByDomainWithExcludes(normalizedCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
+
+	// Calculate current overall coverage
+	var totalCovered, totalStatements int
+	for _, stat := range domainCoverage {
+		totalCovered += stat.Covered
+		totalStatements += stat.Total
+	}
+	currentPercent := 0.0
+	if totalStatements > 0 {
+		currentPercent = round1((float64(totalCovered) / float64(totalStatements)) * 100)
+	}
+
+	// Get previous entry for trend calculation
+	latest := history.LatestEntry()
+	previousPercent := latest.Overall
+	trend := domain.CalculateTrend(previousPercent, currentPercent)
+
+	// Calculate per-domain trends
+	byDomain := make(map[string]domain.Trend)
+	for domainName, stat := range domainCoverage {
+		currentDomainPercent := 0.0
+		if stat.Total > 0 {
+			currentDomainPercent = round1((float64(stat.Covered) / float64(stat.Total)) * 100)
+		}
+		if prevEntry, ok := latest.Domains[domainName]; ok {
+			byDomain[domainName] = domain.CalculateTrend(prevEntry.Percent, currentDomainPercent)
+		} else {
+			byDomain[domainName] = domain.Trend{Direction: domain.TrendStable, Delta: 0}
+		}
+	}
+
+	return TrendResult{
+		Current:  currentPercent,
+		Previous: previousPercent,
+		Trend:    trend,
+		Entries:  history.Entries,
+		ByDomain: byDomain,
+	}, nil
+}
+
+// Record saves current coverage to history.
+func (s *Service) Record(ctx context.Context, opts RecordOptions, store HistoryStore) error {
+	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return err
+	}
+
+	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
+	if err != nil {
+		return err
+	}
+
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return err
+	}
+
+	profiles := []string{opts.ProfilePath}
+	if len(cfg.Merge.Profiles) > 0 {
+		profiles = append(profiles, cfg.Merge.Profiles...)
+	}
+	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
+	if err != nil {
+		return err
+	}
+
+	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
+	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
+	if err != nil {
+		return err
+	}
+
+	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
+	if err != nil {
+		return err
+	}
+
+	domainExcludes := buildDomainExcludes(domains)
+	domainCoverage := AggregateByDomainWithExcludes(normalizedCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
+
+	// Calculate overall coverage
+	var totalCovered, totalStatements int
+	domainEntries := make(map[string]domain.DomainEntry)
+	for domainName, stat := range domainCoverage {
+		totalCovered += stat.Covered
+		totalStatements += stat.Total
+
+		percent := 0.0
+		if stat.Total > 0 {
+			percent = round1((float64(stat.Covered) / float64(stat.Total)) * 100)
+		}
+
+		// Find the min threshold for this domain
+		var min float64
+		for _, d := range domains {
+			if d.Name == domainName && d.Min != nil {
+				min = *d.Min
+				break
+			}
+		}
+		if min == 0 {
+			min = cfg.Policy.DefaultMin
+		}
+
+		status := domain.StatusPass
+		if percent < min {
+			status = domain.StatusFail
+		}
+
+		domainEntries[domainName] = domain.DomainEntry{
+			Name:    domainName,
+			Percent: percent,
+			Min:     min,
+			Status:  status,
+		}
+	}
+
+	overallPercent := 0.0
+	if totalStatements > 0 {
+		overallPercent = round1((float64(totalCovered) / float64(totalStatements)) * 100)
+	}
+
+	entry := domain.HistoryEntry{
+		Timestamp: timeNow(),
+		Commit:    opts.Commit,
+		Branch:    opts.Branch,
+		Overall:   overallPercent,
+		Domains:   domainEntries,
+	}
+
+	return store.Append(entry)
+}
+
+// timeNow is a variable to allow test injection
+var timeNow = func() time.Time {
+	return time.Now()
+}
+
+// applyDeltas calculates and applies coverage deltas from history to the result.
+func applyDeltas(result *domain.Result, history domain.History) {
+	if len(history.Entries) == 0 {
+		return
+	}
+	latest := history.LatestEntry()
+	if latest == nil {
+		return
+	}
+
+	for i := range result.Domains {
+		domainName := result.Domains[i].Domain
+		if prevEntry, ok := latest.Domains[domainName]; ok {
+			delta := round1(result.Domains[i].Percent - prevEntry.Percent)
+			result.Domains[i].Delta = &delta
+		}
+	}
+}
+
+// SuggestResult contains threshold suggestions for all domains.
+type SuggestResult struct {
+	Suggestions []Suggestion
+	Config      Config
+}
+
+// Suggest analyzes current coverage and suggests optimal thresholds.
+func (s *Service) Suggest(ctx context.Context, opts SuggestOptions) (SuggestResult, error) {
+	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return SuggestResult{}, err
+	}
+
+	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
+	if err != nil {
+		return SuggestResult{}, err
+	}
+
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return SuggestResult{}, err
+	}
+
+	profiles := []string{opts.ProfilePath}
+	if len(cfg.Merge.Profiles) > 0 {
+		profiles = append(profiles, cfg.Merge.Profiles...)
+	}
+	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
+	if err != nil {
+		return SuggestResult{}, err
+	}
+
+	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
+	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
+	if err != nil {
+		return SuggestResult{}, err
+	}
+
+	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
+	if err != nil {
+		return SuggestResult{}, err
+	}
+
+	domainExcludes := buildDomainExcludes(domains)
+	domainCoverage := AggregateByDomainWithExcludes(normalizedCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
+
+	// Generate suggestions for each domain
+	suggestions := make([]Suggestion, 0, len(domains))
+	for i, d := range domains {
+		stat := domainCoverage[d.Name]
+		currentPercent := 0.0
+		if stat.Total > 0 {
+			currentPercent = round1((float64(stat.Covered) / float64(stat.Total)) * 100)
+		}
+
+		currentMin := cfg.Policy.DefaultMin
+		if d.Min != nil {
+			currentMin = *d.Min
+		}
+
+		suggestedMin, reason := calculateSuggestion(currentPercent, currentMin, opts.Strategy)
+
+		suggestions = append(suggestions, Suggestion{
+			Domain:         d.Name,
+			CurrentPercent: currentPercent,
+			CurrentMin:     currentMin,
+			SuggestedMin:   suggestedMin,
+			Reason:         reason,
+		})
+
+		// Update config with suggested values
+		suggestedMinPtr := suggestedMin
+		cfg.Policy.Domains[i].Min = &suggestedMinPtr
+	}
+
+	return SuggestResult{
+		Suggestions: suggestions,
+		Config:      cfg,
+	}, nil
+}
+
+func calculateSuggestion(current, currentMin float64, strategy SuggestStrategy) (float64, string) {
+	switch strategy {
+	case SuggestAggressive:
+		// Suggest 5% above current, capped at 95%
+		suggested := math.Min(current+5, 95)
+		if suggested > currentMin {
+			return round1(suggested), "push for improvement (+5%)"
+		}
+		return currentMin, "already at or above aggressive target"
+
+	case SuggestConservative:
+		// Suggest 5% below current, but at least current min
+		suggested := math.Max(current-5, currentMin)
+		suggested = math.Max(suggested, 50) // Never suggest below 50%
+		return round1(suggested), "gradual improvement target"
+
+	default: // SuggestCurrent
+		// Suggest 2% below current to allow some variance
+		suggested := current - 2
+		if suggested < currentMin {
+			return currentMin, "keep current threshold (coverage near minimum)"
+		}
+		if suggested < 50 {
+			suggested = 50
+		}
+		return round1(suggested), "based on current coverage (-2% buffer)"
+	}
+}
+
+// Debt calculates coverage debt - the gap between current and required coverage.
+func (s *Service) Debt(ctx context.Context, opts DebtOptions) (DebtResult, error) {
+	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return DebtResult{}, err
+	}
+
+	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
+	if err != nil {
+		return DebtResult{}, err
+	}
+
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return DebtResult{}, err
+	}
+
+	profiles := []string{opts.ProfilePath}
+	if len(cfg.Merge.Profiles) > 0 {
+		profiles = append(profiles, cfg.Merge.Profiles...)
+	}
+	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
+	if err != nil {
+		return DebtResult{}, err
+	}
+
+	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
+	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
+	if err != nil {
+		return DebtResult{}, err
+	}
+
+	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
+	if err != nil {
+		return DebtResult{}, err
+	}
+
+	domainExcludes := buildDomainExcludes(domains)
+	domainCoverage := AggregateByDomainWithExcludes(normalizedCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
+
+	var items []DebtItem
+	var totalDebt float64
+	var totalLines int
+	var passCount, failCount int
+
+	// Calculate domain debt
+	for _, d := range domains {
+		stat := domainCoverage[d.Name]
+		currentPercent := 0.0
+		if stat.Total > 0 {
+			currentPercent = round1((float64(stat.Covered) / float64(stat.Total)) * 100)
+		}
+
+		required := cfg.Policy.DefaultMin
+		if d.Min != nil {
+			required = *d.Min
+		}
+
+		if currentPercent < required {
+			shortfall := round1(required - currentPercent)
+			// Estimate lines needing tests: (shortfall% * total statements) / 100
+			linesNeeded := int(float64(stat.Total-stat.Covered) * (shortfall / (required - currentPercent + 0.01)))
+			if linesNeeded < 0 {
+				linesNeeded = stat.Total - stat.Covered
+			}
+
+			items = append(items, DebtItem{
+				Name:      d.Name,
+				Type:      "domain",
+				Current:   currentPercent,
+				Required:  required,
+				Shortfall: shortfall,
+				Lines:     linesNeeded,
+			})
+			totalDebt += shortfall
+			totalLines += linesNeeded
+			failCount++
+		} else {
+			passCount++
+		}
+	}
+
+	// Calculate file rule debt
+	for _, rule := range cfg.Files {
+		for file, stat := range normalizedCoverage {
+			if excluded(file, cfg.Exclude) {
+				continue
+			}
+			if ann, ok := annotations[file]; ok && ann.Ignore {
+				continue
+			}
+			if matchAnyPattern(file, rule.Match) {
+				currentPercent := 0.0
+				if stat.Total > 0 {
+					currentPercent = round1((float64(stat.Covered) / float64(stat.Total)) * 100)
+				}
+
+				if currentPercent < rule.Min {
+					shortfall := round1(rule.Min - currentPercent)
+					linesNeeded := stat.Total - stat.Covered
+
+					items = append(items, DebtItem{
+						Name:      file,
+						Type:      "file",
+						Current:   currentPercent,
+						Required:  rule.Min,
+						Shortfall: shortfall,
+						Lines:     linesNeeded,
+					})
+					totalDebt += shortfall
+					totalLines += linesNeeded
+					failCount++
+				} else {
+					passCount++
+				}
+			}
+		}
+	}
+
+	// Sort by shortfall (highest first)
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Shortfall > items[j].Shortfall
+	})
+
+	// Calculate health score (0-100, higher is better)
+	healthScore := 100.0
+	if passCount+failCount > 0 {
+		healthScore = round1((float64(passCount) / float64(passCount+failCount)) * 100)
+	}
+
+	return DebtResult{
+		Items:       items,
+		TotalDebt:   round1(totalDebt),
+		TotalLines:  totalLines,
+		HealthScore: healthScore,
+	}, nil
+}
+
+// WatchCallback is called after each coverage run in watch mode.
+type WatchCallback func(runNumber int, err error)
+
+// Watch runs coverage tests in a loop, re-running when source files change.
+func (s *Service) Watch(ctx context.Context, opts WatchOptions, watcher FileWatcher, callback WatchCallback) error {
+	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := watcher.WatchDir(moduleRoot); err != nil {
+		return fmt.Errorf("failed to watch directory: %w", err)
+	}
+
+	// Prepare run options
+	runOpts := RunOnlyOptions{
+		ConfigPath: opts.ConfigPath,
+		Profile:    opts.Profile,
+		Domains:    opts.Domains,
+	}
+
+	// Run immediately on start
+	runNumber := 1
+	runErr := s.RunOnly(ctx, runOpts)
+	if callback != nil {
+		callback(runNumber, runErr)
+	}
+
+	// Watch for changes
+	events := watcher.Events(ctx)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case _, ok := <-events:
+			if !ok {
+				return nil
+			}
+			runNumber++
+			runErr := s.RunOnly(ctx, runOpts)
+			if callback != nil {
+				callback(runNumber, runErr)
+			}
+		}
+	}
 }

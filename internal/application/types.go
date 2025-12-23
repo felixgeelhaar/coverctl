@@ -13,6 +13,7 @@ type OutputFormat string
 const (
 	OutputText OutputFormat = "text"
 	OutputJSON OutputFormat = "json"
+	OutputHTML OutputFormat = "html"
 )
 
 var ErrConfigNotFound = errors.New("config not found")
@@ -109,4 +110,99 @@ type Annotation struct {
 
 type IgnoreOptions struct {
 	ConfigPath string
+}
+
+type BadgeOptions struct {
+	ConfigPath  string
+	ProfilePath string
+	Output      string
+	Label       string
+	Style       string
+}
+
+type TrendOptions struct {
+	ConfigPath  string
+	ProfilePath string
+	HistoryPath string
+	Output      OutputFormat
+	Days        int // Number of days to analyze (0 = all)
+}
+
+type RecordOptions struct {
+	ConfigPath  string
+	ProfilePath string
+	HistoryPath string
+	Commit      string
+	Branch      string
+}
+
+type HistoryStore interface {
+	Load() (domain.History, error)
+	Save(h domain.History) error
+	Append(entry domain.HistoryEntry) error
+}
+
+type SuggestOptions struct {
+	ConfigPath  string
+	ProfilePath string
+	Strategy    SuggestStrategy
+}
+
+type SuggestStrategy string
+
+const (
+	// SuggestCurrent suggests thresholds slightly below current coverage
+	SuggestCurrent SuggestStrategy = "current"
+	// SuggestAggressive suggests higher thresholds to push for improvement
+	SuggestAggressive SuggestStrategy = "aggressive"
+	// SuggestConservative suggests lower thresholds for gradual improvement
+	SuggestConservative SuggestStrategy = "conservative"
+)
+
+type Suggestion struct {
+	Domain         string
+	CurrentPercent float64
+	CurrentMin     float64
+	SuggestedMin   float64
+	Reason         string
+}
+
+// FileWatcher provides file change notifications.
+type FileWatcher interface {
+	WatchDir(root string) error
+	Events(ctx context.Context) <-chan struct{}
+	Close() error
+}
+
+// WatchOptions configures watch mode behavior.
+type WatchOptions struct {
+	ConfigPath string
+	Profile    string
+	Domains    []string
+	Clear      bool // Clear terminal before each run
+}
+
+// DebtOptions configures the coverage debt report.
+type DebtOptions struct {
+	ConfigPath  string
+	ProfilePath string
+	Output      OutputFormat
+}
+
+// DebtItem represents a single coverage debt item.
+type DebtItem struct {
+	Name      string  // Domain or file name
+	Type      string  // "domain" or "file"
+	Current   float64 // Current coverage percentage
+	Required  float64 // Required minimum coverage
+	Shortfall float64 // How much coverage is missing (required - current)
+	Lines     int     // Estimated lines of code needing tests
+}
+
+// DebtResult contains the overall coverage debt analysis.
+type DebtResult struct {
+	Items       []DebtItem
+	TotalDebt   float64 // Sum of all shortfalls
+	TotalLines  int     // Total estimated lines needing tests
+	HealthScore float64 // 0-100 score (higher is better)
 }

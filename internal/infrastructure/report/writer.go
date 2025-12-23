@@ -34,6 +34,8 @@ func (Writer) Write(w io.Writer, result domain.Result, format application.Output
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		return enc.Encode(payload)
+	case application.OutputHTML:
+		return writeHTML(w, result)
 	case application.OutputText, "":
 		return writeText(w, result)
 	default:
@@ -43,10 +45,29 @@ func (Writer) Write(w io.Writer, result domain.Result, format application.Output
 
 func writeText(w io.Writer, result domain.Result) error {
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-	_, _ = fmt.Fprintln(tw, "Domain\tCoverage\tRequired\tStatus")
+
+	// Check if any domain has delta info
+	hasDeltas := false
+	for _, d := range result.Domains {
+		if d.Delta != nil {
+			hasDeltas = true
+			break
+		}
+	}
+
+	if hasDeltas {
+		_, _ = fmt.Fprintln(tw, "Domain\tCoverage\tDelta\tRequired\tStatus")
+	} else {
+		_, _ = fmt.Fprintln(tw, "Domain\tCoverage\tRequired\tStatus")
+	}
+
 	colorize := colorEnabled(w)
 	passStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#16A34A")).Bold(true)
 	failStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#DC2626")).Bold(true)
+	warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#CA8A04")).Bold(true)
+	deltaUpStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#16A34A"))
+	deltaDownStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#DC2626"))
+
 	for _, d := range result.Domains {
 		status := string(d.Status)
 		if colorize {
@@ -55,9 +76,27 @@ func writeText(w io.Writer, result domain.Result) error {
 				status = passStyle.Render(status)
 			case domain.StatusFail:
 				status = failStyle.Render(status)
+			case domain.StatusWarn:
+				status = warnStyle.Render(status)
 			}
 		}
-		_, _ = fmt.Fprintf(tw, "%s\t%.1f%%\t%.1f%%\t%s\n", d.Domain, d.Percent, d.Required, status)
+
+		if hasDeltas {
+			deltaStr := "-"
+			if d.Delta != nil {
+				deltaStr = fmt.Sprintf("%+.1f%%", *d.Delta)
+				if colorize {
+					if *d.Delta > 0 {
+						deltaStr = deltaUpStyle.Render(deltaStr)
+					} else if *d.Delta < 0 {
+						deltaStr = deltaDownStyle.Render(deltaStr)
+					}
+				}
+			}
+			_, _ = fmt.Fprintf(tw, "%s\t%.1f%%\t%s\t%.1f%%\t%s\n", d.Domain, d.Percent, deltaStr, d.Required, status)
+		} else {
+			_, _ = fmt.Fprintf(tw, "%s\t%.1f%%\t%.1f%%\t%s\n", d.Domain, d.Percent, d.Required, status)
+		}
 	}
 	if err := tw.Flush(); err != nil {
 		return err

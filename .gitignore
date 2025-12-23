@@ -21,3 +21,12 @@ vendor/
 
 # Sensitive files
 .env
+
+# Claude Code local files
+.claude/
+
+# Relicta local files
+.relicta/
+
+# Local binary
+/coverctl

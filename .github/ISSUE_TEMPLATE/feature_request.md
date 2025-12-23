@@ -1,14 +1,22 @@
 ---
 name: Feature request
-about: Suggest improvements or new features
+about: Suggest a new feature for coverctl
+title: '[FEATURE] '
 labels: enhancement
+assignees: ''
 ---
 
-**Describe the solution you want**
-A clear and concise description of what you want to happen.
+## Problem Statement
+A clear description of the problem you're trying to solve.
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed Solution
+Describe the solution you'd like.
 
-**Additional context**
-Add any other context about the feature request here.
+## Alternatives Considered
+Any alternative solutions or features you've considered.
+
+## Use Case
+How would this feature be used? Provide examples if possible.
+
+## Additional Context
+Add any other context or screenshots about the feature request.

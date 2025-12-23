@@ -232,3 +232,23 @@ Per-file rules
 Annotations / pragmas
 
 GitHub Action
+
+v1.3
+
+HTML coverage reports
+
+Severity levels (warn thresholds)
+
+SVG badge generation
+
+Coverage trend tracking
+
+Threshold suggestions
+
+Coverage delta in diff mode
+
+Domain-specific excludes
+
+Watch mode for continuous coverage
+
+Coverage debt reporting
