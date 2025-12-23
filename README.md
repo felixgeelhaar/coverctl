@@ -130,10 +130,10 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.22"
+          go-version: "1.24"
       - uses: ./.github/actions/coverctl
         with:
           command: check
