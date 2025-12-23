@@ -16,9 +16,10 @@ go install github.com/felixgeelhaar/coverctl@latest
 git clone git@github.com:felixgeelhaar/coverctl.git
 cd coverctl
 go build ./...
-coverctl init --config .coverctl.yaml       # runs an interactive Bubble Tea wizard (use --no-interactive for automation)
-coverctl detect --write-config              # inspect/domain output without writing
-coverctl check --config .coverctl.yaml      # enforce policy, add -o json for automation
+coverctl init                               # runs an interactive Bubble Tea wizard (use --no-interactive for automation)
+coverctl detect --dry-run                   # preview detected domains without writing config
+coverctl check                              # enforce policy, add -o json for automation
+coverctl watch                              # continuous coverage feedback during development
 ```
 
 ## CLI reference
@@ -26,10 +27,11 @@ coverctl check --config .coverctl.yaml      # enforce policy, add -o json for au
 | Command | What it does | Notes |
 | --- | --- | --- |
 | `coverctl init` | Autodetect domains and launch the Bubble Tea wizard before writing `.coverctl.yaml` | Navigate with ↑/↓, adjust thresholds with ←/→ or +/-, and confirm to persist. Pass `--no-interactive` to skip the UI in scripts. |
-| `coverctl detect` | Preview domain policy and optionally write config | Pass `--write-config`/`--force` to persist identical config; omit to see the policy before writing. |
-| `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. Use `--show-delta` to display coverage changes. |
-| `coverctl run` | Produce coverage artifacts without evaluating policy | Use `--profile` to customize output path. Add `--watch` for continuous coverage on file changes. |
-| `coverctl report` | Evaluate an already generated profile | Consumes the same config + domains; ideal for CI artifacts or debugging. Supports `-o html` for HTML reports. |
+| `coverctl detect` | Autodetect domains and write config | Writes config by default; use `--dry-run` to preview without writing. Pass `--force` to overwrite existing config. |
+| `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. Use `--show-delta` to display coverage changes. Supports `--fail-under N` and `--ratchet`. |
+| `coverctl run` | Produce coverage artifacts without evaluating policy | Use `--profile` to customize output path. |
+| `coverctl watch` | Watch for file changes and re-run coverage | Continuous coverage feedback during development. |
+| `coverctl report` | Evaluate an already generated profile | Consumes the same config + domains; ideal for CI artifacts or debugging. Supports `-o html`, `--uncovered`, `--diff <ref>`, and `--merge <profile>`. |
 | `coverctl ignore` | Show configured `exclude` patterns and the tracked domains | Use this to document generated folders (e.g., `internal/generated/proto/...`) that you wish to skip. |
 | `coverctl badge` | Generate an SVG coverage badge | Use `--style flat-square` for a different style. Output to `coverage.svg` by default. |
 | `coverctl trend` | Show coverage trends over time | Requires history data recorded via `coverctl record`. |
@@ -42,6 +44,36 @@ Text output (the default) shows domain coverage, required thresholds, and status
 ## Init wizard
 
 `coverctl init` now launches a short Bubble Tea wizard that reviews the detected domains, lets you adjust coverage minima with arrow keys or +/- shortcuts, and confirms the policy before persisting `.coverctl.yaml`. Use `--no-interactive` when you need to run the command in CI or scripted workflows and you just want to write the autodetected configuration.
+
+## Build/test flags
+
+The `check`, `run`, and `watch` commands support common Go test flags for customizing test execution:
+
+| Flag | Description | Example |
+| --- | --- | --- |
+| `--tags` | Build tags | `--tags integration,e2e` |
+| `--race` | Enable race detector | `--race` |
+| `--short` | Skip long-running tests | `--short` |
+| `-v` | Verbose test output | `-v` |
+| `--run` | Run only tests matching pattern | `--run TestFoo` |
+| `--timeout` | Test timeout | `--timeout 30m` |
+| `--test-arg` | Additional go test argument (repeatable) | `--test-arg=-count=1` |
+
+Examples:
+
+```bash
+# Run integration tests with build tag
+coverctl check --tags integration
+
+# Run with race detector and extended timeout
+coverctl check --race --timeout 30m
+
+# Run specific tests with verbose output
+coverctl run --run TestMyFunction -v
+
+# Pass multiple extra arguments to go test
+coverctl check --test-arg=-count=1 --test-arg=-parallel=4
+```
 
 ## Coverage policy
 
