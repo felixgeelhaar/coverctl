@@ -47,11 +47,11 @@ type ReportOptions struct {
 	ConfigPath    string
 	Profile       string
 	Output        OutputFormat
-	Domains       []string       // Filter to specific domains (empty = all domains)
-	HistoryStore  HistoryStore   // Optional: for delta calculation
-	ShowUncovered bool           // Show only files with 0% coverage
-	DiffRef       string         // Git ref for diff-based filtering (overrides config)
-	MergeProfiles []string       // Additional profile files to merge
+	Domains       []string     // Filter to specific domains (empty = all domains)
+	HistoryStore  HistoryStore // Optional: for delta calculation
+	ShowUncovered bool         // Show only files with 0% coverage
+	DiffRef       string       // Git ref for diff-based filtering (overrides config)
+	MergeProfiles []string     // Additional profile files to merge
 }
 
 type DetectOptions struct {

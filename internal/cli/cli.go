@@ -68,14 +68,10 @@ func parseGlobalFlags(args []string) (GlobalOptions, string, []string) {
 	var global GlobalOptions
 	var cmd string
 	var remaining []string
-	foundCmd := false
 
+loop:
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		if foundCmd {
-			remaining = append(remaining, arg)
-			continue
-		}
 
 		switch arg {
 		case "-q", "--quiet":
@@ -87,10 +83,9 @@ func parseGlobalFlags(args []string) (GlobalOptions, string, []string) {
 		default:
 			// First non-global-flag is the command
 			cmd = arg
-			foundCmd = true
 			// Remaining args go to the command
 			remaining = args[i+1:]
-			break
+			break loop
 		}
 	}
 
