@@ -3,80 +3,142 @@ title: coverctl
 description: Domain-aware test coverage enforcement for Go teams
 template: splash
 hero:
-  tagline: Enforce coverage policies at the domain level, not just the module level. Built with DDD principles and TDD-first validation.
+  tagline: Stop chasing a single coverage number. Enforce coverage policies where it matters most - at the domain level.
   image:
     file: ../../assets/logo.svg
   actions:
     - text: Get Started
       link: /coverctl/installation/
       icon: right-arrow
-    - text: View on GitHub
+    - text: GitHub
       link: https://github.com/felixgeelhaar/coverctl
       icon: external
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## Why coverctl?
+<div class="hero-supplement">
 
-Traditional coverage tools report a single percentage for your entire module. But real codebases have domains with different criticality levels. Your core business logic needs stricter coverage than utility functions.
+Your core business logic deserves 90% coverage. Your HTTP handlers? Maybe 70%.
+**coverctl** lets you define and enforce these policies per domain.
 
-**coverctl** solves this by letting you define coverage policies per domain, enforcing them in CI, and providing actionable feedback when policies fail.
+</div>
 
-<CardGrid stagger>
-  <Card title="Domain-Aware" icon="puzzle">
-    Define coverage thresholds per domain (core, api, infrastructure). Each domain gets its own minimum requirement.
-  </Card>
-  <Card title="CI-Ready" icon="github">
-    Built for automation. JSON output, GitHub Actions annotations, and exit codes that work with any CI system.
-  </Card>
-  <Card title="Auto-Detection" icon="magnifier">
-    Automatically discovers domains from your project structure. Interactive wizard or `--no-interactive` for scripts.
-  </Card>
-  <Card title="Flexible Output" icon="document">
-    Text, JSON, or HTML reports. Coverage badges, trend analysis, and debt tracking included.
-  </Card>
-</CardGrid>
+---
 
-## Quick Example
+## The Problem
 
-```bash
-# Install coverctl
-go install github.com/felixgeelhaar/coverctl@latest
+Traditional coverage tools give you one number for your entire codebase. But real applications have layers:
 
-# Initialize configuration
-coverctl init
+- **Core domain logic** needs strict coverage - bugs here cost money
+- **API handlers** need solid coverage - they're your contract with users
+- **Infrastructure code** can have lower thresholds - it's often integration-heavy
 
-# Run coverage with policy enforcement
-coverctl check
-```
+A single percentage hides these distinctions. You either over-test utilities or under-test critical paths.
 
-## Sample Configuration
+---
 
-```yaml
+## The Solution
+
+Define coverage policies that match your architecture:
+
+```yaml title=".coverctl.yaml"
 version: 1
 policy:
   default:
-    min: 75
+    min: 70
   domains:
     - name: core
       match: ["./internal/core/..."]
-      min: 85
+      min: 90
     - name: api
       match: ["./internal/api/..."]
       min: 80
+    - name: infra
+      match: ["./internal/infra/..."]
+      min: 60
 exclude:
   - internal/generated/*
 ```
 
-## Features at a Glance
+---
 
-- **Policy Enforcement**: Set minimum coverage per domain
-- **Build Flags**: Pass `--tags`, `--race`, `--timeout` to customize test runs
-- **Watch Mode**: Continuous coverage during development
-- **CI Integration**: `--fail-under`, `--ratchet` prevent coverage regression
-- **HTML Reports**: Visual coverage reports with `-o html`
-- **Coverage Badges**: Generate SVG badges for README files
-- **Trend Analysis**: Track coverage over time
-- **Debt Reports**: Identify files that need more tests
+## Quick Start
+
+```bash
+# Install
+go install github.com/felixgeelhaar/coverctl@latest
+
+# Initialize (interactive wizard)
+coverctl init
+
+# Enforce policies
+coverctl check
+```
+
+That's it. Coverage enforcement that understands your architecture.
+
+---
+
+<CardGrid>
+  <Card title="Domain-Aware Policies" icon="puzzle">
+    Set different coverage thresholds for each domain. Core logic at 90%, utilities at 60%.
+  </Card>
+  <Card title="CI-Ready" icon="github">
+    JSON output, GitHub Actions annotations, and exit codes for any CI system.
+  </Card>
+  <Card title="Auto-Discovery" icon="magnifier">
+    Automatically detects your project structure. Interactive wizard or `--no-interactive` for scripts.
+  </Card>
+  <Card title="Multiple Outputs" icon="document">
+    Text, JSON, or HTML reports. Coverage badges for READMEs. Trend analysis included.
+  </Card>
+</CardGrid>
+
+---
+
+## Beyond Basic Coverage
+
+<CardGrid>
+  <LinkCard
+    title="Build Flags"
+    description="Pass --tags, --race, --timeout to customize test runs."
+    href="/coverctl/guides/build-flags/"
+  />
+  <LinkCard
+    title="Watch Mode"
+    description="Continuous coverage feedback during development."
+    href="/coverctl/cli/watch/"
+  />
+  <LinkCard
+    title="Ratcheting"
+    description="Prevent coverage regression with --ratchet in CI."
+    href="/coverctl/guides/ci-integration/"
+  />
+  <LinkCard
+    title="Debt Reports"
+    description="Identify files that need more test coverage."
+    href="/coverctl/cli/report/"
+  />
+</CardGrid>
+
+---
+
+## Designed for Teams
+
+coverctl is built with domain-driven design principles. It understands that different parts of your codebase have different criticality levels.
+
+- **Explicit policies** - No guessing what coverage is expected
+- **CI enforcement** - Catch regressions before they merge
+- **Clear feedback** - Know exactly which domain failed and why
+
+---
+
+<div class="cta-section">
+
+Ready to enforce coverage where it matters?
+
+[Get Started](/coverctl/installation/) | [View on GitHub](https://github.com/felixgeelhaar/coverctl)
+
+</div>
