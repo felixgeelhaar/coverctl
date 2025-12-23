@@ -27,12 +27,17 @@ coverctl check --config .coverctl.yaml      # enforce policy, add -o json for au
 | --- | --- | --- |
 | `coverctl init` | Autodetect domains and launch the Bubble Tea wizard before writing `.coverctl.yaml` | Navigate with ↑/↓, adjust thresholds with ←/→ or +/-, and confirm to persist. Pass `--no-interactive` to skip the UI in scripts. |
 | `coverctl detect` | Preview domain policy and optionally write config | Pass `--write-config`/`--force` to persist identical config; omit to see the policy before writing. |
-| `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. |
-| `coverctl run` | Produce coverage artifacts without evaluating policy | Use `--profile` to customize output path. |
-| `coverctl report` | Evaluate an already generated profile | Consumes the same config + domains; ideal for CI artifacts or debugging. |
+| `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. Use `--show-delta` to display coverage changes. |
+| `coverctl run` | Produce coverage artifacts without evaluating policy | Use `--profile` to customize output path. Add `--watch` for continuous coverage on file changes. |
+| `coverctl report` | Evaluate an already generated profile | Consumes the same config + domains; ideal for CI artifacts or debugging. Supports `-o html` for HTML reports. |
 | `coverctl ignore` | Show configured `exclude` patterns and the tracked domains | Use this to document generated folders (e.g., `internal/generated/proto/...`) that you wish to skip. |
+| `coverctl badge` | Generate an SVG coverage badge | Use `--style flat-square` for a different style. Output to `coverage.svg` by default. |
+| `coverctl trend` | Show coverage trends over time | Requires history data recorded via `coverctl record`. |
+| `coverctl record` | Record current coverage to history | Use with `--commit` and `--branch` for CI integration. |
+| `coverctl suggest` | Suggest optimal coverage thresholds | Strategies: `current`, `aggressive`, `conservative`. Use `--write-config` to apply. |
+| `coverctl debt` | Show coverage debt report | Identifies domains/files below target and estimates remediation effort. |
 
-Text output (the default) shows domain coverage, required thresholds, and statuses. JSON adds warnings for overlap detection and is suitable for dashboards when you pass `-o json`. Use `coverctl ignore` to review the `exclude` list, which is how generated folders such as proto artifacts can be omitted before running `coverctl check`.
+Text output (the default) shows domain coverage, required thresholds, and statuses. JSON adds warnings for overlap detection and is suitable for dashboards when you pass `-o json`. HTML output (`-o html`) generates a visual report with coverage percentages and status indicators. Use `coverctl ignore` to review the `exclude` list, which is how generated folders such as proto artifacts can be omitted before running `coverctl check`.
 
 ## Init wizard
 

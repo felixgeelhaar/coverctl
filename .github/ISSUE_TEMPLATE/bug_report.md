@@ -1,24 +1,33 @@
 ---
 name: Bug report
-about: Report incorrect behavior or a regression
+about: Report a bug in coverctl
+title: '[BUG] '
 labels: bug
+assignees: ''
 ---
 
-**Describe the bug**
+## Description
 A clear and concise description of what the bug is.
 
-**Steps to reproduce**
-1. 
-2. 
-3. 
+## Steps to Reproduce
+1. Run `coverctl ...`
+2. ...
 
-**Expected behavior**
+## Expected Behavior
 What you expected to happen.
 
-**Environment**
-- coverctl version: `git describe --tags --always`
-- Go version: `go version`
-- OS: 
+## Actual Behavior
+What actually happened.
 
-**Additional context**
-Any other context or screenshots about the bug.
+## Environment
+- coverctl version: (run `coverctl version`)
+- Go version: (run `go version`)
+- OS:
+
+## Configuration
+```yaml
+# Paste your .coverctl.yaml here (if relevant)
+```
+
+## Additional Context
+Add any other context about the problem here.

@@ -321,3 +321,37 @@ func TestWritePassStatus(t *testing.T) {
 		t.Fatal("expected PASS status in output")
 	}
 }
+
+func TestWriteWarnStatus(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Percent: 85.0, Required: 80, Status: domain.StatusWarn},
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputText); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	if !strings.Contains(output, "WARN") {
+		t.Fatal("expected WARN status in output")
+	}
+}
+
+func TestWriteWarnStatusJSON(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Percent: 85.0, Required: 80, Status: domain.StatusWarn},
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputJSON); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	if !strings.Contains(output, "WARN") {
+		t.Fatal("expected WARN status in JSON output")
+	}
+}

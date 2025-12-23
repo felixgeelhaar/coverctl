@@ -17,9 +17,11 @@ func (c CoverageStat) Percent() float64 {
 
 // Domain defines a named coverage scope and its policy.
 type Domain struct {
-	Name  string
-	Match []string
-	Min   *float64
+	Name    string
+	Match   []string
+	Min     *float64
+	Warn    *float64 // Optional warn threshold (must be >= Min)
+	Exclude []string // Optional patterns to exclude from this domain
 }
 
 // Policy defines default and domain-specific coverage requirements.
@@ -33,15 +35,17 @@ type Status string
 const (
 	StatusPass Status = "PASS"
 	StatusFail Status = "FAIL"
+	StatusWarn Status = "WARN"
 )
 
 type DomainResult struct {
-	Domain   string  `json:"domain"`
-	Covered  int     `json:"covered"`
-	Total    int     `json:"total"`
-	Percent  float64 `json:"percent"`
-	Required float64 `json:"required"`
-	Status   Status  `json:"status"`
+	Domain   string   `json:"domain"`
+	Covered  int      `json:"covered"`
+	Total    int      `json:"total"`
+	Percent  float64  `json:"percent"`
+	Required float64  `json:"required"`
+	Status   Status   `json:"status"`
+	Delta    *float64 `json:"delta,omitempty"` // Change from previous run
 }
 
 type FileRule struct {
@@ -80,6 +84,9 @@ func Evaluate(policy Policy, coverage map[string]CoverageStat) Result {
 		if percent < required {
 			status = StatusFail
 			passed = false
+		} else if d.Warn != nil && percent < *d.Warn {
+			// Above min but below warn threshold
+			status = StatusWarn
 		}
 		results = append(results, DomainResult{
 			Domain:   d.Name,

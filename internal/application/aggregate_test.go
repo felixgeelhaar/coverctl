@@ -97,3 +97,46 @@ func TestAggregateByDomainAnnotations(t *testing.T) {
 		t.Fatalf("expected ignored file to be skipped")
 	}
 }
+
+func TestAggregateByDomainWithDomainExcludes(t *testing.T) {
+	files := map[string]domain.CoverageStat{
+		"internal/core/handler.go":   {Covered: 5, Total: 10},
+		"internal/core/gen/proto.go": {Covered: 0, Total: 5},
+		"internal/api/server.go":     {Covered: 8, Total: 10},
+		"internal/api/gen/stub.go":   {Covered: 1, Total: 5},
+	}
+	moduleRoot := "/repo"
+	domainDirs := map[string][]string{
+		"core": {filepath.Join(moduleRoot, "internal/core")},
+		"api":  {filepath.Join(moduleRoot, "internal/api")},
+	}
+	// Only exclude gen files from core domain, not api
+	domainExcludes := map[string][]string{
+		"core": {"internal/core/gen/*"},
+	}
+	modulePath := "github.com/felixgeelhaar/coverctl"
+	result := AggregateByDomainWithExcludes(files, domainDirs, nil, domainExcludes, moduleRoot, modulePath, nil)
+
+	// core should have only handler.go (5/10), proto.go is excluded
+	if got := result["core"]; got.Covered != 5 || got.Total != 10 {
+		t.Fatalf("expected core to exclude gen files, got %+v", got)
+	}
+	// api should have both files (8+1=9/10+5=15), nothing excluded
+	if got := result["api"]; got.Covered != 9 || got.Total != 15 {
+		t.Fatalf("expected api to include all files, got %+v", got)
+	}
+}
+
+func TestBuildDomainExcludes(t *testing.T) {
+	domains := []domain.Domain{
+		{Name: "core", Match: []string{"internal/core/*"}, Exclude: []string{"internal/core/gen/*"}},
+		{Name: "api", Match: []string{"internal/api/*"}}, // no excludes
+	}
+	result := buildDomainExcludes(domains)
+	if len(result) != 1 {
+		t.Fatalf("expected 1 domain with excludes, got %d", len(result))
+	}
+	if excludes, ok := result["core"]; !ok || len(excludes) != 1 || excludes[0] != "internal/core/gen/*" {
+		t.Fatalf("unexpected core excludes: %+v", excludes)
+	}
+}

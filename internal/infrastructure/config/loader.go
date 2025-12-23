@@ -36,9 +36,11 @@ type fileDefault struct {
 }
 
 type fileDomain struct {
-	Name  string   `yaml:"name"`
-	Match []string `yaml:"match"`
-	Min   *float64 `yaml:"min"`
+	Name    string   `yaml:"name"`
+	Match   []string `yaml:"match"`
+	Min     *float64 `yaml:"min"`
+	Warn    *float64 `yaml:"warn,omitempty"`
+	Exclude []string `yaml:"exclude,omitempty"`
 }
 
 type fileFileRule struct {
@@ -113,9 +115,11 @@ func (l Loader) Load(path string) (application.Config, error) {
 
 	for _, d := range cfg.Policy.Domains {
 		policy.Domains = append(policy.Domains, domain.Domain{
-			Name:  d.Name,
-			Match: d.Match,
-			Min:   d.Min,
+			Name:    d.Name,
+			Match:   d.Match,
+			Min:     d.Min,
+			Warn:    d.Warn,
+			Exclude: append([]string(nil), d.Exclude...),
 		})
 	}
 
@@ -183,9 +187,11 @@ func Write(w io.Writer, cfg application.Config) error {
 	}
 	for _, d := range cfg.Policy.Domains {
 		out.Policy.Domains = append(out.Policy.Domains, fileDomain{
-			Name:  d.Name,
-			Match: d.Match,
-			Min:   d.Min,
+			Name:    d.Name,
+			Match:   d.Match,
+			Min:     d.Min,
+			Warn:    d.Warn,
+			Exclude: append([]string(nil), d.Exclude...),
 		})
 	}
 	for _, rule := range cfg.Files {

@@ -43,21 +43,25 @@ Emit report + exit code
 
 3. Module Layout
    coverctl/
-   ├── cmd/coverctl/        # legacy entrypoint (thin wrapper)
-   │ └── main.go
-   ├── main.go              # root entrypoint for go install
+   ├── cmd/coverctl/            # legacy entrypoint (thin wrapper)
+   │   └── main.go
+   ├── main.go                  # root entrypoint for go install
    ├── internal/
-   │ ├── config/
-   │ ├── autodetect/
-   │ ├── runner/
-   │ ├── coverprofile/
-   │ ├── domains/
-   │ ├── policy/
-   │ ├── report/
-   │ └── util/
-   ├── pkg/ (optional public API)
+   │   ├── domain/              # core domain types, policy, checker
+   │   ├── application/         # services: check, run, report, detect, badge, trend, debt
+   │   ├── infrastructure/      # adapters
+   │   │   ├── config/          # YAML config loader
+   │   │   ├── gotool/          # go test runner
+   │   │   ├── profile/         # coverage profile parser
+   │   │   ├── report/          # text/JSON/HTML reporters
+   │   │   ├── badge/           # SVG badge generator
+   │   │   ├── history/         # trend history JSON store
+   │   │   ├── watcher/         # file system watcher (fsnotify)
+   │   │   └── diff/            # git diff provider
+   │   └── cli/                 # CLI parsing, output, wiring
+   ├── templates/               # default config template
    └── schemas/
-   └── coverctl.schema.json
+       └── coverctl.schema.json
 
 4. Coverage Execution
    Unit Mode
@@ -139,6 +143,16 @@ JSON
 "summary": { "pass": false }
 }
 
+HTML
+- Styled HTML report with coverage percentages
+- Color-coded status indicators (PASS/WARN/FAIL)
+- Domain and file-level breakdown
+
+SVG Badge
+- Coverage percentage badge for README embedding
+- Configurable label, style (flat, flat-square)
+- Color thresholds: green (80+), yellow (60-79), red (<60)
+
 9. Error Handling & Exit Codes
    Code Meaning
    0 Pass
@@ -174,3 +188,33 @@ Extensive README examples
 Golden-file tests for coverage parsing
 
 Test repos for autodetection validation
+
+13. Advanced Features
+
+Watch Mode
+- File system watcher using fsnotify
+- Debounced re-runs on .go file changes
+- Skips hidden directories and vendor/
+- Signal handling for graceful shutdown (Ctrl+C)
+
+Coverage Trends
+- JSON history file (.coverctl-history.json)
+- Records coverage per domain over time
+- Trend analysis with configurable day range
+- Integration with CI via commit/branch metadata
+
+Threshold Suggestions
+- Strategies: current, aggressive, conservative
+- Analyzes actual coverage to recommend thresholds
+- Optional --write-config to apply suggestions
+
+Coverage Debt
+- Calculates shortfall from required minimums
+- Estimates lines of code needing tests
+- Health score (0-100) for overall status
+- Domain and file-level breakdown
+
+Domain-Specific Excludes
+- Per-domain exclude patterns
+- Fine-grained control over coverage scope
+- Separate from global excludes
