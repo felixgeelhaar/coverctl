@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/charmbracelet/lipgloss"
@@ -36,6 +37,8 @@ func (Writer) Write(w io.Writer, result domain.Result, format application.Output
 		return enc.Encode(payload)
 	case application.OutputHTML:
 		return writeHTML(w, result)
+	case application.OutputBrief:
+		return writeBrief(w, result)
 	case application.OutputText, "":
 		return writeText(w, result)
 	default:
@@ -142,4 +145,60 @@ func colorEnabled(w io.Writer) bool {
 		return false
 	}
 	return isatty.IsTerminal(file.Fd()) || isatty.IsCygwinTerminal(file.Fd())
+}
+
+// writeBrief outputs a single-line summary optimized for LLM/agent consumption.
+// Format: STATUS | XX.X% overall | N/M domains passing [| failing: domain1 (XX.X%), domain2 (XX.X%)]
+func writeBrief(w io.Writer, result domain.Result) error {
+	// Calculate overall coverage
+	var totalCovered, totalStatements int
+	var passing, failing int
+	var failedDomains []domain.DomainResult
+
+	for _, d := range result.Domains {
+		totalCovered += d.Covered
+		totalStatements += d.Total
+		if d.Status == domain.StatusFail {
+			failing++
+			failedDomains = append(failedDomains, d)
+		} else {
+			passing++
+		}
+	}
+
+	overall := 0.0
+	if totalStatements > 0 {
+		overall = float64(totalCovered) / float64(totalStatements) * 100
+	}
+
+	status := "PASS"
+	if !result.Passed {
+		status = "FAIL"
+	}
+
+	total := passing + failing
+
+	// Build output line
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("%s | %.1f%% overall | %d/%d domains passing", status, overall, passing, total))
+
+	// Add failing domains if any
+	if len(failedDomains) > 0 {
+		sb.WriteString(" | failing:")
+		for i, d := range failedDomains {
+			if i > 0 {
+				sb.WriteString(",")
+			}
+			sb.WriteString(fmt.Sprintf(" %s (%.1f%%)", d.Domain, d.Percent))
+		}
+	}
+
+	// Add warning count if any
+	if len(result.Warnings) > 0 {
+		sb.WriteString(fmt.Sprintf(" | %d warnings", len(result.Warnings)))
+	}
+
+	sb.WriteString("\n")
+	_, err := w.Write([]byte(sb.String()))
+	return err
 }

@@ -549,8 +549,8 @@ func BuildService(out *os.File) *application.Service {
 
 func outputFlags(fs *flag.FlagSet) *application.OutputFormat {
 	output := application.OutputText
-	fs.Var((*outputValue)(&output), "output", "Output format: text|json|html")
-	fs.Var((*outputValue)(&output), "o", "Output format: text|json|html")
+	fs.Var((*outputValue)(&output), "output", "Output format: text|json|html|brief")
+	fs.Var((*outputValue)(&output), "o", "Output format: text|json|html|brief")
 	return &output
 }
 
@@ -560,11 +560,11 @@ func (o *outputValue) String() string { return string(*o) }
 
 func (o *outputValue) Set(value string) error {
 	switch value {
-	case string(application.OutputText), string(application.OutputJSON), string(application.OutputHTML):
+	case string(application.OutputText), string(application.OutputJSON), string(application.OutputHTML), string(application.OutputBrief):
 		*o = outputValue(value)
 		return nil
 	default:
-		return fmt.Errorf("invalid output format: %s (valid: text, json, html)", value)
+		return fmt.Errorf("invalid output format: %s (valid: text, json, html, brief)", value)
 	}
 }
 
@@ -887,7 +887,8 @@ Flags:
   -c, --config string    Config file path (default ".coverctl.yaml")
   -p, --profile string   Coverage profile output path (default ".cover/coverage.out")
   -d, --domain string    Filter to specific domain (repeatable)
-  -o, --output string    Output format: text|json|html (default "text")
+  -o, --output string    Output format: text|json|html|brief (default "text")
+                         Use 'brief' for single-line LLM/agent-optimized output
       --show-delta       Show coverage change from previous run
       --history string   History file path for delta display
       --fail-under N     Fail if overall coverage is below N percent
@@ -1009,7 +1010,8 @@ Flags:
   -c, --config string    Config file path (default ".coverctl.yaml")
   -p, --profile string   Coverage profile path (default ".cover/coverage.out")
   -d, --domain string    Filter to specific domain (repeatable)
-  -o, --output string    Output format: text|json|html (default "text")
+  -o, --output string    Output format: text|json|html|brief (default "text")
+                         Use 'brief' for single-line LLM/agent-optimized output
       --show-delta       Show coverage change from previous run
       --history string   History file path for delta display
       --uncovered        Show only files with 0% coverage
@@ -1049,7 +1051,7 @@ Flags:
   -c, --config string    Config file path (default ".coverctl.yaml")
   -p, --profile string   Coverage profile path (default ".cover/coverage.out")
       --history string   History file path (default ".cover/history.json")
-  -o, --output string    Output format: text|json|html (default "text")
+  -o, --output string    Output format: text|json|html|brief (default "text")
 
 Examples:
   coverctl trend
@@ -1095,7 +1097,7 @@ Usage:
 Flags:
   -c, --config string    Config file path (default ".coverctl.yaml")
   -p, --profile string   Coverage profile path (default ".cover/coverage.out")
-  -o, --output string    Output format: text|json|html (default "text")
+  -o, --output string    Output format: text|json|brief (default "text")
 
 Examples:
   coverctl debt

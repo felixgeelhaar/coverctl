@@ -11,9 +11,10 @@ import (
 type OutputFormat string
 
 const (
-	OutputText OutputFormat = "text"
-	OutputJSON OutputFormat = "json"
-	OutputHTML OutputFormat = "html"
+	OutputText  OutputFormat = "text"
+	OutputJSON  OutputFormat = "json"
+	OutputHTML  OutputFormat = "html"
+	OutputBrief OutputFormat = "brief"
 )
 
 var ErrConfigNotFound = errors.New("config not found")

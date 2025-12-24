@@ -355,3 +355,103 @@ func TestWriteWarnStatusJSON(t *testing.T) {
 		t.Fatal("expected WARN status in JSON output")
 	}
 }
+
+func TestWriteBriefPass(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Covered: 850, Total: 1000, Percent: 85.0, Required: 80, Status: domain.StatusPass},
+			{Domain: "api", Covered: 820, Total: 1000, Percent: 82.0, Required: 80, Status: domain.StatusPass},
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputBrief); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	// Should be single line
+	if strings.Count(output, "\n") != 1 {
+		t.Fatalf("expected single line output, got: %q", output)
+	}
+	if !strings.HasPrefix(output, "PASS") {
+		t.Fatalf("expected PASS prefix, got: %q", output)
+	}
+	if !strings.Contains(output, "2/2 domains passing") {
+		t.Fatalf("expected domain count, got: %q", output)
+	}
+	// Should not contain failing section
+	if strings.Contains(output, "failing:") {
+		t.Fatalf("unexpected failing section in passing result")
+	}
+}
+
+func TestWriteBriefFail(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: false,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Covered: 850, Total: 1000, Percent: 85.0, Required: 80, Status: domain.StatusPass},
+			{Domain: "api", Covered: 650, Total: 1000, Percent: 65.0, Required: 80, Status: domain.StatusFail},
+			{Domain: "cli", Covered: 700, Total: 1000, Percent: 70.0, Required: 80, Status: domain.StatusFail},
+		},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputBrief); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	// Should be single line
+	if strings.Count(output, "\n") != 1 {
+		t.Fatalf("expected single line output, got: %q", output)
+	}
+	if !strings.HasPrefix(output, "FAIL") {
+		t.Fatalf("expected FAIL prefix, got: %q", output)
+	}
+	if !strings.Contains(output, "1/3 domains passing") {
+		t.Fatalf("expected domain count, got: %q", output)
+	}
+	if !strings.Contains(output, "failing:") {
+		t.Fatalf("expected failing section, got: %q", output)
+	}
+	if !strings.Contains(output, "api (65.0%)") {
+		t.Fatalf("expected api in failing list, got: %q", output)
+	}
+	if !strings.Contains(output, "cli (70.0%)") {
+		t.Fatalf("expected cli in failing list, got: %q", output)
+	}
+}
+
+func TestWriteBriefWithWarnings(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed: true,
+		Domains: []domain.DomainResult{
+			{Domain: "core", Covered: 850, Total: 1000, Percent: 85.0, Required: 80, Status: domain.StatusPass},
+		},
+		Warnings: []string{"warning1", "warning2"},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputBrief); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	if !strings.Contains(output, "2 warnings") {
+		t.Fatalf("expected warnings count, got: %q", output)
+	}
+}
+
+func TestWriteBriefEmpty(t *testing.T) {
+	buf := new(bytes.Buffer)
+	res := domain.Result{
+		Passed:  true,
+		Domains: []domain.DomainResult{},
+	}
+	if err := (Writer{}).Write(buf, res, application.OutputBrief); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	output := buf.String()
+	if !strings.HasPrefix(output, "PASS") {
+		t.Fatalf("expected PASS for empty result, got: %q", output)
+	}
+	if !strings.Contains(output, "0/0 domains passing") {
+		t.Fatalf("expected 0/0 domains, got: %q", output)
+	}
+}
