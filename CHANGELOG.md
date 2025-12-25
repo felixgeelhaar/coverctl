@@ -4,6 +4,12 @@ All notable changes to `coverctl` will be documented here. Relicta manages this 
 
 ## [Unreleased]
 
+## [1.7.1] - 2025-12-25
+
+### Changed
+- Lower Go version requirement from 1.25.5 to 1.24.0
+- Update mcp-go to v1.1.0
+
 ## [1.7.0] - 2025-12-25
 
 ### Changed
