@@ -38,6 +38,7 @@ coverctl watch                              # continuous coverage feedback durin
 | `coverctl record` | Record current coverage to history | Use with `--commit` and `--branch` for CI integration. |
 | `coverctl suggest` | Suggest optimal coverage thresholds | Strategies: `current`, `aggressive`, `conservative`. Use `--write-config` to apply. |
 | `coverctl debt` | Show coverage debt report | Identifies domains/files below target and estimates remediation effort. |
+| `coverctl mcp serve` | Start MCP server for AI agents | Enables Claude and other AI agents to interact with coverage tools programmatically via STDIO. |
 
 Text output (the default) shows domain coverage, required thresholds, and statuses. JSON adds warnings for overlap detection and is suitable for dashboards when you pass `-o json`. HTML output (`-o html`) generates a visual report with coverage percentages and status indicators. Use `coverctl ignore` to review the `exclude` list, which is how generated folders such as proto artifacts can be omitted before running `coverctl check`.
 
@@ -129,6 +130,49 @@ annotations:
 - `annotations` enables `// coverctl:ignore` and `// coverctl:domain=NAME` pragmas.
 
 Need a starting point? Copy `templates/coverctl.yaml` and adjust domains and thresholds to fit your repo.
+
+## MCP Server (AI Agent Integration)
+
+coverctl includes a Model Context Protocol (MCP) server that enables AI agents like Claude to interact with coverage tools programmatically. Start it with:
+
+```bash
+coverctl mcp serve
+```
+
+### Available Tools
+
+| Tool | Description |
+| --- | --- |
+| `check` | Run coverage tests and enforce policy thresholds |
+| `report` | Analyze an existing coverage profile |
+| `record` | Record current coverage to history |
+
+### Available Resources
+
+| URI | Description |
+| --- | --- |
+| `coverctl://debt` | Coverage debt metrics |
+| `coverctl://trend` | Coverage trends over time |
+| `coverctl://suggest` | Threshold recommendations |
+| `coverctl://config` | Current configuration |
+
+### Claude Desktop Configuration
+
+Add to `~/.config/claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "coverctl": {
+      "command": "coverctl",
+      "args": ["mcp", "serve"],
+      "cwd": "/path/to/your/go/project"
+    }
+  }
+}
+```
+
+Once configured, Claude can run coverage checks, analyze reports, and provide recommendations based on your project's coverage data.
 
 ## Architecture
 
