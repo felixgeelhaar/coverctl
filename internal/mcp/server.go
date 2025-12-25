@@ -2,7 +2,10 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -59,10 +62,33 @@ func (s *Server) Run(ctx context.Context) error {
 	// Run with STDIO transport
 	transport := &mcp.StdioTransport{}
 	if err := server.Run(ctx, transport); err != nil {
+		// EOF is a normal shutdown condition when stdin closes
+		// This happens when the client disconnects gracefully
+		if isGracefulShutdown(err) {
+			return nil
+		}
 		return fmt.Errorf("mcp server error: %w", err)
 	}
 
 	return nil
+}
+
+// isGracefulShutdown checks if the error indicates a normal client disconnection.
+// EOF and "server is closing" errors are expected when the client closes the connection.
+func isGracefulShutdown(err error) bool {
+	if err == nil {
+		return true
+	}
+	// Direct EOF check
+	if errors.Is(err, io.EOF) {
+		return true
+	}
+	// The SDK wraps EOF in "server is closing: EOF"
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "EOF") || strings.Contains(errMsg, "server is closing") {
+		return true
+	}
+	return false
 }
 
 // registerTools adds all tool handlers to the server.

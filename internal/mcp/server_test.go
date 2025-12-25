@@ -2,6 +2,9 @@ package mcp
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io"
 	"testing"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
@@ -222,4 +225,57 @@ func stringContains(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+func TestIsGracefulShutdown(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name:     "nil error is graceful",
+			err:      nil,
+			expected: true,
+		},
+		{
+			name:     "io.EOF is graceful",
+			err:      io.EOF,
+			expected: true,
+		},
+		{
+			name:     "wrapped EOF is graceful",
+			err:      fmt.Errorf("connection error: %w", io.EOF),
+			expected: true,
+		},
+		{
+			name:     "server is closing with EOF is graceful",
+			err:      errors.New("server is closing: EOF"),
+			expected: true,
+		},
+		{
+			name:     "mcp server error with EOF is graceful",
+			err:      errors.New("mcp server error: server is closing: EOF"),
+			expected: true,
+		},
+		{
+			name:     "other errors are not graceful",
+			err:      errors.New("connection refused"),
+			expected: false,
+		},
+		{
+			name:     "timeout error is not graceful",
+			err:      errors.New("context deadline exceeded"),
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isGracefulShutdown(tt.err)
+			if result != tt.expected {
+				t.Errorf("isGracefulShutdown(%v) = %v, want %v", tt.err, result, tt.expected)
+			}
+		})
+	}
 }
