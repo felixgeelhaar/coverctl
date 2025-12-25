@@ -3,6 +3,7 @@ package mcp
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
@@ -41,29 +42,29 @@ func DefaultConfig() Config {
 
 // CheckInput defines the input parameters for the check tool.
 type CheckInput struct {
-	ConfigPath string   `json:"configPath,omitempty" jsonschema:"Path to .coverctl.yaml config file"`
-	Profile    string   `json:"profile,omitempty" jsonschema:"Coverage profile output path"`
-	Domains    []string `json:"domains,omitempty" jsonschema:"Filter to specific domains"`
-	FailUnder  *float64 `json:"failUnder,omitempty" jsonschema:"Fail if coverage below threshold"`
-	Ratchet    bool     `json:"ratchet,omitempty" jsonschema:"Fail if coverage decreases"`
+	ConfigPath string   `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile    string   `json:"profile,omitempty" jsonschema:"description=Coverage profile output path"`
+	Domains    []string `json:"domains,omitempty" jsonschema:"description=Filter to specific domains"`
+	FailUnder  *float64 `json:"failUnder,omitempty" jsonschema:"description=Fail if coverage below threshold"`
+	Ratchet    bool     `json:"ratchet,omitempty" jsonschema:"description=Fail if coverage decreases"`
 }
 
 // ReportInput defines the input parameters for the report tool.
 type ReportInput struct {
-	ConfigPath    string   `json:"configPath,omitempty" jsonschema:"Path to .coverctl.yaml config file"`
-	Profile       string   `json:"profile,omitempty" jsonschema:"Path to existing coverage profile"`
-	Domains       []string `json:"domains,omitempty" jsonschema:"Filter to specific domains"`
-	ShowUncovered bool     `json:"showUncovered,omitempty" jsonschema:"Show only files with 0% coverage"`
-	DiffRef       string   `json:"diffRef,omitempty" jsonschema:"Git ref for diff-based filtering"`
+	ConfigPath    string   `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile       string   `json:"profile,omitempty" jsonschema:"description=Path to existing coverage profile"`
+	Domains       []string `json:"domains,omitempty" jsonschema:"description=Filter to specific domains"`
+	ShowUncovered bool     `json:"showUncovered,omitempty" jsonschema:"description=Show only files with 0%% coverage"`
+	DiffRef       string   `json:"diffRef,omitempty" jsonschema:"description=Git ref for diff-based filtering"`
 }
 
 // RecordInput defines the input parameters for the record tool.
 type RecordInput struct {
-	ConfigPath  string `json:"configPath,omitempty" jsonschema:"Path to .coverctl.yaml config file"`
-	Profile     string `json:"profile,omitempty" jsonschema:"Path to coverage profile"`
-	HistoryPath string `json:"historyPath,omitempty" jsonschema:"Path to history file"`
-	Commit      string `json:"commit,omitempty" jsonschema:"Git commit SHA"`
-	Branch      string `json:"branch,omitempty" jsonschema:"Git branch name"`
+	ConfigPath  string `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile     string `json:"profile,omitempty" jsonschema:"description=Path to coverage profile"`
+	HistoryPath string `json:"historyPath,omitempty" jsonschema:"description=Path to history file"`
+	Commit      string `json:"commit,omitempty" jsonschema:"description=Git commit SHA"`
+	Branch      string `json:"branch,omitempty" jsonschema:"description=Git branch name"`
 }
 
 // ToolOutput represents the common output structure for tools.
@@ -82,4 +83,33 @@ func coalesce(value, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+// generateSummary creates a human-readable summary from the result.
+func generateSummary(result domain.Result) string {
+	if len(result.Domains) == 0 {
+		return "No domains found"
+	}
+
+	var totalCovered, totalStatements int
+	var passing int
+
+	for _, d := range result.Domains {
+		totalCovered += d.Covered
+		totalStatements += d.Total
+		if d.Status == domain.StatusPass {
+			passing++
+		}
+	}
+
+	overallPercent := 0.0
+	if totalStatements > 0 {
+		overallPercent = float64(totalCovered) / float64(totalStatements) * 100
+	}
+
+	total := len(result.Domains)
+	if result.Passed {
+		return fmt.Sprintf("PASS | %.1f%% overall | %d/%d domains passing", overallPercent, passing, total)
+	}
+	return fmt.Sprintf("FAIL | %.1f%% overall | %d/%d domains passing", overallPercent, passing, total)
 }

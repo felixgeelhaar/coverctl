@@ -2,9 +2,6 @@ package mcp
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"io"
 	"testing"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
@@ -77,6 +74,9 @@ func TestNew(t *testing.T) {
 	}
 	if server.config.ProfilePath != cfg.ProfilePath {
 		t.Errorf("expected ProfilePath %q, got %q", cfg.ProfilePath, server.config.ProfilePath)
+	}
+	if server.server == nil {
+		t.Error("expected internal MCP server to be initialized")
 	}
 }
 
@@ -227,55 +227,136 @@ func stringContains(s, substr string) bool {
 	return false
 }
 
-func TestIsGracefulShutdown(t *testing.T) {
-	tests := []struct {
-		name     string
-		err      error
-		expected bool
-	}{
-		{
-			name:     "nil error is graceful",
-			err:      nil,
-			expected: true,
-		},
-		{
-			name:     "io.EOF is graceful",
-			err:      io.EOF,
-			expected: true,
-		},
-		{
-			name:     "wrapped EOF is graceful",
-			err:      fmt.Errorf("connection error: %w", io.EOF),
-			expected: true,
-		},
-		{
-			name:     "server is closing with EOF is graceful",
-			err:      errors.New("server is closing: EOF"),
-			expected: true,
-		},
-		{
-			name:     "mcp server error with EOF is graceful",
-			err:      errors.New("mcp server error: server is closing: EOF"),
-			expected: true,
-		},
-		{
-			name:     "other errors are not graceful",
-			err:      errors.New("connection refused"),
-			expected: false,
-		},
-		{
-			name:     "timeout error is not graceful",
-			err:      errors.New("context deadline exceeded"),
-			expected: false,
+func TestHandleCheck(t *testing.T) {
+	svc := &mockService{
+		checkResult: domain.Result{
+			Passed: true,
+			Domains: []domain.DomainResult{
+				{Domain: "core", Status: domain.StatusPass, Covered: 80, Total: 100},
+			},
 		},
 	}
+	server := New(svc, DefaultConfig())
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := isGracefulShutdown(tt.err)
-			if result != tt.expected {
-				t.Errorf("isGracefulShutdown(%v) = %v, want %v", tt.err, result, tt.expected)
-			}
-		})
+	output, err := server.handleCheck(context.Background(), CheckInput{})
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !output.Passed {
+		t.Error("expected output.Passed to be true")
+	}
+	if output.Summary == "" {
+		t.Error("expected non-empty summary")
+	}
+}
+
+func TestHandleReport(t *testing.T) {
+	svc := &mockService{
+		reportResult: domain.Result{
+			Passed: true,
+			Domains: []domain.DomainResult{
+				{Domain: "core", Status: domain.StatusPass, Covered: 75, Total: 100},
+			},
+		},
+	}
+	server := New(svc, DefaultConfig())
+
+	output, err := server.handleReport(context.Background(), ReportInput{})
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !output.Passed {
+		t.Error("expected output.Passed to be true")
+	}
+}
+
+func TestHandleRecord(t *testing.T) {
+	svc := &mockService{}
+	server := New(svc, DefaultConfig())
+
+	output, err := server.handleRecord(context.Background(), RecordInput{})
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !output.Passed {
+		t.Error("expected output.Passed to be true")
+	}
+	if output.Summary != "Coverage recorded to history" {
+		t.Errorf("expected success summary, got %q", output.Summary)
+	}
+}
+
+func TestHandleDebtResource(t *testing.T) {
+	svc := &mockService{
+		debtResult: application.DebtResult{
+			TotalDebt: 10.5,
+		},
+	}
+	server := New(svc, DefaultConfig())
+
+	content, err := server.handleDebtResource(context.Background(), "coverctl://debt", nil)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if content == nil {
+		t.Fatal("expected non-nil content")
+	}
+	if content.URI != "coverctl://debt" {
+		t.Errorf("expected URI 'coverctl://debt', got %q", content.URI)
+	}
+	if content.MimeType != "application/json" {
+		t.Errorf("expected MIME type 'application/json', got %q", content.MimeType)
+	}
+}
+
+func TestHandleTrendResource(t *testing.T) {
+	svc := &mockService{
+		trendResult: application.TrendResult{},
+	}
+	server := New(svc, DefaultConfig())
+
+	content, err := server.handleTrendResource(context.Background(), "coverctl://trend", nil)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if content == nil {
+		t.Fatal("expected non-nil content")
+	}
+}
+
+func TestHandleSuggestResource(t *testing.T) {
+	svc := &mockService{
+		suggestResult: application.SuggestResult{},
+	}
+	server := New(svc, DefaultConfig())
+
+	content, err := server.handleSuggestResource(context.Background(), "coverctl://suggest", nil)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if content == nil {
+		t.Fatal("expected non-nil content")
+	}
+}
+
+func TestHandleConfigResource(t *testing.T) {
+	svc := &mockService{
+		detectResult: application.Config{},
+	}
+	server := New(svc, DefaultConfig())
+
+	content, err := server.handleConfigResource(context.Background(), "coverctl://config", nil)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if content == nil {
+		t.Fatal("expected non-nil content")
 	}
 }
