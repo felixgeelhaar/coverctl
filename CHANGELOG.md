@@ -4,6 +4,8 @@ All notable changes to `coverctl` will be documented here. Relicta manages this 
 
 ## [Unreleased]
 
+## [1.7.0] - 2025-12-25
+
 ### Changed
 - **MCP Server**: Migrate from `modelcontextprotocol/go-sdk` to `mcp-go` library
   - Fluent builder API for cleaner tool/resource registration
