@@ -57,31 +57,33 @@ type ReportOptions struct {
 type DetectOptions struct {
 }
 
-func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
+// CheckResult runs coverage tests and evaluates policy, returning the result.
+// This is the pure function version that returns data instead of writing to output.
+func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Result, error) {
 	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	// Filter domains if specific ones are requested
 	domains = filterDomainsByNames(domains, opts.Domains)
 	if len(domains) == 0 {
-		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
+		return domain.Result{}, fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
 	profile, err := s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile, BuildFlags: opts.BuildFlags})
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	modulePath, err := s.DomainResolver.ModulePath(ctx)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	profiles := []string{profile}
@@ -95,7 +97,7 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 			BuildFlags: opts.BuildFlags,
 		})
 		if err != nil {
-			return err
+			return domain.Result{}, err
 		}
 		profiles = append(profiles, integrationProfile)
 	}
@@ -104,28 +106,28 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 	}
 	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
 	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 	changedFiles, err := s.diffFiles(ctx, cfg)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 	filteredCoverage := filterCoverageByFiles(normalizedCoverage, changedFiles)
 	if cfg.Diff.Enabled && len(filteredCoverage) == 0 {
 		result := domain.Result{Passed: true}
 		result.Warnings = []string{"no files matched diff-based coverage check"}
-		return s.Reporter.Write(s.Out, result, opts.Output)
+		return result, nil
 	}
 
 	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	domainExcludes := buildDomainExcludes(domains)
@@ -150,6 +152,15 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 		if err == nil {
 			applyDeltas(&result, history)
 		}
+	}
+
+	return result, nil
+}
+
+func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
+	result, err := s.CheckResult(ctx, opts)
+	if err != nil {
+		return err
 	}
 
 	if err := s.Reporter.Write(s.Out, result, opts.Output); err != nil {
@@ -198,26 +209,28 @@ func (s *Service) RunOnly(ctx context.Context, opts RunOnlyOptions) error {
 	return err
 }
 
-func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
+// ReportResult analyzes an existing coverage profile and returns the result.
+// This is the pure function version that returns data instead of writing to output.
+func (s *Service) ReportResult(ctx context.Context, opts ReportOptions) (domain.Result, error) {
 	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	// Filter domains if specific ones are requested
 	domains = filterDomainsByNames(domains, opts.Domains)
 	if len(domains) == 0 {
-		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
+		return domain.Result{}, fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
 	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	modulePath, err := s.DomainResolver.ModulePath(ctx)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	profiles := []string{opts.Profile}
@@ -230,18 +243,18 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	}
 	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	normalizedCoverage := normalizeCoverageMap(fileCoverage, moduleRoot, modulePath)
 	annotations, err := s.loadAnnotations(ctx, cfg, moduleRoot, normalizedCoverage)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	// Handle --uncovered flag: show only files with 0% coverage
 	if opts.ShowUncovered {
-		return s.reportUncovered(normalizedCoverage, cfg.Exclude, annotations, opts.Output)
+		return s.reportUncoveredResult(normalizedCoverage, cfg.Exclude, annotations)
 	}
 
 	// Handle --diff flag: override config diff setting
@@ -252,18 +265,18 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 	}
 	changedFiles, err := s.diffFilesWithConfig(ctx, diffCfg)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 	filteredCoverage := filterCoverageByFiles(normalizedCoverage, changedFiles)
 	if diffCfg.Enabled && len(filteredCoverage) == 0 {
 		result := domain.Result{Passed: true}
 		result.Warnings = []string{"no files matched diff-based coverage check"}
-		return s.Reporter.Write(s.Out, result, opts.Output)
+		return result, nil
 	}
 
 	domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
 	if err != nil {
-		return err
+		return domain.Result{}, err
 	}
 
 	domainExcludes := buildDomainExcludes(domains)
@@ -290,11 +303,19 @@ func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
 		}
 	}
 
+	return result, nil
+}
+
+func (s *Service) Report(ctx context.Context, opts ReportOptions) error {
+	result, err := s.ReportResult(ctx, opts)
+	if err != nil {
+		return err
+	}
 	return s.Reporter.Write(s.Out, result, opts.Output)
 }
 
-// reportUncovered generates a report of files with 0% coverage.
-func (s *Service) reportUncovered(files map[string]domain.CoverageStat, exclude []string, annotations map[string]Annotation, format OutputFormat) error {
+// reportUncoveredResult returns a result of files with 0% coverage.
+func (s *Service) reportUncoveredResult(files map[string]domain.CoverageStat, exclude []string, annotations map[string]Annotation) (domain.Result, error) {
 	var uncoveredFiles []domain.FileResult
 	for file, stat := range files {
 		if excluded(file, exclude) {
@@ -328,6 +349,15 @@ func (s *Service) reportUncovered(files map[string]domain.CoverageStat, exclude 
 	}
 	if len(uncoveredFiles) > 0 {
 		result.Warnings = []string{fmt.Sprintf("%d files have 0%% coverage", len(uncoveredFiles))}
+	}
+	return result, nil
+}
+
+// reportUncovered generates a report of files with 0% coverage.
+func (s *Service) reportUncovered(files map[string]domain.CoverageStat, exclude []string, annotations map[string]Annotation, format OutputFormat) error {
+	result, err := s.reportUncoveredResult(files, exclude, annotations)
+	if err != nil {
+		return err
 	}
 	return s.Reporter.Write(s.Out, result, format)
 }

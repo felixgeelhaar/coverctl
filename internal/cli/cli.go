@@ -25,6 +25,7 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/report"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/watcher"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/wizard"
+	"github.com/felixgeelhaar/coverctl/internal/mcp"
 )
 
 type Service interface {
@@ -526,6 +527,54 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		}
 		printDebtResult(result, stdout, *output)
 		return 0
+	case "mcp":
+		if len(cmdArgs) < 1 {
+			fmt.Fprintln(stderr, "Usage: coverctl mcp <subcommand>")
+			fmt.Fprintln(stderr, "Subcommands: serve")
+			return 2
+		}
+		switch cmdArgs[0] {
+		case "serve":
+			fs := flag.NewFlagSet("mcp serve", flag.ContinueOnError)
+			fs.Usage = func() { commandHelp("mcp", stderr) }
+			configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+			fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
+			historyPath := fs.String("history", ".cover/history.json", "History file path")
+			profilePath := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
+			fs.StringVar(profilePath, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
+			if err := fs.Parse(cmdArgs[1:]); err != nil {
+				return 2
+			}
+
+			// Build MCP server with application service
+			mcpSvc := BuildService(os.Stdout)
+			mcpServer := mcp.New(mcpSvc, mcp.Config{
+				ConfigPath:  *configPath,
+				HistoryPath: *historyPath,
+				ProfilePath: *profilePath,
+			})
+
+			// Handle signals for graceful shutdown
+			ctx, cancel := context.WithCancel(ctx)
+			defer cancel()
+
+			sigCh := make(chan os.Signal, 1)
+			signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+			go func() {
+				<-sigCh
+				cancel()
+			}()
+
+			if err := mcpServer.Run(ctx); err != nil {
+				fmt.Fprintf(stderr, "MCP server error: %v\n", err)
+				return 1
+			}
+			return 0
+		default:
+			fmt.Fprintf(stderr, "Unknown mcp subcommand: %s\n", cmdArgs[0])
+			fmt.Fprintln(stderr, "Available subcommands: serve")
+			return 2
+		}
 	default:
 		usage(stderr)
 		return 2
@@ -649,6 +698,7 @@ Commands:
   suggest     Suggest optimal coverage thresholds
   debt        Show coverage debt report
   ignore      Show configured excludes and ignore advice
+  mcp         MCP (Model Context Protocol) server for AI agents
 
 Other:
   help        Show help for a command
@@ -1113,6 +1163,53 @@ Flags:
 
 Examples:
   coverctl ignore`,
+
+	"mcp": `coverctl mcp - MCP (Model Context Protocol) server for AI agents
+
+Usage:
+  coverctl mcp <subcommand> [flags]
+
+Subcommands:
+  serve       Start the MCP server (STDIO transport)
+
+Flags for 'serve':
+  -c, --config string    Config file path (default ".coverctl.yaml")
+  -p, --profile string   Coverage profile path (default ".cover/coverage.out")
+      --history string   History file path (default ".cover/history.json")
+
+Description:
+  The MCP server enables AI agents (like Claude) to interact with coverctl
+  programmatically. It exposes coverage tools and resources via the Model
+  Context Protocol using STDIO transport.
+
+Tools (actions):
+  check     Run coverage tests and enforce policy thresholds
+  report    Analyze an existing coverage profile
+  record    Record current coverage to history
+
+Resources (read-only queries):
+  coverctl://debt      Coverage debt metrics
+  coverctl://trend     Coverage trends over time
+  coverctl://suggest   Threshold recommendations
+  coverctl://config    Current configuration
+
+Claude Desktop Configuration:
+  Add to ~/.config/claude/claude_desktop_config.json:
+
+  {
+    "mcpServers": {
+      "coverctl": {
+        "command": "coverctl",
+        "args": ["mcp", "serve"],
+        "cwd": "/path/to/your/go/project"
+      }
+    }
+  }
+
+Examples:
+  coverctl mcp serve
+  coverctl mcp serve -c custom.yaml
+  coverctl mcp serve --history .cover/history.json`,
 }
 
 func commandHelp(cmd string, w io.Writer) int {
@@ -1151,7 +1248,7 @@ _coverctl() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    commands="check run watch init detect report badge trend record suggest debt ignore help version completion c r w i"
+    commands="check run watch init detect report badge trend record suggest debt ignore mcp help version completion c r w i"
     global_flags="-q --quiet --no-color --ci"
 
     if [[ ${COMP_CWORD} -eq 1 ]]; then
@@ -1184,6 +1281,10 @@ _coverctl() {
             COMPREPLY=( $(compgen -W "bash zsh fish" -- ${cur}) )
             return 0
             ;;
+        mcp)
+            COMPREPLY=( $(compgen -W "serve" -- ${cur}) )
+            return 0
+            ;;
     esac
 
     COMPREPLY=( $(compgen -W "-c --config -p --profile -d --domain -o --output -f --force -h --help -q --quiet --no-color --ci --uncovered --diff --merge --show-delta --history --fail-under --ratchet --validate --tags --race --short -v --run --timeout --test-arg" -- ${cur}) )
@@ -1211,6 +1312,7 @@ _coverctl() {
         'suggest:Suggest optimal coverage thresholds'
         'debt:Show coverage debt report'
         'ignore:Show configured excludes and ignore advice'
+        'mcp:MCP server for AI agents'
         'help:Show help for a command'
         'version:Show version information'
         'completion:Generate shell completion scripts'
@@ -1261,6 +1363,9 @@ _coverctl() {
                 completion)
                     _arguments '1:shell:(bash zsh fish)'
                     ;;
+                mcp)
+                    _arguments '1:subcommand:(serve)'
+                    ;;
             esac
             ;;
     esac
@@ -1293,6 +1398,7 @@ complete -c coverctl -n "__fish_use_subcommand" -a "record" -d "Record current c
 complete -c coverctl -n "__fish_use_subcommand" -a "suggest" -d "Suggest optimal coverage thresholds"
 complete -c coverctl -n "__fish_use_subcommand" -a "debt" -d "Show coverage debt report"
 complete -c coverctl -n "__fish_use_subcommand" -a "ignore" -d "Show configured excludes"
+complete -c coverctl -n "__fish_use_subcommand" -a "mcp" -d "MCP server for AI agents"
 complete -c coverctl -n "__fish_use_subcommand" -a "help" -d "Show help for a command"
 complete -c coverctl -n "__fish_use_subcommand" -a "version" -d "Show version information"
 complete -c coverctl -n "__fish_use_subcommand" -a "completion" -d "Generate shell completion"
@@ -1321,4 +1427,7 @@ complete -c coverctl -l timeout -d "Test timeout (e.g., 10m, 1h)" -r
 complete -c coverctl -l test-arg -d "Additional argument passed to go test" -r
 
 # Completion subcommand
-complete -c coverctl -n "__fish_seen_subcommand_from completion" -a "bash zsh fish"`
+complete -c coverctl -n "__fish_seen_subcommand_from completion" -a "bash zsh fish"
+
+# MCP subcommand
+complete -c coverctl -n "__fish_seen_subcommand_from mcp" -a "serve" -d "Start the MCP server"`
