@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write  # Required for OIDC authentication with MCP Registry
 
 jobs:
   release:
@@ -64,8 +65,33 @@ jobs:
       - name: Build MCPB bundles
         run: ./scripts/build-mcpb.sh ${GITHUB_REF_NAME#v}
 
+      - name: Update server.json
+        run: ./scripts/update-server-json.sh ${GITHUB_REF_NAME#v}
+
       - name: Upload release artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.zip dist/*.mcpb --clobber
+
+      - name: Install mcp-publisher
+        run: |
+          curl -sL https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_Linux_x86_64.tar.gz -o mcp-publisher.tar.gz
+          tar xzf mcp-publisher.tar.gz
+          sudo mv mcp-publisher /usr/local/bin/
+          mcp-publisher --help || true
+
+      - name: Publish to MCP Registry
+        run: |
+          mcp-publisher login github-oidc
+          mcp-publisher publish
+
+      - name: Commit updated server.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add server.json
+          git commit -m "chore: update server.json for ${{ github.ref_name }}" || echo "No changes to commit"
+          git push origin HEAD:main || echo "Push failed, may need manual update"
