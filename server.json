@@ -15,6 +15,46 @@
       "transport": {
         "type": "stdio"
       }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/felixgeelhaar/coverctl/releases/download/v1.7.2/coverctl-mcp-darwin-amd64.mcpb",
+      "fileSha256": "ab57fa12a55845cbdb98b8a9e1ab343872c16b3d19c20833bc1b28bc9c948a1d",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/felixgeelhaar/coverctl/releases/download/v1.7.2/coverctl-mcp-linux-amd64.mcpb",
+      "fileSha256": "d2bd60a5ee49fee8618a9ae70007fa84617f6300f3a714bd858692ac79152274",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/felixgeelhaar/coverctl/releases/download/v1.7.2/coverctl-mcp-linux-arm64.mcpb",
+      "fileSha256": "a5a42255f0f630fb11ffee351e55dd3319433bbd452ab3da8b75b59b4ccb21c7",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/felixgeelhaar/coverctl/releases/download/v1.7.2/coverctl-mcp-windows-amd64.mcpb",
+      "fileSha256": "e32c4bb4df175dbab9a201f4c088bde27a840527197768c8537c84aa0fec3caa",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/felixgeelhaar/coverctl/releases/download/v1.7.2/coverctl-mcp-windows-arm64.mcpb",
+      "fileSha256": "3be2da0e3c7638547eef2a9dad772fd45440a622fb9008f6bfd0714376ae18c3",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
