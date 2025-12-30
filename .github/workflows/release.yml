@@ -28,10 +28,16 @@ jobs:
       - name: Build release artifacts
         run: ./scripts/build-artifacts.sh
 
+      - name: Install Relicta
+        run: |
+          curl -sL https://github.com/relicta-tech/relicta/releases/latest/download/relicta_Linux_x86_64.tar.gz -o relicta.tar.gz
+          tar xzf relicta.tar.gz
+          sudo mv relicta_Linux_x86_64/relicta /usr/local/bin/
+          relicta version
+          relicta plugin install github
+
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Upload artifacts to existing release
-          gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.zip --clobber || \
-          gh release create ${{ github.ref_name }} dist/*.tar.gz dist/*.zip --generate-notes
+          relicta publish --yes
