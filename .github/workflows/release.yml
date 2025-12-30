@@ -61,8 +61,11 @@ jobs:
       - name: Build release artifacts
         run: ./scripts/build-artifacts.sh
 
+      - name: Build MCPB bundles
+        run: ./scripts/build-mcpb.sh ${GITHUB_REF_NAME#v}
+
       - name: Upload release artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.zip --clobber
+          gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.zip dist/*.mcpb --clobber
