@@ -37,6 +37,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Debug: show git status
+          echo "=== Git Status ==="
+          git status
+          echo "=== Cleaning up ==="
+          rm -f relicta.tar.gz
+          rm -rf relicta_Linux_x86_64
+          git status
+
           # Extract version from tag
           VERSION=${GITHUB_REF_NAME#v}
 
