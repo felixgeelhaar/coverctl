@@ -6,23 +6,36 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version: '1.24'
-      - name: Run Relicta release
-        uses: relicta-tech/relicta-action@v2
-        with:
-          github-token: ${{ secrets.RELICTA_TOKEN || secrets.GITHUB_TOKEN }}
-          command: release --yes
-          plugins: github
+
+      - name: Run tests
+        run: go test -race ./...
+
+      - name: Build release artifacts
+        run: ./scripts/build-artifacts.sh
+
+      - name: Install Relicta
+        run: |
+          curl -sL https://github.com/relicta-tech/relicta/releases/latest/download/relicta_Linux_x86_64.tar.gz | tar xz
+          sudo mv relicta /usr/local/bin/
+          relicta plugin install github
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          relicta publish --yes

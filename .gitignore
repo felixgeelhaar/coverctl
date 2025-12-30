@@ -38,3 +38,4 @@ docs/.astro/
 
 # Playwright MCP screenshots
 .playwright-mcp/
+dist/

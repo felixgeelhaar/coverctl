@@ -51,6 +51,8 @@ plugins:
   - name: github
     enabled: true
     config:
+      owner: felixgeelhaar
+      repo: coverctl
       draft: false
       assets:
         - dist/*.tar.gz

@@ -26,6 +26,14 @@ build() {
   esac
 }
 
+# Linux builds
 build linux amd64 coverctl-linux-amd64
+build linux arm64 coverctl-linux-arm64
+
+# macOS builds
 build darwin amd64 coverctl-darwin-amd64
+build darwin arm64 coverctl-darwin-arm64
+
+# Windows builds
 build windows amd64 coverctl-windows-amd64.exe
+build windows arm64 coverctl-windows-arm64.exe
