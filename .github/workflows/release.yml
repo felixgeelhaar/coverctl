@@ -55,7 +55,7 @@ jobs:
           relicta plan --from "$PREV_TAG"
           relicta bump --version "$VERSION"
           relicta notes
-          relicta approve
+          relicta approve --yes
           relicta publish --ci --skip-tag --skip-push --skip-plugins
 
       - name: Build release artifacts
