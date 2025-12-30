@@ -62,7 +62,7 @@ workflow:
   require_approval: true
   allowed_branches:
     - main
-  require_clean_working_tree: true
+  require_clean_working_tree: false
   require_up_to_date: false
   auto_commit_changelog: true
   changelog_commit_message: "chore(release): update changelog for ${version}"
