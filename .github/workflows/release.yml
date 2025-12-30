@@ -40,4 +40,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Extract version from tag
+          VERSION=${GITHUB_REF_NAME#v}
+
+          # Run relicta release workflow
+          relicta plan --from $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          relicta bump --version "$VERSION"
+          relicta notes
+          relicta approve
           relicta publish --ci
