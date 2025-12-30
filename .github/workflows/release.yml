@@ -25,9 +25,6 @@ jobs:
       - name: Run tests
         run: go test -race ./...
 
-      - name: Build release artifacts
-        run: ./scripts/build-artifacts.sh
-
       - name: Install Relicta
         run: |
           curl -sL https://github.com/relicta-tech/relicta/releases/latest/download/relicta_Linux_x86_64.tar.gz -o relicta.tar.gz
@@ -36,7 +33,7 @@ jobs:
           relicta version
           relicta plugin install github
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release with Relicta
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -46,10 +43,18 @@ jobs:
           # Get previous tag for changelog
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
-          # Run relicta release workflow
-          # Note: Using --skip-tag since tag already exists from workflow trigger
+          # Run relicta release workflow (skip tag since it exists, skip plugins to upload assets separately)
           relicta plan --from "$PREV_TAG"
           relicta bump --version "$VERSION"
           relicta notes
           relicta approve
-          relicta publish --ci --skip-tag --skip-push
+          relicta publish --ci --skip-tag --skip-push --skip-plugins
+
+      - name: Build release artifacts
+        run: ./scripts/build-artifacts.sh
+
+      - name: Upload release artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.zip --clobber
