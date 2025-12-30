@@ -1,0 +1,26 @@
+{
+  "$schema": "https://registry.modelcontextprotocol.io/schemas/server.schema.json",
+  "name": "io.github.felixgeelhaar/coverctl",
+  "description": "Go code coverage analysis tool with MCP server capability for analyzing test coverage, generating reports, and integrating coverage data into AI workflows",
+  "repository": {
+    "url": "https://github.com/felixgeelhaar/coverctl",
+    "source": "github"
+  },
+  "version_detail": {
+    "version": "1.7.2"
+  },
+  "packages": [
+    {
+      "registry_name": "github",
+      "name": "felixgeelhaar/coverctl",
+      "version": "1.7.2",
+      "runtime_hint": "binary",
+      "runtime_arguments": ["mcp", "serve"],
+      "transports": [
+        {
+          "type": "stdio"
+        }
+      ]
+    }
+  ]
+}
