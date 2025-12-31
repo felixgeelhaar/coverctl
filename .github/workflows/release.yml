@@ -41,18 +41,8 @@ jobs:
           # Cleanup relicta installation artifacts
           rm -f relicta.tar.gz CHANGELOG.md LICENSE README.md 2>/dev/null || true
 
-          # Extract version from tag
-          VERSION=${GITHUB_REF_NAME#v}
-
-          # Get previous tag for changelog
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-
-          # Run relicta release workflow (skip tag since it exists, skip plugins to upload assets separately)
-          relicta plan --from "$PREV_TAG"
-          relicta bump --version "$VERSION"
-          relicta notes
-          relicta approve --yes
-          relicta publish --ci --skip-tag --skip-push --skip-plugins
+          # Run relicta release (CI mode handles tag-push scenario)
+          relicta release --yes --ci --skip-plugins
 
       - name: Build release artifacts
         run: ./scripts/build-artifacts.sh
