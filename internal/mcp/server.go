@@ -45,7 +45,6 @@ func New(svc Service, cfg Config) *Server {
 		Capabilities: mcp.Capabilities{
 			Tools:     true,
 			Resources: true,
-			Prompts:   true,
 		},
 	})
 
