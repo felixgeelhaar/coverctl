@@ -45,6 +45,7 @@ func New(svc Service, cfg Config) *Server {
 		Capabilities: mcp.Capabilities{
 			Tools:     true,
 			Resources: true,
+			Prompts:   true,
 		},
 	})
 
@@ -111,7 +112,7 @@ func (s *Server) registerResources() {
 
 // Tool handlers
 
-func (s *Server) handleCheck(ctx context.Context, input CheckInput) (ToolOutput, error) {
+func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]any, error) {
 	opts := application.CheckOptions{
 		ConfigPath: coalesce(input.ConfigPath, s.config.ConfigPath),
 		Profile:    coalesce(input.Profile, s.config.ProfilePath),
@@ -128,24 +129,23 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (ToolOutput,
 
 	result, err := s.svc.CheckResult(ctx, opts)
 
-	output := ToolOutput{
-		Passed:   result.Passed,
-		Domains:  result.Domains,
-		Files:    result.Files,
-		Warnings: result.Warnings,
+	output := map[string]any{
+		"passed":   result.Passed,
+		"summary":  generateSummary(result),
+		"domains":  result.Domains,
+		"files":    result.Files,
+		"warnings": result.Warnings,
 	}
 
 	if err != nil {
-		output.Passed = false
-		output.Error = err.Error()
+		output["passed"] = false
+		output["error"] = err.Error()
 	}
-
-	output.Summary = generateSummary(result)
 
 	return output, nil
 }
 
-func (s *Server) handleReport(ctx context.Context, input ReportInput) (ToolOutput, error) {
+func (s *Server) handleReport(ctx context.Context, input ReportInput) (map[string]any, error) {
 	opts := application.ReportOptions{
 		ConfigPath:    coalesce(input.ConfigPath, s.config.ConfigPath),
 		Profile:       coalesce(input.Profile, s.config.ProfilePath),
@@ -157,24 +157,23 @@ func (s *Server) handleReport(ctx context.Context, input ReportInput) (ToolOutpu
 
 	result, err := s.svc.ReportResult(ctx, opts)
 
-	output := ToolOutput{
-		Passed:   result.Passed,
-		Domains:  result.Domains,
-		Files:    result.Files,
-		Warnings: result.Warnings,
+	output := map[string]any{
+		"passed":   result.Passed,
+		"summary":  generateSummary(result),
+		"domains":  result.Domains,
+		"files":    result.Files,
+		"warnings": result.Warnings,
 	}
 
 	if err != nil {
-		output.Passed = false
-		output.Error = err.Error()
+		output["passed"] = false
+		output["error"] = err.Error()
 	}
-
-	output.Summary = generateSummary(result)
 
 	return output, nil
 }
 
-func (s *Server) handleRecord(ctx context.Context, input RecordInput) (ToolOutput, error) {
+func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[string]any, error) {
 	opts := application.RecordOptions{
 		ConfigPath:  coalesce(input.ConfigPath, s.config.ConfigPath),
 		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
@@ -187,15 +186,15 @@ func (s *Server) handleRecord(ctx context.Context, input RecordInput) (ToolOutpu
 
 	err := s.svc.Record(ctx, opts, store)
 
-	output := ToolOutput{
-		Passed: err == nil,
+	output := map[string]any{
+		"passed": err == nil,
 	}
 
 	if err != nil {
-		output.Error = err.Error()
-		output.Summary = "Failed to record coverage"
+		output["error"] = err.Error()
+		output["summary"] = "Failed to record coverage"
 	} else {
-		output.Summary = "Coverage recorded to history"
+		output["summary"] = "Coverage recorded to history"
 	}
 
 	return output, nil

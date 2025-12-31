@@ -243,10 +243,10 @@ func TestHandleCheck(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !output.Passed {
-		t.Error("expected output.Passed to be true")
+	if passed, ok := output["passed"].(bool); !ok || !passed {
+		t.Error("expected output['passed'] to be true")
 	}
-	if output.Summary == "" {
+	if summary, ok := output["summary"].(string); !ok || summary == "" {
 		t.Error("expected non-empty summary")
 	}
 }
@@ -267,8 +267,8 @@ func TestHandleReport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !output.Passed {
-		t.Error("expected output.Passed to be true")
+	if passed, ok := output["passed"].(bool); !ok || !passed {
+		t.Error("expected output['passed'] to be true")
 	}
 }
 
@@ -281,11 +281,11 @@ func TestHandleRecord(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !output.Passed {
-		t.Error("expected output.Passed to be true")
+	if passed, ok := output["passed"].(bool); !ok || !passed {
+		t.Error("expected output['passed'] to be true")
 	}
-	if output.Summary != "Coverage recorded to history" {
-		t.Errorf("expected success summary, got %q", output.Summary)
+	if summary, ok := output["summary"].(string); !ok || summary != "Coverage recorded to history" {
+		t.Errorf("expected success summary, got %q", summary)
 	}
 }
 
