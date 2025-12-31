@@ -28,9 +28,9 @@ jobs:
 
       - name: Install Relicta
         run: |
-          curl -sL https://github.com/relicta-tech/relicta/releases/latest/download/relicta_Linux_x86_64.tar.gz -o relicta.tar.gz
+          curl -sL https://github.com/relicta-tech/relicta/releases/latest/download/relicta_linux_amd64.tar.gz -o relicta.tar.gz
           tar xzf relicta.tar.gz
-          sudo mv relicta_Linux_x86_64/relicta /usr/local/bin/
+          sudo mv relicta /usr/local/bin/
           relicta version
           relicta plugin install github
 
@@ -38,13 +38,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Debug: show git status
-          echo "=== Git Status ==="
-          git status
-          echo "=== Cleaning up ==="
-          rm -f relicta.tar.gz
-          rm -rf relicta_Linux_x86_64
-          git status
+          # Cleanup relicta installation artifacts
+          rm -f relicta.tar.gz CHANGELOG.md LICENSE README.md 2>/dev/null || true
 
           # Extract version from tag
           VERSION=${GITHUB_REF_NAME#v}
