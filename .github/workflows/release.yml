@@ -26,25 +26,6 @@ jobs:
       - name: Run tests
         run: go test -race ./...
 
-      - name: Install Relicta
-        run: |
-          curl -sL https://github.com/relicta-tech/relicta/releases/latest/download/relicta_linux_amd64.tar.gz -o relicta.tar.gz
-          tar xzf relicta.tar.gz
-          sudo mv relicta /usr/local/bin/
-          relicta version
-          relicta plugin install github
-
-      - name: Create GitHub Release with Relicta
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Cleanup relicta installation artifacts
-          rm -f relicta.tar.gz CHANGELOG.md LICENSE README.md 2>/dev/null || true
-
-          # Run relicta release (CI mode handles tag-push scenario)
-          # Plugins run separately to upload artifacts first
-          relicta release --yes --ci
-
       - name: Build release artifacts
         run: ./scripts/build-artifacts.sh
 
@@ -54,11 +35,29 @@ jobs:
       - name: Update server.json
         run: ./scripts/update-server-json.sh ${GITHUB_REF_NAME#v}
 
-      - name: Upload release artifacts
+      - name: Generate release notes
+        id: notes
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          # Generate changelog
+          if [ -n "$PREV_TAG" ]; then
+            echo "## What's Changed" > notes.md
+            echo "" >> notes.md
+            git log ${PREV_TAG}..HEAD --pretty=format:"* %s (%h)" >> notes.md
+          else
+            echo "Initial release" > notes.md
+          fi
+
+      - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.zip dist/*.mcpb --clobber
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${GITHUB_REF_NAME#v}" \
+            --notes-file notes.md \
+            dist/*.tar.gz dist/*.zip dist/*.mcpb
 
       - name: Install mcp-publisher
         run: |
