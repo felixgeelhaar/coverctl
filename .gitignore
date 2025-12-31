@@ -39,3 +39,6 @@ docs/.astro/
 # Playwright MCP screenshots
 .playwright-mcp/
 dist/
+
+# MCP registry tokens
+.mcpregistry_*

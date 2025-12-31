@@ -39,14 +39,12 @@ func New(svc Service, cfg Config) *Server {
 	}
 
 	// Create MCP server with capabilities
-	// Note: Prompts must be advertised for Claude Code to discover the server
 	s.server = mcp.NewServer(mcp.ServerInfo{
 		Name:    "coverctl",
 		Version: Version,
 		Capabilities: mcp.Capabilities{
 			Tools:     true,
 			Resources: true,
-			Prompts:   true,
 		},
 	})
 
