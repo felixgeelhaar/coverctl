@@ -42,7 +42,8 @@ jobs:
           rm -f relicta.tar.gz CHANGELOG.md LICENSE README.md 2>/dev/null || true
 
           # Run relicta release (CI mode handles tag-push scenario)
-          relicta release --yes --ci --skip-plugins
+          # Plugins run separately to upload artifacts first
+          relicta release --yes --ci
 
       - name: Build release artifacts
         run: ./scripts/build-artifacts.sh
