@@ -26,6 +26,7 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/watcher"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/wizard"
 	"github.com/felixgeelhaar/coverctl/internal/mcp"
+	"github.com/felixgeelhaar/coverctl/internal/pathutil"
 )
 
 type Service interface {
@@ -656,7 +657,11 @@ func writeConfigFile(path string, cfg application.Config, stdout io.Writer, forc
 			return fmt.Errorf("config %s already exists", path)
 		}
 	}
-	file, err := os.Create(path)
+	cleanPath, err := pathutil.ValidatePath(path)
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
+	file, err := os.Create(cleanPath) // #nosec G304 - path is validated above
 	if err != nil {
 		return err
 	}
@@ -712,7 +717,11 @@ Run 'coverctl help <command>' for more information on a command.
 }
 
 func writeBadgeFile(path string, percent float64, label, style string) error {
-	file, err := os.Create(path)
+	cleanPath, err := pathutil.ValidatePath(path)
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
+	file, err := os.Create(cleanPath) // #nosec G304 - path is validated above
 	if err != nil {
 		return err
 	}

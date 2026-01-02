@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/felixgeelhaar/coverctl/internal/domain"
+	"github.com/felixgeelhaar/coverctl/internal/pathutil"
 )
 
 type Parser struct{}
@@ -60,7 +61,12 @@ func parseProfiles(paths []string) (map[string]map[string]domain.CoverageStat, e
 }
 
 func parseProfile(path string) (map[string]map[string]domain.CoverageStat, error) {
-	file, err := os.Open(path)
+	cleanPath, err := pathutil.ValidatePath(path)
+	if err != nil {
+		return nil, fmt.Errorf("invalid path: %w", err)
+	}
+
+	file, err := os.Open(cleanPath) // #nosec G304 - path is validated above
 	if err != nil {
 		return nil, err
 	}

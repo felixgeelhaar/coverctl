@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/pathutil"
 )
 
 type Scanner struct{}
@@ -28,7 +29,11 @@ func (Scanner) Scan(_ context.Context, moduleRoot string, files []string) (map[s
 		if moduleRoot != "" {
 			path = filepath.Join(moduleRoot, filepath.FromSlash(file))
 		}
-		f, err := os.Open(path)
+		cleanPath, err := pathutil.ValidatePath(path)
+		if err != nil {
+			continue // Skip invalid paths
+		}
+		f, err := os.Open(cleanPath) // #nosec G304 - path is validated above
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue

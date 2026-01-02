@@ -11,6 +11,7 @@ import (
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
+	"github.com/felixgeelhaar/coverctl/internal/pathutil"
 )
 
 type Loader struct{}
@@ -81,7 +82,12 @@ func (l Loader) Exists(path string) (bool, error) {
 }
 
 func (l Loader) Load(path string) (application.Config, error) {
-	raw, err := os.ReadFile(path)
+	cleanPath, err := pathutil.ValidatePath(path)
+	if err != nil {
+		return application.Config{}, fmt.Errorf("invalid path: %w", err)
+	}
+
+	raw, err := os.ReadFile(cleanPath) // #nosec G304 - path is validated above
 	if err != nil {
 		return application.Config{}, err
 	}
