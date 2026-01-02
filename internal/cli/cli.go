@@ -547,13 +547,13 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 				return 2
 			}
 
-			// Build MCP server with application service
+			// Build MCP server with application service and CLI version
 			mcpSvc := BuildService(os.Stdout)
 			mcpServer := mcp.New(mcpSvc, mcp.Config{
 				ConfigPath:  *configPath,
 				HistoryPath: *historyPath,
 				ProfilePath: *profilePath,
-			})
+			}, Version)
 
 			// Handle signals for graceful shutdown
 			ctx, cancel := context.WithCancel(ctx)

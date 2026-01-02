@@ -10,9 +10,6 @@ import (
 	"github.com/felixgeelhaar/mcp-go"
 )
 
-// Version is set at build time.
-var Version = "dev"
-
 // Server wraps the application service with MCP protocol handling.
 type Server struct {
 	svc    Service
@@ -21,7 +18,7 @@ type Server struct {
 }
 
 // New creates a new MCP server wrapping the given service.
-func New(svc Service, cfg Config) *Server {
+func New(svc Service, cfg Config, version string) *Server {
 	// Apply defaults
 	if cfg.ConfigPath == "" {
 		cfg.ConfigPath = DefaultConfig().ConfigPath
@@ -32,6 +29,9 @@ func New(svc Service, cfg Config) *Server {
 	if cfg.ProfilePath == "" {
 		cfg.ProfilePath = DefaultConfig().ProfilePath
 	}
+	if version == "" {
+		version = "dev"
+	}
 
 	s := &Server{
 		svc:    svc,
@@ -41,7 +41,7 @@ func New(svc Service, cfg Config) *Server {
 	// Create MCP server with capabilities
 	s.server = mcp.NewServer(mcp.ServerInfo{
 		Name:    "coverctl",
-		Version: Version,
+		Version: version,
 		Capabilities: mcp.Capabilities{
 			Tools:     true,
 			Resources: true,

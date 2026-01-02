@@ -61,7 +61,7 @@ func TestNew(t *testing.T) {
 		ProfilePath: "custom/coverage.out",
 	}
 
-	server := New(svc, cfg)
+	server := New(svc, cfg, "test")
 
 	if server == nil {
 		t.Fatal("expected non-nil server")
@@ -84,7 +84,7 @@ func TestNew_DefaultConfig(t *testing.T) {
 	svc := &mockService{}
 	cfg := Config{} // Empty config should get defaults
 
-	server := New(svc, cfg)
+	server := New(svc, cfg, "test")
 
 	defaults := DefaultConfig()
 	if server.config.ConfigPath != defaults.ConfigPath {
@@ -236,7 +236,7 @@ func TestHandleCheck(t *testing.T) {
 			},
 		},
 	}
-	server := New(svc, DefaultConfig())
+	server := New(svc, DefaultConfig(), "test")
 
 	output, err := server.handleCheck(context.Background(), CheckInput{})
 
@@ -260,7 +260,7 @@ func TestHandleReport(t *testing.T) {
 			},
 		},
 	}
-	server := New(svc, DefaultConfig())
+	server := New(svc, DefaultConfig(), "test")
 
 	output, err := server.handleReport(context.Background(), ReportInput{})
 
@@ -274,7 +274,7 @@ func TestHandleReport(t *testing.T) {
 
 func TestHandleRecord(t *testing.T) {
 	svc := &mockService{}
-	server := New(svc, DefaultConfig())
+	server := New(svc, DefaultConfig(), "test")
 
 	output, err := server.handleRecord(context.Background(), RecordInput{})
 
@@ -295,7 +295,7 @@ func TestHandleDebtResource(t *testing.T) {
 			TotalDebt: 10.5,
 		},
 	}
-	server := New(svc, DefaultConfig())
+	server := New(svc, DefaultConfig(), "test")
 
 	content, err := server.handleDebtResource(context.Background(), "coverctl://debt", nil)
 
@@ -317,7 +317,7 @@ func TestHandleTrendResource(t *testing.T) {
 	svc := &mockService{
 		trendResult: application.TrendResult{},
 	}
-	server := New(svc, DefaultConfig())
+	server := New(svc, DefaultConfig(), "test")
 
 	content, err := server.handleTrendResource(context.Background(), "coverctl://trend", nil)
 
@@ -333,7 +333,7 @@ func TestHandleSuggestResource(t *testing.T) {
 	svc := &mockService{
 		suggestResult: application.SuggestResult{},
 	}
-	server := New(svc, DefaultConfig())
+	server := New(svc, DefaultConfig(), "test")
 
 	content, err := server.handleSuggestResource(context.Background(), "coverctl://suggest", nil)
 
@@ -349,7 +349,7 @@ func TestHandleConfigResource(t *testing.T) {
 	svc := &mockService{
 		detectResult: application.Config{},
 	}
-	server := New(svc, DefaultConfig())
+	server := New(svc, DefaultConfig(), "test")
 
 	content, err := server.handleConfigResource(context.Background(), "coverctl://config", nil)
 
