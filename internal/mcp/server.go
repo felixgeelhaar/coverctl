@@ -127,6 +127,15 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]
 		Domains:    input.Domains,
 		FailUnder:  input.FailUnder,
 		Ratchet:    input.Ratchet,
+		BuildFlags: application.BuildFlags{
+			Tags:     input.Tags,
+			Race:     input.Race,
+			Short:    input.Short,
+			Verbose:  input.Verbose,
+			Run:      input.Run,
+			Timeout:  input.Timeout,
+			TestArgs: input.TestArgs,
+		},
 	}
 
 	// Add history store if ratchet is enabled
