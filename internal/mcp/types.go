@@ -67,6 +67,12 @@ type RecordInput struct {
 	Branch      string `json:"branch,omitempty" jsonschema:"description=Git branch name"`
 }
 
+// InitInput defines the input parameters for the init tool.
+type InitInput struct {
+	ConfigPath string `json:"configPath,omitempty" jsonschema:"description=Path to write .coverctl.yaml config file"`
+	Force      bool   `json:"force,omitempty" jsonschema:"description=Overwrite existing config file if it exists"`
+}
+
 // ToolOutput represents the common output structure for tools.
 type ToolOutput struct {
 	Passed   bool                  `json:"passed"`

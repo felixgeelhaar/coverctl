@@ -2,6 +2,8 @@ package mcp
 
 import (
 	"context"
+	"errors"
+	"os"
 	"testing"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
@@ -359,4 +361,152 @@ func TestHandleConfigResource(t *testing.T) {
 	if content == nil {
 		t.Fatal("expected non-nil content")
 	}
+}
+
+func TestHandleInit(t *testing.T) {
+	t.Run("creates config file with detected domains", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := tmpDir + "/test.coverctl.yaml"
+
+		svc := &mockService{
+			detectResult: application.Config{
+				Version: 1,
+				Policy: domain.Policy{
+					DefaultMin: 80,
+					Domains: []domain.Domain{
+						{Name: "core", Match: []string{"internal/core/*"}},
+						{Name: "api", Match: []string{"internal/api/*"}},
+					},
+				},
+			},
+		}
+		server := New(svc, Config{ConfigPath: configPath}, "test")
+
+		output, err := server.handleInit(context.Background(), InitInput{})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if passed, ok := output["passed"].(bool); !ok || !passed {
+			t.Errorf("expected passed=true, got %v", output)
+		}
+		if domainCount, ok := output["domainCount"].(int); !ok || domainCount != 2 {
+			t.Errorf("expected domainCount=2, got %v", output["domainCount"])
+		}
+		if domains, ok := output["domains"].([]string); !ok || len(domains) != 2 {
+			t.Errorf("expected 2 domains, got %v", output["domains"])
+		}
+	})
+
+	t.Run("fails when config exists without force", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := tmpDir + "/existing.coverctl.yaml"
+
+		// Create existing file
+		if err := writeTestFile(configPath, "version: 1"); err != nil {
+			t.Fatalf("failed to create test file: %v", err)
+		}
+
+		svc := &mockService{
+			detectResult: application.Config{},
+		}
+		server := New(svc, Config{ConfigPath: configPath}, "test")
+
+		output, err := server.handleInit(context.Background(), InitInput{})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if passed, ok := output["passed"].(bool); !ok || passed {
+			t.Error("expected passed=false when file exists")
+		}
+		if errMsg, ok := output["error"].(string); !ok || !stringContains(errMsg, "already exists") {
+			t.Errorf("expected error message about existing file, got %v", output["error"])
+		}
+	})
+
+	t.Run("overwrites config with force", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := tmpDir + "/overwrite.coverctl.yaml"
+
+		// Create existing file
+		if err := writeTestFile(configPath, "version: 1"); err != nil {
+			t.Fatalf("failed to create test file: %v", err)
+		}
+
+		svc := &mockService{
+			detectResult: application.Config{
+				Version: 1,
+				Policy: domain.Policy{
+					DefaultMin: 70,
+					Domains: []domain.Domain{
+						{Name: "new", Match: []string{"internal/new/*"}},
+					},
+				},
+			},
+		}
+		server := New(svc, Config{ConfigPath: configPath}, "test")
+
+		output, err := server.handleInit(context.Background(), InitInput{Force: true})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if passed, ok := output["passed"].(bool); !ok || !passed {
+			t.Errorf("expected passed=true with force, got %v", output)
+		}
+	})
+
+	t.Run("fails when detection fails", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configPath := tmpDir + "/fail.coverctl.yaml"
+
+		svc := &mockService{
+			detectErr: errTestDetection,
+		}
+		server := New(svc, Config{ConfigPath: configPath}, "test")
+
+		output, err := server.handleInit(context.Background(), InitInput{})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if passed, ok := output["passed"].(bool); !ok || passed {
+			t.Error("expected passed=false when detection fails")
+		}
+		if summary, ok := output["summary"].(string); !ok || !stringContains(summary, "Failed to detect") {
+			t.Errorf("expected failure summary, got %v", output["summary"])
+		}
+	})
+
+	t.Run("uses custom config path from input", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		customPath := tmpDir + "/custom.yaml"
+
+		svc := &mockService{
+			detectResult: application.Config{
+				Version: 1,
+				Policy: domain.Policy{
+					DefaultMin: 60,
+					Domains:    []domain.Domain{},
+				},
+			},
+		}
+		server := New(svc, DefaultConfig(), "test")
+
+		output, err := server.handleInit(context.Background(), InitInput{ConfigPath: customPath})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if configPathOut, ok := output["configPath"].(string); !ok || configPathOut != customPath {
+			t.Errorf("expected configPath=%q, got %v", customPath, output["configPath"])
+		}
+	})
+}
+
+var errTestDetection = errors.New("test detection error")
+
+func writeTestFile(path, content string) error {
+	return os.WriteFile(path, []byte(content), 0644)
 }

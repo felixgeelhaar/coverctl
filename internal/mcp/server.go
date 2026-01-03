@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/config"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/history"
+	"github.com/felixgeelhaar/coverctl/internal/pathutil"
 	"github.com/felixgeelhaar/mcp-go"
 )
 
@@ -62,6 +65,11 @@ func (s *Server) Run(ctx context.Context) error {
 
 // registerTools adds all tool handlers to the server.
 func (s *Server) registerTools() {
+	// Init tool - creates a new coverctl configuration
+	s.server.Tool("init").
+		Description("Initialize a new coverctl configuration file. Auto-detects project structure and creates .coverctl.yaml with domain-based coverage policies.").
+		Handler(s.handleInit)
+
 	// Check tool - runs coverage tests with policy enforcement
 	s.server.Tool("check").
 		Description("Run coverage tests and enforce policy thresholds. Executes 'go test -cover' and evaluates results against configured minimums.").
@@ -197,6 +205,76 @@ func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[strin
 	}
 
 	return output, nil
+}
+
+func (s *Server) handleInit(ctx context.Context, input InitInput) (map[string]any, error) {
+	configPath := coalesce(input.ConfigPath, s.config.ConfigPath)
+
+	// Check if config already exists
+	if !input.Force {
+		if _, err := os.Stat(configPath); err == nil {
+			return map[string]any{
+				"passed":  false,
+				"error":   fmt.Sprintf("config file %s already exists (use force: true to overwrite)", configPath),
+				"summary": "Config file already exists",
+			}, nil
+		}
+	}
+
+	// Auto-detect project structure
+	cfg, err := s.svc.Detect(ctx, application.DetectOptions{})
+	if err != nil {
+		return map[string]any{
+			"passed":  false,
+			"error":   err.Error(),
+			"summary": "Failed to detect project structure",
+		}, nil
+	}
+
+	// Validate and clean the path
+	cleanPath, err := pathutil.ValidatePath(configPath)
+	if err != nil {
+		return map[string]any{
+			"passed":  false,
+			"error":   fmt.Sprintf("invalid config path: %v", err),
+			"summary": "Invalid config path",
+		}, nil
+	}
+
+	// Write the config file
+	file, err := os.Create(cleanPath) // #nosec G304 - path is validated above
+	if err != nil {
+		return map[string]any{
+			"passed":  false,
+			"error":   err.Error(),
+			"summary": "Failed to create config file",
+		}, nil
+	}
+	defer file.Close()
+
+	if err := config.Write(file, cfg); err != nil {
+		return map[string]any{
+			"passed":  false,
+			"error":   err.Error(),
+			"summary": "Failed to write config file",
+		}, nil
+	}
+
+	// Build summary of what was detected
+	domainCount := len(cfg.Policy.Domains)
+	domainNames := make([]string, 0, domainCount)
+	for _, d := range cfg.Policy.Domains {
+		domainNames = append(domainNames, d.Name)
+	}
+
+	return map[string]any{
+		"passed":      true,
+		"summary":     fmt.Sprintf("Created %s with %d domains", configPath, domainCount),
+		"configPath":  configPath,
+		"domains":     domainNames,
+		"defaultMin":  cfg.Policy.DefaultMin,
+		"domainCount": domainCount,
+	}, nil
 }
 
 // Resource handlers
