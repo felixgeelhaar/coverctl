@@ -14,6 +14,7 @@ import (
 type mockService struct {
 	checkResult   domain.Result
 	checkErr      error
+	checkOpts     application.CheckOptions // Captured options from last call
 	reportResult  domain.Result
 	reportErr     error
 	recordErr     error
@@ -28,6 +29,7 @@ type mockService struct {
 }
 
 func (m *mockService) CheckResult(ctx context.Context, opts application.CheckOptions) (domain.Result, error) {
+	m.checkOpts = opts // Capture the options for verification
 	return m.checkResult, m.checkErr
 }
 
@@ -250,6 +252,57 @@ func TestHandleCheck(t *testing.T) {
 	}
 	if summary, ok := output["summary"].(string); !ok || summary == "" {
 		t.Error("expected non-empty summary")
+	}
+}
+
+func TestHandleCheck_BuildFlags(t *testing.T) {
+	svc := &mockService{
+		checkResult: domain.Result{
+			Passed: true,
+			Domains: []domain.DomainResult{
+				{Domain: "core", Status: domain.StatusPass, Covered: 80, Total: 100},
+			},
+		},
+	}
+	server := New(svc, DefaultConfig(), "test")
+
+	input := CheckInput{
+		Tags:     "integration,e2e",
+		Race:     true,
+		Short:    true,
+		Verbose:  true,
+		Run:      "TestSpecific",
+		Timeout:  "30m",
+		TestArgs: []string{"-count=1", "-parallel=4"},
+	}
+
+	_, err := server.handleCheck(context.Background(), input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Verify build flags were passed correctly
+	flags := svc.checkOpts.BuildFlags
+	if flags.Tags != "integration,e2e" {
+		t.Errorf("expected Tags='integration,e2e', got %q", flags.Tags)
+	}
+	if !flags.Race {
+		t.Error("expected Race=true")
+	}
+	if !flags.Short {
+		t.Error("expected Short=true")
+	}
+	if !flags.Verbose {
+		t.Error("expected Verbose=true")
+	}
+	if flags.Run != "TestSpecific" {
+		t.Errorf("expected Run='TestSpecific', got %q", flags.Run)
+	}
+	if flags.Timeout != "30m" {
+		t.Errorf("expected Timeout='30m', got %q", flags.Timeout)
+	}
+	if len(flags.TestArgs) != 2 || flags.TestArgs[0] != "-count=1" || flags.TestArgs[1] != "-parallel=4" {
+		t.Errorf("expected TestArgs=['-count=1', '-parallel=4'], got %v", flags.TestArgs)
 	}
 }
 
