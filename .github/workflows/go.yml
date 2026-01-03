@@ -70,7 +70,7 @@ jobs:
           sarif_file: gosec.sarif
         if: always()
       - name: Upload VerdictSec results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: security-scan-results
           path: verdict-results.json
