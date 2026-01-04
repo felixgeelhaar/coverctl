@@ -55,14 +55,18 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: '1.24'
-      - name: Install VerdictSec
-        run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@latest
+      - name: Install security tools
+        run: |
+          go install github.com/felixgeelhaar/verdictsec/cmd/verdict@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
       - name: Run VerdictSec Security Scan
-        run: verdict scan --sarif -o verdict.sarif || true
+        run: verdict scan || true
+      - name: Generate SARIF for GitHub Security
+        run: gosec -fmt sarif -out gosec.sarif ./... || true
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: verdict.sarif
+          sarif_file: gosec.sarif
         if: always()
 
   coverage:
