@@ -209,7 +209,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - uses: ./.github/actions/coverctl
         with:
           command: check
@@ -232,14 +232,14 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - name: Install verdict
         run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@v0.8.0
       - name: Install verdict engines
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
           go install golang.org/x/vuln/cmd/govulncheck@latest
-          go install github.com/gitleaks/gitleaks/v8@v8.29.0
+          go install github.com/gitleaks/gitleaks/v8@latest
           go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
           go install github.com/anchore/syft/cmd/syft@latest
           go install honnef.co/go/tools/cmd/staticcheck@latest

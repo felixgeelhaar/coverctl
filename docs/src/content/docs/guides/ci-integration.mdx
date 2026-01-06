@@ -29,7 +29,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Install coverctl
         run: go install github.com/felixgeelhaar/coverctl@latest
@@ -49,7 +49,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
 
       - name: Install coverctl
@@ -74,7 +74,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Install coverctl
         run: go install github.com/felixgeelhaar/coverctl@latest
@@ -121,7 +121,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Install coverctl
         run: go install github.com/felixgeelhaar/coverctl@latest
@@ -146,7 +146,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Install verdict
         run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@v0.8.0
@@ -155,7 +155,7 @@ jobs:
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
           go install golang.org/x/vuln/cmd/govulncheck@latest
-          go install github.com/gitleaks/gitleaks/v8@v8.29.0
+          go install github.com/gitleaks/gitleaks/v8@latest
           go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
           go install github.com/anchore/syft/cmd/syft@latest
           go install honnef.co/go/tools/cmd/staticcheck@latest
@@ -185,7 +185,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Install coverctl
         run: go install github.com/felixgeelhaar/coverctl@latest
@@ -220,7 +220,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Install coverctl
         run: go install github.com/felixgeelhaar/coverctl@latest
@@ -246,7 +246,7 @@ jobs:
     ```yaml
     # .gitlab-ci.yml
     coverage:
-      image: golang:1.24
+      image: golang:1.25
       script:
         - go install github.com/felixgeelhaar/coverctl@latest
         - coverctl check --ci --fail-under 80
@@ -260,7 +260,7 @@ jobs:
     jobs:
       coverage:
         docker:
-          - image: cimg/go:1.24
+          - image: cimg/go:1.25
         steps:
           - checkout
           - run:
@@ -276,7 +276,7 @@ jobs:
     // Jenkinsfile
     pipeline {
       agent {
-        docker { image 'golang:1.24' }
+        docker { image 'golang:1.25' }
       }
       stages {
         stage('Coverage') {
