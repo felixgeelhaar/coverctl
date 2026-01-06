@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "node --no-deprecation ./node_modules/astro/dist/cli/index.js build",
+    "build": "NODE_OPTIONS=--no-deprecation astro build",
     "preview": "astro preview",
     "astro": "astro"
   },

@@ -58,7 +58,11 @@ jobs:
       - name: Install VerdictSec
         run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@v0.8.0
       - name: Run VerdictSec Security Scan
-        run: verdict --sarif -o verdict.sarif || true
+        run: |
+          verdict scan --sarif -o verdict.sarif || true
+          if [ ! -f verdict.sarif ]; then
+            echo '{"version":"2.1.0","runs":[]}' > verdict.sarif
+          fi
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         with:

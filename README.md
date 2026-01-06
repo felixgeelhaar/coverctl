@@ -236,7 +236,7 @@ jobs:
       - name: Install verdict
         run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@v0.8.0
       - name: Run verdict (SARIF)
-        run: verdict --sarif -o verdict.sarif || true
+        run: verdict scan --sarif -o verdict.sarif || true
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
         with:

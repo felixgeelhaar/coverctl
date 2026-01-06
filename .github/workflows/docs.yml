@@ -44,10 +44,15 @@ jobs:
         working-directory: docs
         run: npm run build
 
+      - name: Prepare artifact
+        run: |
+          rm -rf dist
+          mv docs/dist dist
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/dist
+          path: dist
 
   deploy:
     environment:
