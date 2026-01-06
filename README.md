@@ -217,6 +217,32 @@ jobs:
           output: text
 ```
 
+## Security Scan (SARIF)
+
+Run VerdictSec in GitHub Actions and upload SARIF results:
+
+```yaml
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+      - name: Install verdict
+        run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@v0.8.0
+      - name: Run verdict (SARIF)
+        run: verdict --sarif -o verdict.sarif || true
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: verdict.sarif
+```
+
 ## Docs & governance
 
 - Product/architecture docs live under `docs/` (TDD/PRD). `AGENTS.md` covers contributor expectations.

@@ -6,6 +6,27 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
   site: 'https://felixgeelhaar.github.io',
   base: '/coverctl',
+  vite: {
+    build: {
+      rollupOptions: {
+        onwarn(warning, warn) {
+          if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
+            const message = String(warning.message || '');
+            const importer = String(warning.importer || '');
+            const source = String(warning.source || '');
+            if (
+              message.includes('@astrojs/internal-helpers/remote') ||
+              importer.includes('astro/dist/assets/utils/remotePattern.js') ||
+              source.includes('@astrojs/internal-helpers/remote')
+            ) {
+              return;
+            }
+          }
+          warn(warning);
+        },
+      },
+    },
+  },
   integrations: [
     starlight({
       title: 'coverctl',

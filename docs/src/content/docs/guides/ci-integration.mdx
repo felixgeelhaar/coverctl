@@ -130,6 +130,36 @@ jobs:
         run: coverctl check --ci --diff origin/${{ github.base_ref }}
 ```
 
+### Security Scan (SARIF)
+
+Run VerdictSec and upload SARIF to GitHub code scanning:
+
+```yaml
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install verdict
+        run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@v0.8.0
+
+      - name: Run verdict (SARIF)
+        run: verdict --sarif -o verdict.sarif || true
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: verdict.sarif
+```
+
 ### Coverage Badge
 
 Generate and commit a coverage badge:
