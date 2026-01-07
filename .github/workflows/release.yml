@@ -26,8 +26,20 @@ jobs:
       - name: Run tests
         run: go test -race ./...
 
-      - name: Build release artifacts
-        run: ./scripts/build-artifacts.sh
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Homebrew tap
+        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: ./scripts/update-homebrew-tap.sh ${GITHUB_REF_NAME#v}
 
       - name: Build MCPB bundles
         run: ./scripts/build-mcpb.sh ${GITHUB_REF_NAME#v}
@@ -35,36 +47,11 @@ jobs:
       - name: Update server.json
         run: ./scripts/update-server-json.sh ${GITHUB_REF_NAME#v}
 
-      - name: Generate release notes
-        id: notes
-        run: |
-          # Get previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-
-          # Generate changelog
-          if [ -n "$PREV_TAG" ]; then
-            echo "## What's Changed" > notes.md
-            echo "" >> notes.md
-            git log ${PREV_TAG}..HEAD --pretty=format:"* %s (%h)" >> notes.md
-          else
-            echo "Initial release" > notes.md
-          fi
-
-      - name: Create or Update GitHub Release
+      - name: Upload MCPB bundles to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check if release already exists
-          if gh release view ${{ github.ref_name }} >/dev/null 2>&1; then
-            echo "Release ${{ github.ref_name }} already exists, uploading assets..."
-            gh release upload ${{ github.ref_name }} \
-              dist/*.tar.gz dist/*.zip dist/*.mcpb --clobber || true
-          else
-            gh release create ${{ github.ref_name }} \
-              --title "Release ${GITHUB_REF_NAME#v}" \
-              --notes-file notes.md \
-              dist/*.tar.gz dist/*.zip dist/*.mcpb
-          fi
+          gh release upload ${{ github.ref_name }} dist/*.mcpb --clobber || true
 
       - name: Install mcp-publisher
         run: |

@@ -101,6 +101,17 @@ func TestNew(t *testing.T) {
 }
 
 func TestNew_DefaultConfig(t *testing.T) {
+	// Run from a temp directory to avoid auto-detection finding real configs
+	tmpDir := t.TempDir()
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("failed to change to temp directory: %v", err)
+	}
+	defer func() { _ = os.Chdir(origDir) }()
+
 	svc := &mockService{}
 	cfg := Config{} // Empty config should get defaults
 
