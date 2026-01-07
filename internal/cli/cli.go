@@ -583,7 +583,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 }
 
 func BuildService(out *os.File) *application.Service {
-	module := gotool.ModuleResolver{}
+	module := gotool.NewCachedModuleResolver()
 	return &application.Service{
 		ConfigLoader:      config.Loader{},
 		Autodetector:      autodetect.Detector{Module: module},

@@ -12,7 +12,7 @@ import (
 )
 
 type Detector struct {
-	Module gotool.ModuleResolver
+	Module gotool.ModuleInfo
 }
 
 func (d Detector) Detect() (application.Config, error) {

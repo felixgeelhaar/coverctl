@@ -13,11 +13,12 @@ import (
 )
 
 type DomainResolver struct {
-	Module ModuleResolver
+	Module ModuleInfo
 }
 
 type goPackage struct {
-	Dir string `json:"Dir"`
+	Dir        string `json:"Dir"`
+	ImportPath string `json:"ImportPath"`
 }
 
 func (r DomainResolver) Resolve(ctx context.Context, domains []domain.Domain) (map[string][]string, error) {
@@ -26,21 +27,89 @@ func (r DomainResolver) Resolve(ctx context.Context, domains []domain.Domain) (m
 		return nil, err
 	}
 
+	modulePath, err := r.Module.ModulePath(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Collect all unique patterns
+	patterns := collectPatterns(domains)
+
+	// Batch resolve: single go list call for all patterns
+	allPkgs, err := goList(ctx, moduleRoot, patterns...)
+	if err != nil {
+		return nil, fmt.Errorf("go list: %w", err)
+	}
+
+	// Build lookup map from import path to directory
+	pkgDirMap := make(map[string]string, len(allPkgs))
+	for _, pkg := range allPkgs {
+		pkgDirMap[pkg.ImportPath] = pkg.Dir
+	}
+
+	// Map packages back to domains
 	result := make(map[string][]string, len(domains))
 	for _, d := range domains {
 		dirs := make([]string, 0)
 		for _, match := range d.Match {
-			pkgs, err := goList(ctx, moduleRoot, match)
-			if err != nil {
-				return nil, fmt.Errorf("go list %s: %w", match, err)
-			}
-			for _, pkg := range pkgs {
+			matchedPkgs := matchPackages(allPkgs, match, modulePath)
+			for _, pkg := range matchedPkgs {
 				dirs = append(dirs, pkg.Dir)
 			}
 		}
 		result[d.Name] = unique(dirs)
 	}
 	return result, nil
+}
+
+// collectPatterns extracts all unique match patterns from domains.
+func collectPatterns(domains []domain.Domain) []string {
+	seen := make(map[string]struct{})
+	patterns := make([]string, 0)
+	for _, d := range domains {
+		for _, match := range d.Match {
+			if _, ok := seen[match]; !ok {
+				seen[match] = struct{}{}
+				patterns = append(patterns, match)
+			}
+		}
+	}
+	return patterns
+}
+
+// matchPackages filters packages that match the given pattern.
+func matchPackages(pkgs []goPackage, pattern, modulePath string) []goPackage {
+	matched := make([]goPackage, 0)
+	for _, pkg := range pkgs {
+		if matchPattern(pkg.ImportPath, pattern, modulePath) {
+			matched = append(matched, pkg)
+		}
+	}
+	return matched
+}
+
+// matchPattern checks if an import path matches a domain pattern.
+// Patterns like "./internal/cli/..." match any package under that path.
+func matchPattern(importPath, pattern, modulePath string) bool {
+	// Convert relative pattern to absolute import path pattern
+	absPattern := pattern
+	if len(pattern) >= 2 && pattern[:2] == "./" {
+		absPattern = modulePath + "/" + pattern[2:]
+	}
+
+	// Handle "..." wildcard
+	if len(absPattern) >= 3 && absPattern[len(absPattern)-3:] == "..." {
+		prefix := absPattern[:len(absPattern)-3]
+		// Remove trailing slash if present
+		if len(prefix) > 0 && prefix[len(prefix)-1] == '/' {
+			prefix = prefix[:len(prefix)-1]
+		}
+		// Match exact prefix or prefix/subpackage
+		return importPath == prefix || (len(importPath) > len(prefix) && importPath[:len(prefix)] == prefix && importPath[len(prefix)] == '/')
+	}
+
+	// Exact match
+	return importPath == absPattern
 }
 
 func (r DomainResolver) ModuleRoot(ctx context.Context) (string, error) {
@@ -51,8 +120,9 @@ func (r DomainResolver) ModulePath(ctx context.Context) (string, error) {
 	return r.Module.ModulePath(ctx)
 }
 
-func goList(ctx context.Context, dir string, pattern string) ([]goPackage, error) {
-	cmd := exec.CommandContext(ctx, "go", "list", "-json", pattern)
+func goList(ctx context.Context, dir string, patterns ...string) ([]goPackage, error) {
+	args := append([]string{"list", "-json"}, patterns...)
+	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = dir
 	out, err := cmd.Output()
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 )
 
 type GitDiff struct {
-	Module gotool.ModuleResolver
+	Module gotool.ModuleInfo
 	Exec   func(ctx context.Context, dir string, args []string) ([]byte, error)
 }
 

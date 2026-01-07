@@ -13,7 +13,7 @@ import (
 )
 
 type Runner struct {
-	Module     ModuleResolver
+	Module     ModuleInfo
 	Exec       func(ctx context.Context, dir string, args []string) error
 	ExecOutput func(ctx context.Context, dir string, args []string) ([]byte, error)
 	ExecEnv    func(ctx context.Context, dir string, env []string, cmd string, args []string) error
