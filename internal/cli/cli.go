@@ -739,14 +739,6 @@ func writeBadgeFile(path string, percent float64, label, style string) error {
 	})
 }
 
-func exitCode(err error, code int, stderr io.Writer) int {
-	if err == nil {
-		return 0
-	}
-	fmt.Fprintln(stderr, err)
-	return code
-}
-
 // exitCodeWithCI outputs errors in GitHub Actions annotation format when CI mode is enabled
 func exitCodeWithCI(err error, code int, stderr io.Writer, global GlobalOptions) int {
 	if err == nil {

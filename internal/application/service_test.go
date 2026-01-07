@@ -96,15 +96,6 @@ func (f fakeDiffProvider) ChangedFiles(ctx context.Context, base string) ([]stri
 	return f.files, f.err
 }
 
-type fakeAnnotationScanner struct {
-	annotations map[string]Annotation
-	err         error
-}
-
-func (f fakeAnnotationScanner) Scan(ctx context.Context, moduleRoot string, files []string) (map[string]Annotation, error) {
-	return f.annotations, f.err
-}
-
 func TestServiceCheckPass(t *testing.T) {
 	min := 80.0
 	cfg := Config{Version: 1, Policy: domain.Policy{DefaultMin: 80, Domains: []domain.Domain{{Name: "core", Match: []string{"./internal/core/..."}, Min: &min}}}}

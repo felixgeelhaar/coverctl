@@ -353,15 +353,6 @@ func (s *Service) reportUncoveredResult(files map[string]domain.CoverageStat, ex
 	return result, nil
 }
 
-// reportUncovered generates a report of files with 0% coverage.
-func (s *Service) reportUncovered(files map[string]domain.CoverageStat, exclude []string, annotations map[string]Annotation, format OutputFormat) error {
-	result, err := s.reportUncoveredResult(files, exclude, annotations)
-	if err != nil {
-		return err
-	}
-	return s.Reporter.Write(s.Out, result, format)
-}
-
 // diffFilesWithConfig gets changed files using the given diff configuration.
 func (s *Service) diffFilesWithConfig(ctx context.Context, cfg DiffConfig) (map[string]struct{}, error) {
 	if !cfg.Enabled || s.DiffProvider == nil {
