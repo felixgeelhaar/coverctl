@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -22,18 +23,22 @@ type Service struct {
 	DiffProvider      DiffProvider
 	AnnotationScanner AnnotationScanner
 	Reporter          Reporter
+	PRClients         map[PRProvider]PRClient // Supports GitHub, GitLab, Bitbucket
+	CommentFormatter  CommentFormatter
 	Out               io.Writer
 }
 
 type CheckOptions struct {
-	ConfigPath   string
-	Output       OutputFormat
-	Profile      string
-	Domains      []string     // Filter to specific domains (empty = all domains)
-	HistoryStore HistoryStore // Optional: for delta calculation
-	FailUnder    *float64     // Optional: fail if overall coverage is below this threshold
-	Ratchet      bool         // Fail if coverage decreases from previous recorded value
-	BuildFlags   BuildFlags   // Build and test flags
+	ConfigPath     string
+	Output         OutputFormat
+	Profile        string
+	Domains        []string     // Filter to specific domains (empty = all domains)
+	HistoryStore   HistoryStore // Optional: for delta calculation
+	FailUnder      *float64     // Optional: fail if overall coverage is below this threshold
+	Ratchet        bool         // Fail if coverage decreases from previous recorded value
+	BuildFlags     BuildFlags   // Build and test flags
+	Incremental    bool         // Only test packages with changed files
+	IncrementalRef string       // Git ref to compare against (default: HEAD~1)
 }
 
 type RunOnlyOptions struct {
@@ -71,7 +76,33 @@ func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Re
 		return domain.Result{}, fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
-	profile, err := s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile, BuildFlags: opts.BuildFlags})
+	// Handle incremental mode: only test affected packages
+	var packages []string
+	if opts.Incremental && s.DiffProvider != nil {
+		ref := opts.IncrementalRef
+		if ref == "" {
+			ref = "HEAD~1"
+		}
+		changedFiles, err := s.DiffProvider.ChangedFiles(ctx, ref)
+		if err != nil {
+			return domain.Result{}, fmt.Errorf("incremental mode: %w", err)
+		}
+		packages = filesToPackages(changedFiles)
+		if len(packages) == 0 {
+			// No changed Go files, return passing result
+			return domain.Result{
+				Passed:   true,
+				Warnings: []string{"incremental mode: no Go files changed since " + ref},
+			}, nil
+		}
+	}
+
+	profile, err := s.CoverageRunner.Run(ctx, RunOptions{
+		Domains:     domains,
+		ProfilePath: opts.Profile,
+		BuildFlags:  opts.BuildFlags,
+		Packages:    packages,
+	})
 	if err != nil {
 		return domain.Result{}, err
 	}
@@ -1230,8 +1261,193 @@ func (s *Service) Debt(ctx context.Context, opts DebtOptions) (DebtResult, error
 	}, nil
 }
 
+// Compare compares coverage between two profiles.
+func (s *Service) Compare(ctx context.Context, opts CompareOptions) (CompareResult, error) {
+	// Parse base profile
+	baseCoverage, err := s.ProfileParser.Parse(opts.BaseProfile)
+	if err != nil {
+		return CompareResult{}, fmt.Errorf("parse base profile: %w", err)
+	}
+
+	// Parse head profile
+	headCoverage, err := s.ProfileParser.Parse(opts.HeadProfile)
+	if err != nil {
+		return CompareResult{}, fmt.Errorf("parse head profile: %w", err)
+	}
+
+	// Get module info for normalization
+	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
+	if err != nil {
+		return CompareResult{}, err
+	}
+	modulePath, err := s.DomainResolver.ModulePath(ctx)
+	if err != nil {
+		return CompareResult{}, err
+	}
+
+	// Normalize paths
+	baseCoverage = normalizeCoverageMap(baseCoverage, moduleRoot, modulePath)
+	headCoverage = normalizeCoverageMap(headCoverage, moduleRoot, modulePath)
+
+	// Calculate overall coverage
+	baseOverall := calculateCoverageMapPercent(baseCoverage)
+	headOverall := calculateCoverageMapPercent(headCoverage)
+	delta := round1(headOverall - baseOverall)
+
+	// Collect all unique files
+	allFiles := make(map[string]struct{})
+	for file := range baseCoverage {
+		allFiles[file] = struct{}{}
+	}
+	for file := range headCoverage {
+		allFiles[file] = struct{}{}
+	}
+
+	// Compare file by file
+	var improved, regressed []FileDelta
+	unchanged := 0
+
+	for file := range allFiles {
+		baseStat := baseCoverage[file]
+		headStat := headCoverage[file]
+
+		basePct := 0.0
+		if baseStat.Total > 0 {
+			basePct = round1(float64(baseStat.Covered) / float64(baseStat.Total) * 100)
+		}
+
+		headPct := 0.0
+		if headStat.Total > 0 {
+			headPct = round1(float64(headStat.Covered) / float64(headStat.Total) * 100)
+		}
+
+		fileDelta := round1(headPct - basePct)
+
+		if fileDelta > 0.1 {
+			improved = append(improved, FileDelta{
+				File:    file,
+				BasePct: basePct,
+				HeadPct: headPct,
+				Delta:   fileDelta,
+			})
+		} else if fileDelta < -0.1 {
+			regressed = append(regressed, FileDelta{
+				File:    file,
+				BasePct: basePct,
+				HeadPct: headPct,
+				Delta:   fileDelta,
+			})
+		} else {
+			unchanged++
+		}
+	}
+
+	// Sort by delta (largest changes first)
+	sort.Slice(improved, func(i, j int) bool {
+		return improved[i].Delta > improved[j].Delta
+	})
+	sort.Slice(regressed, func(i, j int) bool {
+		return regressed[i].Delta < regressed[j].Delta
+	})
+
+	// Calculate domain deltas if config is available
+	domainDeltas := make(map[string]float64)
+	if opts.ConfigPath != "" {
+		cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+		if err == nil && len(domains) > 0 {
+			domainDirs, err := s.DomainResolver.Resolve(ctx, domains)
+			if err == nil {
+				domainExcludes := buildDomainExcludes(domains)
+				annotations := make(map[string]Annotation)
+
+				baseDomainCov := AggregateByDomainWithExcludes(baseCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
+				headDomainCov := AggregateByDomainWithExcludes(headCoverage, domainDirs, cfg.Exclude, domainExcludes, moduleRoot, modulePath, annotations)
+
+				for _, d := range domains {
+					baseStat := baseDomainCov[d.Name]
+					headStat := headDomainCov[d.Name]
+
+					baseDomainPct := 0.0
+					if baseStat.Total > 0 {
+						baseDomainPct = float64(baseStat.Covered) / float64(baseStat.Total) * 100
+					}
+
+					headDomainPct := 0.0
+					if headStat.Total > 0 {
+						headDomainPct = float64(headStat.Covered) / float64(headStat.Total) * 100
+					}
+
+					domainDeltas[d.Name] = round1(headDomainPct - baseDomainPct)
+				}
+			}
+		}
+	}
+
+	return CompareResult{
+		BaseOverall:  baseOverall,
+		HeadOverall:  headOverall,
+		Delta:        delta,
+		Improved:     improved,
+		Regressed:    regressed,
+		Unchanged:    unchanged,
+		DomainDeltas: domainDeltas,
+	}, nil
+}
+
+// calculateCoverageMapPercent calculates the overall coverage percentage from a coverage map.
+func calculateCoverageMapPercent(coverage map[string]domain.CoverageStat) float64 {
+	var totalCovered, totalStatements int
+	for _, stat := range coverage {
+		totalCovered += stat.Covered
+		totalStatements += stat.Total
+	}
+	if totalStatements == 0 {
+		return 0.0
+	}
+	return round1(float64(totalCovered) / float64(totalStatements) * 100)
+}
+
 // WatchCallback is called after each coverage run in watch mode.
 type WatchCallback func(runNumber int, err error)
+
+// filesToPackages converts changed file paths to Go package paths.
+// It filters to only Go files and deduplicates packages.
+func filesToPackages(files []string) []string {
+	seen := make(map[string]struct{})
+	var packages []string
+
+	for _, file := range files {
+		// Only consider Go files
+		if !strings.HasSuffix(file, ".go") {
+			continue
+		}
+		// Skip test files - we want to test the package, not filter by test presence
+		if strings.HasSuffix(file, "_test.go") {
+			// Still include the package, just don't use test file suffix check
+		}
+
+		// Get the directory (package path)
+		dir := filepath.Dir(file)
+		if dir == "" || dir == "." {
+			dir = "."
+		}
+
+		// Convert to Go package path format
+		pkgPath := "./" + filepath.ToSlash(dir)
+		if pkgPath == "./" {
+			pkgPath = "."
+		}
+
+		if _, ok := seen[pkgPath]; !ok {
+			seen[pkgPath] = struct{}{}
+			packages = append(packages, pkgPath)
+		}
+	}
+
+	// Sort for consistent output
+	sort.Strings(packages)
+	return packages
+}
 
 // Watch runs coverage tests in a loop, re-running when source files change.
 func (s *Service) Watch(ctx context.Context, opts WatchOptions, watcher FileWatcher, callback WatchCallback) error {
@@ -1277,3 +1493,112 @@ func (s *Service) Watch(ctx context.Context, opts WatchOptions, watcher FileWatc
 		}
 	}
 }
+
+// PRComment posts a coverage report as a comment on a PR/MR.
+// Supports GitHub, GitLab, and Bitbucket providers.
+func (s *Service) PRComment(ctx context.Context, opts PRCommentOptions) (PRCommentResult, error) {
+	if s.CommentFormatter == nil {
+		return PRCommentResult{}, fmt.Errorf("comment formatter not configured")
+	}
+
+	// Select or auto-detect provider
+	provider := opts.Provider
+	if provider == "" || provider == ProviderAuto {
+		provider = detectProvider()
+	}
+
+	// Get the appropriate client
+	client, ok := s.PRClients[provider]
+	if !ok || client == nil {
+		return PRCommentResult{}, fmt.Errorf("%s client not configured", provider)
+	}
+
+	// Get coverage result using existing ReportResult method
+	profilePath := opts.ProfilePath
+	if profilePath == "" {
+		profilePath = "coverage.out"
+	}
+	result, err := s.ReportResult(ctx, ReportOptions{
+		ConfigPath: opts.ConfigPath,
+		Profile:    profilePath,
+	})
+	if err != nil {
+		return PRCommentResult{}, fmt.Errorf("generate coverage report: %w", err)
+	}
+
+	// Generate comparison if base profile provided
+	var comparison *CompareResult
+	if opts.BaseProfile != "" {
+		comp, err := s.Compare(ctx, CompareOptions{
+			ConfigPath:  opts.ConfigPath,
+			BaseProfile: opts.BaseProfile,
+			HeadProfile: profilePath,
+		})
+		if err != nil {
+			return PRCommentResult{}, fmt.Errorf("compare coverage: %w", err)
+		}
+		comparison = &comp
+	}
+
+	// Format comment
+	commentBody := s.CommentFormatter.FormatCoverageComment(result, comparison)
+
+	// Handle dry-run mode
+	if opts.DryRun {
+		return PRCommentResult{
+			CommentBody: commentBody,
+		}, nil
+	}
+
+	// Check for existing comment if UpdateExisting is true
+	if opts.UpdateExisting {
+		existingID, err := client.FindCoverageComment(ctx, opts.Owner, opts.Repo, opts.PRNumber)
+		if err != nil {
+			return PRCommentResult{}, fmt.Errorf("find existing comment: %w", err)
+		}
+
+		if existingID != 0 {
+			// Update existing comment
+			if err := client.UpdateComment(ctx, opts.Owner, opts.Repo, existingID, commentBody); err != nil {
+				return PRCommentResult{}, fmt.Errorf("update comment: %w", err)
+			}
+			return PRCommentResult{
+				CommentID:   existingID,
+				CommentBody: commentBody,
+				Created:     false,
+			}, nil
+		}
+	}
+
+	// Create new comment
+	commentID, commentURL, err := client.CreateComment(ctx, opts.Owner, opts.Repo, opts.PRNumber, commentBody)
+	if err != nil {
+		return PRCommentResult{}, fmt.Errorf("create comment: %w", err)
+	}
+
+	return PRCommentResult{
+		CommentID:   commentID,
+		CommentURL:  commentURL,
+		CommentBody: commentBody,
+		Created:     true,
+	}, nil
+}
+
+// detectProvider auto-detects the git hosting provider from environment variables.
+func detectProvider() PRProvider {
+	// GitHub: GITHUB_TOKEN or GITHUB_REPOSITORY
+	if os.Getenv("GITHUB_TOKEN") != "" || os.Getenv("GITHUB_REPOSITORY") != "" {
+		return ProviderGitHub
+	}
+	// GitLab: GITLAB_TOKEN, CI_JOB_TOKEN, or CI_MERGE_REQUEST_IID
+	if os.Getenv("GITLAB_TOKEN") != "" || os.Getenv("CI_JOB_TOKEN") != "" || os.Getenv("CI_MERGE_REQUEST_IID") != "" {
+		return ProviderGitLab
+	}
+	// Bitbucket: BITBUCKET_APP_PASSWORD, BITBUCKET_TOKEN, or BITBUCKET_WORKSPACE
+	if os.Getenv("BITBUCKET_APP_PASSWORD") != "" || os.Getenv("BITBUCKET_TOKEN") != "" || os.Getenv("BITBUCKET_WORKSPACE") != "" {
+		return ProviderBitbucket
+	}
+	// Default to GitHub for backward compatibility
+	return ProviderGitHub
+}
+

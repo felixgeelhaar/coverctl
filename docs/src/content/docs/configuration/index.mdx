@@ -7,11 +7,23 @@ coverctl uses a YAML configuration file (default: `.coverctl.yaml`) to define co
 
 ## File Location
 
-By default, coverctl looks for `.coverctl.yaml` in the current directory. Use `-c` or `--config` to specify a different path:
+By default, coverctl looks for `.coverctl.yaml` in the current directory. If not found, it searches parent directories automatically (useful for monorepos).
 
 ```bash
+# Use custom config path
 coverctl check -c config/coverage.yaml
+
+# Auto-detects from current or parent directories
+cd packages/mypackage && coverctl check
 ```
+
+### Supported file names
+
+coverctl searches for these files in order:
+1. `.coverctl.yaml`
+2. `.coverctl.yml`
+3. `coverctl.yaml`
+4. `coverctl.yml`
 
 ## Basic Structure
 
@@ -39,6 +51,23 @@ exclude:
 ```yaml
 version: 1
 ```
+
+### extends
+
+Inherit configuration from a parent file. Useful for monorepos where packages share common policies.
+
+```yaml
+# packages/api/.coverctl.yaml
+extends: ../../.coverctl.yaml  # Path relative to this config file
+
+policy:
+  domains:
+    - name: api
+      match: ["./..."]
+      min: 90  # Override parent threshold
+```
+
+Child configs override parent values. See [Monorepo Support](/coverctl/guides/monorepo/) for details.
 
 ### policy
 
@@ -180,3 +209,4 @@ version: 1
 - [Domains](/coverctl/configuration/domains/) - Configure domain matching
 - [Policies](/coverctl/configuration/policies/) - Set coverage thresholds
 - [Advanced](/coverctl/configuration/advanced/) - Integration tests, diff mode, and more
+- [Monorepo Support](/coverctl/guides/monorepo/) - Config inheritance and workspace support

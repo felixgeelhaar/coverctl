@@ -24,6 +24,10 @@ type mockService struct {
 	trendErr      error
 	suggestResult application.SuggestResult
 	suggestErr    error
+	badgeResult   application.BadgeResult
+	badgeErr      error
+	compareResult application.CompareResult
+	compareErr    error
 	detectResult  application.Config
 	detectErr     error
 }
@@ -53,8 +57,20 @@ func (m *mockService) Suggest(ctx context.Context, opts application.SuggestOptio
 	return m.suggestResult, m.suggestErr
 }
 
+func (m *mockService) Badge(ctx context.Context, opts application.BadgeOptions) (application.BadgeResult, error) {
+	return m.badgeResult, m.badgeErr
+}
+
+func (m *mockService) Compare(ctx context.Context, opts application.CompareOptions) (application.CompareResult, error) {
+	return m.compareResult, m.compareErr
+}
+
 func (m *mockService) Detect(ctx context.Context, opts application.DetectOptions) (application.Config, error) {
 	return m.detectResult, m.detectErr
+}
+
+func (m *mockService) PRComment(ctx context.Context, opts application.PRCommentOptions) (application.PRCommentResult, error) {
+	return application.PRCommentResult{}, nil
 }
 
 func TestNew(t *testing.T) {

@@ -18,6 +18,7 @@ type Loader struct{}
 
 type fileConfig struct {
 	Version     int             `yaml:"version"`
+	Extends     string          `yaml:"extends,omitempty"` // Path to parent config for inheritance
 	Policy      filePolicy      `yaml:"policy"`
 	Exclude     []string        `yaml:"exclude,omitempty"`
 	Files       []fileFileRule  `yaml:"files,omitempty"`
@@ -81,11 +82,78 @@ func (l Loader) Exists(path string) (bool, error) {
 	return false, err
 }
 
+// FindConfig searches for a .coverctl.yaml config file starting from the current
+// directory and walking up to parent directories. This is useful for monorepo
+// scenarios where the config may be at a parent level.
+// Returns the path to the config file if found, or an error if not found.
+func (l Loader) FindConfig() (string, error) {
+	return FindConfigFrom("")
+}
+
+// FindConfigFrom searches for a .coverctl.yaml config file starting from the
+// specified directory (or current directory if empty) and walking up to parent
+// directories. Returns the path to the config file if found.
+func FindConfigFrom(startDir string) (string, error) {
+	dir := startDir
+	if dir == "" {
+		var err error
+		dir, err = os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("getting current directory: %w", err)
+		}
+	}
+
+	// Convert to absolute path for consistent searching
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		return "", fmt.Errorf("resolving path: %w", err)
+	}
+
+	// Config file names to search for (in order of preference)
+	configNames := []string{".coverctl.yaml", ".coverctl.yml", "coverctl.yaml", "coverctl.yml"}
+
+	for {
+		// Check each config name in the current directory
+		for _, name := range configNames {
+			configPath := filepath.Join(dir, name)
+			if _, err := os.Stat(configPath); err == nil {
+				return configPath, nil
+			}
+		}
+
+		// Move to parent directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached filesystem root without finding config
+			return "", errors.New("config not found: no .coverctl.yaml in current or parent directories")
+		}
+		dir = parent
+	}
+}
+
 func (l Loader) Load(path string) (application.Config, error) {
+	return l.loadWithCycleCheck(path, make(map[string]struct{}))
+}
+
+// loadWithCycleCheck loads a config file, recursively loading parent configs
+// and merging them. visited tracks already-loaded configs to detect cycles.
+func (l Loader) loadWithCycleCheck(path string, visited map[string]struct{}) (application.Config, error) {
 	cleanPath, err := pathutil.ValidatePath(path)
 	if err != nil {
 		return application.Config{}, fmt.Errorf("invalid path: %w", err)
 	}
+
+	// Convert to absolute path for cycle detection
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return application.Config{}, fmt.Errorf("resolving path: %w", err)
+	}
+
+	// Check for circular reference
+	if _, ok := visited[absPath]; ok {
+		return application.Config{}, fmt.Errorf("circular config inheritance detected: %s", absPath)
+	}
+	visited[absPath] = struct{}{}
 
 	raw, err := os.ReadFile(cleanPath) // #nosec G304 - path is validated above
 	if err != nil {
@@ -102,6 +170,24 @@ func (l Loader) Load(path string) (application.Config, error) {
 	if cfg.Version != 1 {
 		return application.Config{}, fmt.Errorf("unsupported config version: %d", cfg.Version)
 	}
+
+	// Handle config inheritance
+	var parentCfg application.Config
+	if cfg.Extends != "" {
+		// Resolve parent path relative to current config's directory
+		configDir := filepath.Dir(absPath)
+		parentPath := cfg.Extends
+		if !filepath.IsAbs(parentPath) {
+			parentPath = filepath.Join(configDir, parentPath)
+		}
+
+		parentCfg, err = l.loadWithCycleCheck(parentPath, visited)
+		if err != nil {
+			return application.Config{}, fmt.Errorf("loading parent config %s: %w", cfg.Extends, err)
+		}
+	}
+
+	// Apply defaults
 	if cfg.Diff.Enabled && cfg.Diff.Base == "" {
 		cfg.Diff.Base = "origin/main"
 	}
@@ -114,6 +200,19 @@ func (l Loader) Load(path string) (application.Config, error) {
 		}
 	}
 
+	// Build child config
+	childCfg := buildAppConfig(cfg)
+
+	// Merge child onto parent (child overrides parent)
+	if cfg.Extends != "" {
+		return mergeConfigs(parentCfg, childCfg), nil
+	}
+
+	return childCfg, nil
+}
+
+// buildAppConfig converts a fileConfig to an application.Config
+func buildAppConfig(cfg fileConfig) application.Config {
 	policy := domain.Policy{
 		DefaultMin: cfg.Policy.Default.Min,
 		Domains:    make([]domain.Domain, 0, len(cfg.Policy.Domains)),
@@ -159,7 +258,84 @@ func (l Loader) Load(path string) (application.Config, error) {
 		Annotations: application.AnnotationsConfig{
 			Enabled: cfg.Annotations.Enabled,
 		},
-	}, nil
+	}
+}
+
+// mergeConfigs merges child config onto parent config.
+// Child values override parent values. Domains with the same name are overridden.
+func mergeConfigs(parent, child application.Config) application.Config {
+	result := parent
+
+	// Version: use child if set
+	if child.Version != 0 {
+		result.Version = child.Version
+	}
+
+	// DefaultMin: use child if set (non-zero)
+	if child.Policy.DefaultMin != 0 {
+		result.Policy.DefaultMin = child.Policy.DefaultMin
+	}
+
+	// Domains: child overrides parent domains with same name, adds new ones
+	if len(child.Policy.Domains) > 0 {
+		domainMap := make(map[string]domain.Domain)
+		// Add parent domains first
+		for _, d := range result.Policy.Domains {
+			domainMap[d.Name] = d
+		}
+		// Child overrides or adds
+		for _, d := range child.Policy.Domains {
+			domainMap[d.Name] = d
+		}
+		// Convert back to slice, preserving child order for new domains
+		merged := make([]domain.Domain, 0, len(domainMap))
+		// First add parent domains that still exist
+		for _, d := range result.Policy.Domains {
+			if dom, ok := domainMap[d.Name]; ok {
+				merged = append(merged, dom)
+				delete(domainMap, d.Name)
+			}
+		}
+		// Then add any new domains from child
+		for _, d := range child.Policy.Domains {
+			if _, ok := domainMap[d.Name]; ok {
+				merged = append(merged, domainMap[d.Name])
+			}
+		}
+		result.Policy.Domains = merged
+	}
+
+	// Exclude: append child excludes (child can add more excludes)
+	if len(child.Exclude) > 0 {
+		result.Exclude = append(result.Exclude, child.Exclude...)
+	}
+
+	// Files: child file rules override parent (complete replacement)
+	if len(child.Files) > 0 {
+		result.Files = child.Files
+	}
+
+	// Diff: child overrides if set
+	if child.Diff.Enabled {
+		result.Diff = child.Diff
+	}
+
+	// Merge profiles: append child profiles
+	if len(child.Merge.Profiles) > 0 {
+		result.Merge.Profiles = append(result.Merge.Profiles, child.Merge.Profiles...)
+	}
+
+	// Integration: child overrides if enabled
+	if child.Integration.Enabled {
+		result.Integration = child.Integration
+	}
+
+	// Annotations: child overrides if enabled
+	if child.Annotations.Enabled {
+		result.Annotations = child.Annotations
+	}
+
+	return result
 }
 
 func Write(w io.Writer, cfg application.Config) error {

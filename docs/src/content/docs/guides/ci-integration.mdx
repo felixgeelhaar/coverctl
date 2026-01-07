@@ -61,7 +61,7 @@ jobs:
 
 ### Pull Request Comments
 
-Post coverage results as PR comments:
+Post coverage results as PR comments using the built-in `pr-comment` command:
 
 ```yaml
 jobs:
@@ -79,31 +79,39 @@ jobs:
       - name: Install coverctl
         run: go install github.com/felixgeelhaar/coverctl@latest
 
-      - name: Run coverage
-        id: coverage
-        run: |
-          coverctl check -o json > coverage.json
-          echo "result=$(cat coverage.json)" >> $GITHUB_OUTPUT
-
-      - name: Comment on PR
+      - name: Run coverage and post comment
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const coverage = JSON.parse('${{ steps.coverage.outputs.result }}');
-            const body = `## Coverage Report
-            | Domain | Coverage | Required | Status |
-            |--------|----------|----------|--------|
-            ${coverage.domains.map(d =>
-              `| ${d.name} | ${d.percent.toFixed(1)}% | ${d.required}% | ${d.status === 'pass' ? '✅' : '❌'} |`
-            ).join('\n')}`;
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          coverctl check
+          coverctl pr-comment --pr ${{ github.event.pull_request.number }}
+```
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+The `pr-comment` command automatically:
+- Detects GitHub from environment variables
+- Generates a formatted coverage report
+- Updates existing comments instead of creating duplicates
+
+#### With Coverage Comparison
+
+Compare against the base branch for delta reporting:
+
+```yaml
+      - name: Checkout base branch coverage
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git checkout origin/${{ github.base_ref }} -- .cover/coverage.out || true
+          mv .cover/coverage.out base-coverage.out 2>/dev/null || true
+
+      - name: Run coverage with comparison
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          coverctl check
+          coverctl pr-comment --pr ${{ github.event.pull_request.number }} --base-profile base-coverage.out
 ```
 
 ### Diff-Based Coverage for PRs
@@ -251,6 +259,17 @@ jobs:
         - go install github.com/felixgeelhaar/coverctl@latest
         - coverctl check --ci --fail-under 80
       coverage: '/Overall\s+(\d+\.\d+)%/'
+
+    # Post MR comments (merge requests)
+    coverage:mr-comment:
+      image: golang:1.25
+      rules:
+        - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      script:
+        - go install github.com/felixgeelhaar/coverctl@latest
+        - coverctl check
+        # MR number auto-detected from CI_MERGE_REQUEST_IID
+        - coverctl pr-comment
     ```
   </TabItem>
   <TabItem label="CircleCI">
@@ -287,6 +306,30 @@ jobs:
         }
       }
     }
+    ```
+  </TabItem>
+  <TabItem label="Bitbucket Pipelines">
+    ```yaml
+    # bitbucket-pipelines.yml
+    pipelines:
+      default:
+        - step:
+            name: Coverage
+            image: golang:1.25
+            script:
+              - go install github.com/felixgeelhaar/coverctl@latest
+              - coverctl check --ci --fail-under 80
+
+      pull-requests:
+        '**':
+          - step:
+              name: Coverage with PR Comment
+              image: golang:1.25
+              script:
+                - go install github.com/felixgeelhaar/coverctl@latest
+                - coverctl check
+                # PR number auto-detected from BITBUCKET_PR_ID
+                - coverctl pr-comment
     ```
   </TabItem>
 </Tabs>

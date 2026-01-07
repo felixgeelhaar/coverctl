@@ -55,6 +55,8 @@ type fakeService struct {
 	recordErr     error
 	suggestErr    error
 	suggestResult application.SuggestResult
+	compareErr    error
+	compareResult application.CompareResult
 }
 
 func (f fakeService) Check(_ context.Context, _ application.CheckOptions) error { return f.checkErr }
@@ -100,6 +102,15 @@ func (f fakeService) Watch(_ context.Context, _ application.WatchOptions, _ appl
 }
 func (f fakeService) Debt(_ context.Context, _ application.DebtOptions) (application.DebtResult, error) {
 	return application.DebtResult{HealthScore: 100}, nil
+}
+func (f fakeService) Compare(_ context.Context, _ application.CompareOptions) (application.CompareResult, error) {
+	if f.compareErr != nil {
+		return application.CompareResult{}, f.compareErr
+	}
+	return f.compareResult, nil
+}
+func (f fakeService) PRComment(_ context.Context, _ application.PRCommentOptions) (application.PRCommentResult, error) {
+	return application.PRCommentResult{}, nil
 }
 
 func TestRunUsage(t *testing.T) {

@@ -1,30 +1,63 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "coverctl config",
+  "$id": "https://github.com/felixgeelhaar/coverctl/schemas/coverctl.schema.json",
+  "title": "coverctl configuration",
+  "description": "Configuration schema for coverctl - domain-based Go coverage policy enforcement",
   "type": "object",
   "properties": {
     "version": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "Configuration version (currently 1)"
+    },
+    "extends": {
+      "type": "string",
+      "description": "Path to parent config file for inheritance. Relative paths are resolved from this config's directory. Useful for monorepos where packages inherit shared policies.",
+      "examples": ["../../.coverctl.yaml", "../base.coverctl.yaml"]
     },
     "policy": {
       "type": "object",
+      "description": "Coverage policy definitions including default thresholds and domain-specific rules",
       "properties": {
         "default": {
           "type": "object",
+          "description": "Default coverage policy applied to all domains unless overridden",
           "properties": {
-            "min": {"type": "number"}
+            "min": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Minimum coverage percentage required (0-100)"
+            }
           },
           "required": ["min"]
         },
         "domains": {
           "type": "array",
+          "description": "List of coverage domains with specific policies",
           "items": {
             "type": "object",
             "properties": {
-              "name": {"type": "string"},
-              "match": {"type": "array", "items": {"type": "string"}},
-              "min": {"type": "number"}
+              "name": {
+                "type": "string",
+                "description": "Unique identifier for this domain"
+              },
+              "match": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Go package patterns to match (e.g., './internal/...', './pkg/auth')"
+              },
+              "min": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Minimum coverage percentage for this domain (overrides default)"
+              },
+              "exclude": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "File patterns to exclude from this domain (e.g., '*_mock.go')"
+              }
             },
             "required": ["name", "match"]
           }
@@ -34,48 +67,114 @@
     },
     "files": {
       "type": "array",
+      "description": "File-level coverage rules for specific files matching patterns",
       "items": {
         "type": "object",
         "properties": {
-          "match": {"type": "array", "items": {"type": "string"}},
-          "min": {"type": "number"}
+          "match": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "File patterns to match (e.g., '*_handler.go', 'internal/core/*.go')"
+          },
+          "min": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Minimum coverage percentage for matched files"
+          }
         },
         "required": ["match", "min"]
       }
     },
+    "exclude": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Global file patterns to exclude from coverage (e.g., '*_test.go', 'vendor/*')"
+    },
     "diff": {
       "type": "object",
+      "description": "Diff-based coverage filtering to only analyze changed files",
       "properties": {
-        "enabled": {"type": "boolean"},
-        "base": {"type": "string"}
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable diff-based filtering"
+        },
+        "base": {
+          "type": "string",
+          "description": "Git ref to compare against (e.g., 'main', 'HEAD~1', 'origin/develop')"
+        }
       }
     },
     "merge": {
       "type": "object",
+      "description": "Merge multiple coverage profiles together",
       "properties": {
-        "profiles": {"type": "array", "items": {"type": "string"}}
+        "profiles": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Additional coverage profile paths to merge with the main profile"
+        }
       }
     },
     "integration": {
       "type": "object",
+      "description": "Integration test coverage settings for binary-based tests",
       "properties": {
-        "enabled": {"type": "boolean"},
-        "packages": {"type": "array", "items": {"type": "string"}},
-        "run_args": {"type": "array", "items": {"type": "string"}},
-        "cover_dir": {"type": "string"},
-        "profile": {"type": "string"}
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable integration test coverage collection"
+        },
+        "packages": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Packages containing integration tests"
+        },
+        "run_args": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Arguments to pass to the test binary"
+        },
+        "cover_dir": {
+          "type": "string",
+          "description": "Directory where coverage data is written (GOCOVERDIR)"
+        },
+        "profile": {
+          "type": "string",
+          "description": "Output path for merged integration coverage profile"
+        }
       }
     },
     "annotations": {
       "type": "object",
+      "description": "Source code annotation support for coverage exclusions",
       "properties": {
-        "enabled": {"type": "boolean"}
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable scanning for //coverctl: annotations in source files"
+        }
       }
-    },
-    "exclude": {
-      "type": "array",
-      "items": {"type": "string"}
     }
   },
-  "required": ["version", "policy"]
+  "required": ["version", "policy"],
+  "examples": [
+    {
+      "version": 1,
+      "policy": {
+        "default": {"min": 70},
+        "domains": [
+          {"name": "core", "match": ["./internal/core/..."], "min": 85},
+          {"name": "api", "match": ["./internal/api/..."], "min": 75}
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "extends": "../../.coverctl.yaml",
+      "policy": {
+        "domains": [
+          {"name": "auth", "match": ["./..."], "min": 90}
+        ]
+      }
+    }
+  ]
 }

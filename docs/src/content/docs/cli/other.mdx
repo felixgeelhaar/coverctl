@@ -5,6 +5,121 @@ description: Badge, trend, record, suggest, debt, and more
 
 This page covers additional coverctl commands for badges, trends, and coverage analysis.
 
+## pr-comment
+
+Post coverage reports as comments on GitHub, GitLab, or Bitbucket pull requests/merge requests.
+
+```bash
+coverctl pr-comment [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `-p, --profile` | Coverage profile path | `.cover/coverage.out` |
+| `--base-profile` | Base coverage profile for comparison | |
+| `--provider` | Git provider: `github`, `gitlab`, `bitbucket`, `auto` | `auto` |
+| `--pr` | PR/MR number | auto-detected |
+| `--owner` | Repository owner/namespace | auto-detected |
+| `--repo` | Repository name | auto-detected |
+| `--update` | Update existing comment instead of creating new | `true` |
+| `--dry-run` | Generate comment without posting | `false` |
+
+### Provider Auto-Detection
+
+The provider is automatically detected from environment variables:
+
+| Provider | Environment Variables |
+|----------|----------------------|
+| GitHub | `GITHUB_TOKEN`, `GITHUB_REPOSITORY` |
+| GitLab | `GITLAB_TOKEN`, `CI_JOB_TOKEN`, `CI_MERGE_REQUEST_IID` |
+| Bitbucket | `BITBUCKET_TOKEN`, `BITBUCKET_WORKSPACE`, `BITBUCKET_REPO_SLUG` |
+
+### Examples
+
+```bash
+# GitHub Actions (auto-detects everything)
+coverctl pr-comment --pr ${{ github.event.pull_request.number }}
+
+# GitLab CI (MR number auto-detected from CI_MERGE_REQUEST_IID)
+coverctl pr-comment
+
+# Bitbucket Pipelines (PR number auto-detected from BITBUCKET_PR_ID)
+coverctl pr-comment
+
+# With coverage comparison to base branch
+coverctl pr-comment --pr 123 --base-profile main-coverage.out
+
+# Explicit provider
+coverctl pr-comment --provider gitlab --pr 42
+
+# Preview comment without posting
+coverctl pr-comment --pr 123 --dry-run
+```
+
+### Comment Format
+
+The generated comment includes:
+
+- Overall coverage percentage and change
+- Domain-level coverage breakdown with status indicators
+- List of changed files with coverage deltas (when base profile provided)
+- Pass/fail status based on configured thresholds
+
+---
+
+## compare
+
+Compare coverage between two profiles to show improvements and regressions.
+
+```bash
+coverctl compare [flags]
+```
+
+### Flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-c, --config` | Config file path | `.coverctl.yaml` |
+| `--base` | Base coverage profile (required) | |
+| `--head` | Head coverage profile | `.cover/coverage.out` |
+| `-o, --output` | Output format: `text`, `json` | `text` |
+
+### Examples
+
+```bash
+# Compare main branch to current
+coverctl compare --base main-coverage.out --head coverage.out
+
+# Compare two saved profiles
+coverctl compare --base v1.0.out --head v2.0.out
+
+# JSON output for CI parsing
+coverctl compare --base main.out -o json
+```
+
+### Output
+
+```
+Coverage Comparison
+───────────────────
+Base:  78.5%
+Head:  82.1%
+Delta: +3.6%
+
+Improved Files (5):
+  internal/core/validator.go   65.2% → 85.4%  (+20.2%)
+  internal/api/handler.go      72.1% → 78.3%  (+6.2%)
+  ...
+
+Regressed Files (1):
+  internal/cli/format.go       90.0% → 87.5%  (-2.5%)
+```
+
+---
+
 ## badge
 
 Generate an SVG coverage badge for your README.

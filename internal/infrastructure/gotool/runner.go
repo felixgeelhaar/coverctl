@@ -45,7 +45,13 @@ func (r Runner) Run(ctx context.Context, opts application.RunOptions) (string, e
 
 	// Add build flags
 	args = appendBuildFlags(args, opts.BuildFlags)
-	args = append(args, "./...")
+
+	// Use specified packages or default to all
+	if len(opts.Packages) > 0 {
+		args = append(args, opts.Packages...)
+	} else {
+		args = append(args, "./...")
+	}
 
 	execFn := r.Exec
 	if execFn == nil {

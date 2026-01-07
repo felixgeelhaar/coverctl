@@ -1,0 +1,363 @@
+---
+title: Monorepo Support
+description: Configure coverctl for monorepos with config inheritance and workspace detection
+---
+
+coverctl provides first-class support for monorepos through config inheritance, allowing you to define shared policies at the root and override them in individual packages.
+
+## Config Inheritance with `extends`
+
+Use the `extends` field to inherit configuration from a parent file:
+
+```yaml
+# packages/auth/service/.coverctl.yaml
+extends: ../../../.coverctl.yaml  # Inherit from root
+
+policy:
+  domains:
+    - name: auth-service
+      match: ["./..."]
+      min: 90  # Override parent's default
+```
+
+### How Inheritance Works
+
+1. **Relative paths**: The `extends` path is resolved relative to the config file's directory
+2. **Multi-level inheritance**: Parent configs can also use `extends`, creating a chain
+3. **Override behavior**: Child domains with the same name override parent domains
+4. **Merging**: Child domains are merged with parent domains; exclusions are combined
+
+### Example Inheritance Chain
+
+```
+monorepo/
+├── .coverctl.yaml              # Root config (default: 70%)
+├── libs/
+│   ├── .coverctl.yaml          # Extends root (default: 75%)
+│   └── shared-utils/
+│       └── .coverctl.yaml      # Extends libs (min: 80%)
+└── services/
+    ├── .coverctl.yaml          # Extends root (default: 80%)
+    └── payment/
+        └── .coverctl.yaml      # Extends services (min: 95%)
+```
+
+---
+
+## Monorepo Config Structure
+
+### Root Config
+
+Define shared defaults and exclusions at the monorepo root:
+
+```yaml
+# .coverctl.yaml (root)
+version: 1
+
+policy:
+  default:
+    min: 70
+  domains:
+    - name: core
+      match: ["./internal/core/..."]
+      min: 85
+
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+  - "**/*_mock.go"
+  - "**/testdata/**"
+```
+
+### Package Config
+
+Override or extend policies in individual packages:
+
+```yaml
+# packages/payment/.coverctl.yaml
+extends: ../../.coverctl.yaml
+
+policy:
+  domains:
+    - name: payment
+      match: ["./..."]
+      min: 95  # Higher threshold for critical code
+    - name: payment-handlers
+      match: ["./handlers/..."]
+      min: 90
+
+# Additional exclusions merged with parent
+exclude:
+  - "./fixtures/**"
+```
+
+---
+
+## Go Workspace Support
+
+For Go workspaces (`go.work`), coverctl automatically detects the workspace structure.
+
+### Workspace Layout
+
+```
+monorepo/
+├── go.work
+├── .coverctl.yaml
+├── libs/
+│   ├── go.mod
+│   └── shared/
+├── services/
+│   ├── api/
+│   │   ├── go.mod
+│   │   └── .coverctl.yaml
+│   └── worker/
+│       ├── go.mod
+│       └── .coverctl.yaml
+```
+
+### Running from Package Directory
+
+```bash
+cd services/api
+coverctl check  # Uses services/api/.coverctl.yaml, inherits from root
+```
+
+### Running from Root
+
+```bash
+coverctl check -c services/api/.coverctl.yaml
+```
+
+---
+
+## CI Integration for Monorepos
+
+### GitHub Actions Matrix Strategy
+
+Run coverage checks in parallel for each package:
+
+```yaml
+name: Coverage
+
+on: [push, pull_request]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - services/api
+          - services/worker
+          - libs/shared
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install coverctl
+        run: go install github.com/felixgeelhaar/coverctl@latest
+
+      - name: Check coverage
+        working-directory: ${{ matrix.package }}
+        run: coverctl check
+```
+
+### Changed Packages Only
+
+For efficiency, only check packages with changed files:
+
+```yaml
+- name: Get changed packages
+  id: changed
+  uses: dorny/paths-filter@v3
+  with:
+    filters: |
+      api:
+        - 'services/api/**'
+      worker:
+        - 'services/worker/**'
+      shared:
+        - 'libs/shared/**'
+
+- name: Check API coverage
+  if: steps.changed.outputs.api == 'true'
+  working-directory: services/api
+  run: coverctl check
+```
+
+---
+
+## Best Practices
+
+### 1. Establish Sensible Defaults
+
+Set reasonable defaults at the root that all packages inherit:
+
+```yaml
+# Root .coverctl.yaml
+version: 1
+policy:
+  default:
+    min: 70  # Reasonable baseline
+```
+
+### 2. Progressive Thresholds
+
+Use higher thresholds for critical packages:
+
+```yaml
+# Critical service config
+extends: ../../.coverctl.yaml
+policy:
+  domains:
+    - name: payments
+      match: ["./..."]
+      min: 95  # Critical code needs high coverage
+```
+
+### 3. Shared Exclusions
+
+Define common exclusions at the root:
+
+```yaml
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+  - "**/*_test.go"
+  - "**/testdata/**"
+  - "**/vendor/**"
+```
+
+### 4. Domain-Based Organization
+
+Mirror your package structure in domains:
+
+```yaml
+policy:
+  domains:
+    - name: libs
+      match: ["./libs/..."]
+      min: 80
+    - name: services
+      match: ["./services/..."]
+      min: 75
+    - name: critical
+      match: ["./services/payment/...", "./services/auth/..."]
+      min: 90
+```
+
+---
+
+## Troubleshooting
+
+### "module root not found" Error
+
+This error occurs when coverctl cannot find a `go.mod` file. Solutions:
+
+1. **Run from package directory**: `cd packages/mypackage && coverctl check`
+2. **Specify config path**: `coverctl check -c packages/mypackage/.coverctl.yaml`
+3. **Ensure go.mod exists**: Each package should have its own `go.mod`
+
+### Circular Inheritance Detected
+
+coverctl prevents circular config inheritance. Check your `extends` chains:
+
+```yaml
+# BAD: Creates a cycle
+# a.yaml extends b.yaml
+# b.yaml extends a.yaml
+
+# GOOD: Linear inheritance
+# child.yaml extends parent.yaml extends root.yaml
+```
+
+### Config Not Found
+
+Ensure paths are relative to the config file, not the current directory:
+
+```yaml
+# In packages/api/.coverctl.yaml
+extends: ../../.coverctl.yaml  # Goes up two levels to root
+```
+
+---
+
+## Complete Monorepo Example
+
+```
+mycompany/
+├── .coverctl.yaml                    # Root config
+├── go.work
+├── libs/
+│   ├── .coverctl.yaml                # Extends root, 75% default
+│   ├── go.mod
+│   └── utils/
+│       └── utils.go
+└── services/
+    ├── .coverctl.yaml                # Extends root, 80% default
+    ├── api/
+    │   ├── .coverctl.yaml            # Extends services, 85% for API
+    │   ├── go.mod
+    │   └── main.go
+    └── payment/
+        ├── .coverctl.yaml            # Extends services, 95% for payment
+        ├── go.mod
+        └── main.go
+```
+
+**Root config:**
+```yaml
+# .coverctl.yaml
+version: 1
+policy:
+  default:
+    min: 70
+exclude:
+  - "**/generated/**"
+  - "**/mocks/**"
+```
+
+**Libs config:**
+```yaml
+# libs/.coverctl.yaml
+extends: ../.coverctl.yaml
+policy:
+  default:
+    min: 75
+  domains:
+    - name: libs
+      match: ["./..."]
+```
+
+**Services config:**
+```yaml
+# services/.coverctl.yaml
+extends: ../.coverctl.yaml
+policy:
+  default:
+    min: 80
+```
+
+**Payment service config:**
+```yaml
+# services/payment/.coverctl.yaml
+extends: ../.coverctl.yaml
+policy:
+  domains:
+    - name: payment-core
+      match: ["./internal/core/..."]
+      min: 95
+    - name: payment-handlers
+      match: ["./handlers/..."]
+      min: 90
+```
+
+## See Also
+
+- [Advanced Configuration](/coverctl/configuration/advanced/) - Diff mode, merging
+- [CI Integration](/coverctl/guides/ci-integration/) - GitHub Actions setup
+- [Domains](/coverctl/configuration/domains/) - Domain configuration

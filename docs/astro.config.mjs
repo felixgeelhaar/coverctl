@@ -103,6 +103,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { label: 'CI Integration', slug: 'guides/ci-integration' },
+            { label: 'Monorepo Support', slug: 'guides/monorepo' },
             { label: 'Build Flags', slug: 'guides/build-flags' },
           ],
         },

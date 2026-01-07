@@ -29,10 +29,45 @@ func (m ModuleResolver) ModuleRoot(ctx context.Context) (string, error) {
 		return "", err
 	}
 	gomod := strings.TrimSpace(out.String())
-	if gomod == "" || gomod == os.DevNull {
-		return "", errors.New("module root not found")
+	if gomod != "" && gomod != os.DevNull {
+		return filepath.Dir(gomod), nil
 	}
-	return filepath.Dir(gomod), nil
+
+	// Fallback: search parent directories for go.mod or go.work
+	return findModuleRoot()
+}
+
+// findModuleRoot searches current and parent directories for go.mod or go.work.
+// This helps in monorepo scenarios where the current directory may be a subdirectory
+// that isn't directly within a Go module, or when using Go workspaces.
+func findModuleRoot() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	dir := cwd
+	for {
+		// Check for go.mod first (standard Go module)
+		gomodPath := filepath.Join(dir, "go.mod")
+		if _, err := os.Stat(gomodPath); err == nil {
+			return dir, nil
+		}
+
+		// Check for go.work (Go workspace)
+		goworkPath := filepath.Join(dir, "go.work")
+		if _, err := os.Stat(goworkPath); err == nil {
+			return dir, nil
+		}
+
+		// Move to parent directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached filesystem root without finding go.mod or go.work
+			return "", errors.New("module root not found: no go.mod or go.work in current or parent directories")
+		}
+		dir = parent
+	}
 }
 
 func (m ModuleResolver) ModulePath(ctx context.Context) (string, error) {

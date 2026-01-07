@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/config"
@@ -34,6 +35,17 @@ func New(svc Service, cfg Config, version string) *Server {
 	}
 	if version == "" {
 		version = "dev"
+	}
+
+	// Only auto-detect config if using default path and it doesn't exist
+	// This preserves explicit custom paths specified by the user
+	defaultPath := DefaultConfig().ConfigPath
+	if cfg.ConfigPath == defaultPath {
+		if _, err := os.Stat(cfg.ConfigPath); os.IsNotExist(err) {
+			if foundPath, findErr := config.FindConfigFrom(""); findErr == nil {
+				cfg.ConfigPath = foundPath
+			}
+		}
 	}
 
 	s := &Server{
@@ -84,6 +96,31 @@ func (s *Server) registerTools() {
 	s.server.Tool("record").
 		Description("Record current coverage to history for trend tracking. Call this after 'check' to save coverage data.").
 		Handler(s.handleRecord)
+
+	// Suggest tool - suggests optimal coverage thresholds
+	s.server.Tool("suggest").
+		Description("Analyze current coverage and suggest optimal thresholds. Strategies: 'current' (slightly below current), 'aggressive' (push for improvement), 'conservative' (gradual improvement).").
+		Handler(s.handleSuggest)
+
+	// Debt tool - shows coverage gaps
+	s.server.Tool("debt").
+		Description("Calculate coverage debt - the gap between current and required coverage thresholds. Shows which domains/files need the most work.").
+		Handler(s.handleDebt)
+
+	// Badge tool - generates coverage badges
+	s.server.Tool("badge").
+		Description("Generate an SVG coverage badge for display in README or CI dashboards. Returns badge data or writes to file.").
+		Handler(s.handleBadge)
+
+	// Compare tool - compares coverage between two profiles
+	s.server.Tool("compare").
+		Description("Compare coverage between two profiles. Shows overall delta, improved files, regressed files, and domain-level changes.").
+		Handler(s.handleCompare)
+
+	// PR Comment tool - posts coverage report as PR/MR comment
+	s.server.Tool("pr-comment").
+		Description("Post coverage report as a comment on a PR/MR. Supports GitHub, GitLab, and Bitbucket. Provider is auto-detected from environment or can be specified. Can update existing comments.").
+		Handler(s.handlePRComment)
 }
 
 // registerResources adds all resource handlers to the server.
@@ -121,12 +158,14 @@ func (s *Server) registerResources() {
 
 func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]any, error) {
 	opts := application.CheckOptions{
-		ConfigPath: coalesce(input.ConfigPath, s.config.ConfigPath),
-		Profile:    coalesce(input.Profile, s.config.ProfilePath),
-		Output:     application.OutputJSON,
-		Domains:    input.Domains,
-		FailUnder:  input.FailUnder,
-		Ratchet:    input.Ratchet,
+		ConfigPath:     s.resolveConfigPath(input.ConfigPath),
+		Profile:        coalesce(input.Profile, s.config.ProfilePath),
+		Output:         application.OutputJSON,
+		Domains:        input.Domains,
+		FailUnder:      input.FailUnder,
+		Ratchet:        input.Ratchet,
+		Incremental:    input.Incremental,
+		IncrementalRef: input.IncrementalRef,
 		BuildFlags: application.BuildFlags{
 			Tags:     input.Tags,
 			Race:     input.Race,
@@ -163,7 +202,7 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]
 
 func (s *Server) handleReport(ctx context.Context, input ReportInput) (map[string]any, error) {
 	opts := application.ReportOptions{
-		ConfigPath:    coalesce(input.ConfigPath, s.config.ConfigPath),
+		ConfigPath:    s.resolveConfigPath(input.ConfigPath),
 		Profile:       coalesce(input.Profile, s.config.ProfilePath),
 		Output:        application.OutputJSON,
 		Domains:       input.Domains,
@@ -191,7 +230,7 @@ func (s *Server) handleReport(ctx context.Context, input ReportInput) (map[strin
 
 func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[string]any, error) {
 	opts := application.RecordOptions{
-		ConfigPath:  coalesce(input.ConfigPath, s.config.ConfigPath),
+		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
 		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
 		HistoryPath: coalesce(input.HistoryPath, s.config.HistoryPath),
 		Commit:      input.Commit,
@@ -217,6 +256,7 @@ func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[strin
 }
 
 func (s *Server) handleInit(ctx context.Context, input InitInput) (map[string]any, error) {
+	// For init, use coalesce (not resolveConfigPath) since we're creating a new file
 	configPath := coalesce(input.ConfigPath, s.config.ConfigPath)
 
 	// Check if config already exists
@@ -373,4 +413,403 @@ func (s *Server) handleConfigResource(ctx context.Context, uri string, params ma
 		MimeType: "application/json",
 		Text:     string(data),
 	}, nil
+}
+
+func (s *Server) handleSuggest(ctx context.Context, input SuggestInput) (map[string]any, error) {
+	strategy := application.SuggestCurrent
+	switch input.Strategy {
+	case "aggressive":
+		strategy = application.SuggestAggressive
+	case "conservative":
+		strategy = application.SuggestConservative
+	case "current", "":
+		strategy = application.SuggestCurrent
+	}
+
+	configPath := s.resolveConfigPath(input.ConfigPath)
+
+	opts := application.SuggestOptions{
+		ConfigPath:  configPath,
+		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
+		Strategy:    strategy,
+	}
+
+	result, err := s.svc.Suggest(ctx, opts)
+
+	output := map[string]any{
+		"passed":      err == nil,
+		"suggestions": result.Suggestions,
+	}
+
+	if err != nil {
+		output["passed"] = false
+		output["error"] = err.Error()
+		output["summary"] = "Failed to generate suggestions"
+		return output, nil
+	}
+
+	// Write suggested config if requested
+	if input.WriteConfig {
+		// Apply suggested thresholds to the config
+		suggestedConfig := applySuggestions(result.Config, result.Suggestions)
+
+		// Backup existing config if it exists
+		backupPath, backupErr := backupConfig(configPath)
+		if backupErr != nil && !os.IsNotExist(backupErr) {
+			output["error"] = fmt.Sprintf("failed to backup config: %v", backupErr)
+			output["summary"] = "Failed to backup existing config"
+			return output, nil
+		}
+
+		// Write new config
+		if err := writeConfig(configPath, suggestedConfig); err != nil {
+			output["error"] = err.Error()
+			output["summary"] = "Failed to write config"
+			return output, nil
+		}
+
+		output["configPath"] = configPath
+		if backupPath != "" {
+			output["backupPath"] = backupPath
+		}
+		output["summary"] = fmt.Sprintf("Applied %d threshold suggestions to %s", len(result.Suggestions), configPath)
+	} else {
+		output["summary"] = fmt.Sprintf("Generated %d threshold suggestions using %s strategy", len(result.Suggestions), strategy)
+	}
+
+	return output, nil
+}
+
+func (s *Server) handleDebt(ctx context.Context, input DebtInput) (map[string]any, error) {
+	opts := application.DebtOptions{
+		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
+		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
+		Output:      application.OutputJSON,
+	}
+
+	result, err := s.svc.Debt(ctx, opts)
+
+	output := map[string]any{
+		"passed":      err == nil,
+		"items":       result.Items,
+		"totalDebt":   result.TotalDebt,
+		"totalLines":  result.TotalLines,
+		"healthScore": result.HealthScore,
+	}
+
+	if err != nil {
+		output["passed"] = false
+		output["error"] = err.Error()
+		output["summary"] = "Failed to calculate coverage debt"
+	} else {
+		if result.TotalDebt > 0 {
+			output["summary"] = fmt.Sprintf("Coverage debt: %.1f%% gap across %d items (health score: %.0f/100)", result.TotalDebt, len(result.Items), result.HealthScore)
+		} else {
+			output["summary"] = fmt.Sprintf("No coverage debt - all thresholds met (health score: %.0f/100)", result.HealthScore)
+		}
+	}
+
+	return output, nil
+}
+
+func (s *Server) handleBadge(ctx context.Context, input BadgeInput) (map[string]any, error) {
+	opts := application.BadgeOptions{
+		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
+		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
+		Output:      input.Output,
+		Label:       coalesce(input.Label, "coverage"),
+		Style:       coalesce(input.Style, "flat"),
+	}
+
+	result, err := s.svc.Badge(ctx, opts)
+
+	output := map[string]any{
+		"passed":  err == nil,
+		"percent": result.Percent,
+	}
+
+	if err != nil {
+		output["passed"] = false
+		output["error"] = err.Error()
+		output["summary"] = "Failed to generate badge"
+	} else {
+		output["summary"] = fmt.Sprintf("Coverage: %.1f%%", result.Percent)
+		if input.Output != "" {
+			output["outputPath"] = input.Output
+		}
+	}
+
+	return output, nil
+}
+
+func (s *Server) handleCompare(ctx context.Context, input CompareInput) (map[string]any, error) {
+	if input.BaseProfile == "" {
+		return map[string]any{
+			"passed":  false,
+			"error":   "baseProfile is required",
+			"summary": "Missing required parameter",
+		}, nil
+	}
+
+	opts := application.CompareOptions{
+		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
+		BaseProfile: input.BaseProfile,
+		HeadProfile: coalesce(input.HeadProfile, s.config.ProfilePath),
+		Output:      application.OutputJSON,
+	}
+
+	result, err := s.svc.Compare(ctx, opts)
+
+	output := map[string]any{
+		"passed":       err == nil,
+		"baseOverall":  result.BaseOverall,
+		"headOverall":  result.HeadOverall,
+		"delta":        result.Delta,
+		"improved":     result.Improved,
+		"regressed":    result.Regressed,
+		"unchanged":    result.Unchanged,
+		"domainDeltas": result.DomainDeltas,
+	}
+
+	if err != nil {
+		output["passed"] = false
+		output["error"] = err.Error()
+		output["summary"] = "Failed to compare coverage"
+	} else {
+		sign := "+"
+		if result.Delta < 0 {
+			sign = ""
+		}
+		output["summary"] = fmt.Sprintf("Coverage %s%.1f%% (%.1f%% → %.1f%%), %d improved, %d regressed",
+			sign, result.Delta, result.BaseOverall, result.HeadOverall, len(result.Improved), len(result.Regressed))
+	}
+
+	return output, nil
+}
+
+func (s *Server) handlePRComment(ctx context.Context, input PRCommentInput) (map[string]any, error) {
+	// Parse provider
+	var provider application.PRProvider
+	switch strings.ToLower(input.Provider) {
+	case "github":
+		provider = application.ProviderGitHub
+	case "gitlab":
+		provider = application.ProviderGitLab
+	case "bitbucket":
+		provider = application.ProviderBitbucket
+	case "auto", "":
+		provider = application.ProviderAuto
+	default:
+		return map[string]any{
+			"passed":  false,
+			"error":   fmt.Sprintf("unknown provider %q (use github, gitlab, bitbucket, or auto)", input.Provider),
+			"summary": "Invalid provider specified",
+		}, nil
+	}
+
+	// Auto-detect owner/repo/PR from environment
+	owner, repo, prNumber := detectPRContextMCP(provider, input.Owner, input.Repo, input.PRNumber)
+
+	if prNumber == 0 {
+		return map[string]any{
+			"passed":  false,
+			"error":   "prNumber is required (or set CI environment variables for auto-detection)",
+			"summary": "Missing required parameter",
+		}, nil
+	}
+	if owner == "" || repo == "" {
+		return map[string]any{
+			"passed":  false,
+			"error":   "owner and repo are required (or set provider-specific environment variables)",
+			"summary": "Missing required parameter",
+		}, nil
+	}
+
+	// Default UpdateExisting to true if not specified
+	updateExisting := true
+	if input.UpdateExisting {
+		updateExisting = input.UpdateExisting
+	}
+
+	opts := application.PRCommentOptions{
+		ConfigPath:     s.resolveConfigPath(input.ConfigPath),
+		ProfilePath:    coalesce(input.Profile, s.config.ProfilePath),
+		BaseProfile:    input.BaseProfile,
+		Provider:       provider,
+		PRNumber:       prNumber,
+		Owner:          owner,
+		Repo:           repo,
+		UpdateExisting: updateExisting,
+		DryRun:         input.DryRun,
+	}
+
+	result, err := s.svc.PRComment(ctx, opts)
+
+	output := map[string]any{
+		"passed":      err == nil,
+		"commentBody": result.CommentBody,
+		"provider":    string(provider),
+	}
+
+	if err != nil {
+		output["passed"] = false
+		output["error"] = err.Error()
+		output["summary"] = "Failed to post PR comment"
+	} else if input.DryRun {
+		output["summary"] = "Generated PR comment (dry-run mode)"
+	} else if result.Created {
+		output["commentId"] = result.CommentID
+		output["commentUrl"] = result.CommentURL
+		output["summary"] = fmt.Sprintf("Created comment on PR #%d: %s", prNumber, result.CommentURL)
+	} else {
+		output["commentId"] = result.CommentID
+		output["summary"] = fmt.Sprintf("Updated existing comment #%d on PR #%d", result.CommentID, prNumber)
+	}
+
+	return output, nil
+}
+
+// detectPRContextMCP auto-detects owner, repo, and PR number from environment variables.
+func detectPRContextMCP(provider application.PRProvider, owner, repo string, prNumber int) (string, string, int) {
+	// If all values are already provided, return them
+	if owner != "" && repo != "" && prNumber != 0 {
+		return owner, repo, prNumber
+	}
+
+	// GitHub: GITHUB_REPOSITORY=owner/repo
+	if (provider == application.ProviderGitHub || provider == application.ProviderAuto) && (owner == "" || repo == "") {
+		if ghRepo := os.Getenv("GITHUB_REPOSITORY"); ghRepo != "" {
+			parts := strings.SplitN(ghRepo, "/", 2)
+			if len(parts) == 2 {
+				if owner == "" {
+					owner = parts[0]
+				}
+				if repo == "" {
+					repo = parts[1]
+				}
+			}
+		}
+	}
+
+	// GitLab: CI_PROJECT_NAMESPACE and CI_PROJECT_NAME
+	if (provider == application.ProviderGitLab || provider == application.ProviderAuto) && (owner == "" || repo == "") {
+		if ns := os.Getenv("CI_PROJECT_NAMESPACE"); ns != "" && owner == "" {
+			owner = ns
+		}
+		if name := os.Getenv("CI_PROJECT_NAME"); name != "" && repo == "" {
+			repo = name
+		}
+		// GitLab can also auto-detect MR number
+		if prNumber == 0 {
+			if mrIID := os.Getenv("CI_MERGE_REQUEST_IID"); mrIID != "" {
+				fmt.Sscanf(mrIID, "%d", &prNumber)
+			}
+		}
+	}
+
+	// Bitbucket: BITBUCKET_WORKSPACE and BITBUCKET_REPO_SLUG
+	if (provider == application.ProviderBitbucket || provider == application.ProviderAuto) && (owner == "" || repo == "") {
+		if ws := os.Getenv("BITBUCKET_WORKSPACE"); ws != "" && owner == "" {
+			owner = ws
+		}
+		if slug := os.Getenv("BITBUCKET_REPO_SLUG"); slug != "" && repo == "" {
+			repo = slug
+		}
+		// Bitbucket can also auto-detect PR number
+		if prNumber == 0 {
+			if prID := os.Getenv("BITBUCKET_PR_ID"); prID != "" {
+				fmt.Sscanf(prID, "%d", &prNumber)
+			}
+		}
+	}
+
+	return owner, repo, prNumber
+}
+
+// Helper functions for config management
+
+// resolveConfigPath returns the config path to use.
+// If inputPath is specified and exists, use it.
+// If inputPath is specified but doesn't exist, try auto-detection.
+// If inputPath is empty, use server default.
+func (s *Server) resolveConfigPath(inputPath string) string {
+	// Use input path if provided
+	if inputPath != "" {
+		// If input path exists, use it directly
+		if _, err := os.Stat(inputPath); err == nil {
+			return inputPath
+		}
+		// Input path doesn't exist, try auto-detection
+		if foundPath, findErr := config.FindConfigFrom(""); findErr == nil {
+			return foundPath
+		}
+		// Auto-detection failed, return input path (will produce clear error)
+		return inputPath
+	}
+
+	// No input path, use server default
+	return s.config.ConfigPath
+}
+
+// applySuggestions applies the suggested thresholds to the config.
+func applySuggestions(cfg application.Config, suggestions []application.Suggestion) application.Config {
+	// Create a map for quick lookup
+	suggestedMins := make(map[string]float64)
+	for _, s := range suggestions {
+		suggestedMins[s.Domain] = s.SuggestedMin
+	}
+
+	// Apply suggestions to domains
+	for i := range cfg.Policy.Domains {
+		if min, ok := suggestedMins[cfg.Policy.Domains[i].Name]; ok {
+			minVal := min
+			cfg.Policy.Domains[i].Min = &minVal
+		}
+	}
+
+	return cfg
+}
+
+// backupConfig creates a backup of the existing config file.
+// Returns the backup path and any error.
+func backupConfig(configPath string) (string, error) {
+	// Check if file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return "", err
+	}
+
+	// Read original content
+	content, err := os.ReadFile(configPath) // #nosec G304 - path from trusted config
+	if err != nil {
+		return "", fmt.Errorf("read config: %w", err)
+	}
+
+	// Create backup with timestamp
+	backupPath := configPath + ".backup"
+	if err := os.WriteFile(backupPath, content, 0o644); err != nil { // #nosec G306 - config files don't need strict permissions
+		return "", fmt.Errorf("write backup: %w", err)
+	}
+
+	return backupPath, nil
+}
+
+// writeConfig writes the config to the specified path.
+func writeConfig(configPath string, cfg application.Config) error {
+	// Validate path
+	cleanPath, err := pathutil.ValidatePath(configPath)
+	if err != nil {
+		return fmt.Errorf("invalid config path: %w", err)
+	}
+
+	file, err := os.Create(cleanPath) // #nosec G304 - path is validated above
+	if err != nil {
+		return fmt.Errorf("create config: %w", err)
+	}
+	defer file.Close()
+
+	if err := config.Write(file, cfg); err != nil {
+		return fmt.Errorf("write config: %w", err)
+	}
+
+	return nil
 }

@@ -19,7 +19,10 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/badge"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/config"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/coverprofile"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/bitbucket"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/diff"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/github"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gitlab"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/history"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/report"
@@ -41,6 +44,8 @@ type Service interface {
 	Suggest(ctx context.Context, opts application.SuggestOptions) (application.SuggestResult, error)
 	Watch(ctx context.Context, opts application.WatchOptions, watcher application.FileWatcher, callback application.WatchCallback) error
 	Debt(ctx context.Context, opts application.DebtOptions) (application.DebtResult, error)
+	Compare(ctx context.Context, opts application.CompareOptions) (application.CompareResult, error)
+	PRComment(ctx context.Context, opts application.PRCommentOptions) (application.PRCommentResult, error)
 }
 
 // GlobalOptions holds CLI-wide options that affect output behavior
@@ -156,6 +161,9 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		var domains domainList
 		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
 		fs.Var(&domains, "d", "Filter to specific domain (shorthand)")
+		// Incremental mode flags
+		incremental := fs.Bool("incremental", false, "Only test packages with changed files")
+		incrementalRef := fs.String("incremental-ref", "HEAD~1", "Git ref to compare against for incremental mode")
 		if err := fs.Parse(cmdArgs); err != nil {
 			return 2
 		}
@@ -170,10 +178,12 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 			return 0
 		}
 		opts := application.CheckOptions{
-			ConfigPath: *configPath,
-			Output:     *output,
-			Profile:    *profile,
-			Domains:    domains,
+			ConfigPath:     *configPath,
+			Output:         *output,
+			Profile:        *profile,
+			Domains:        domains,
+			Incremental:    *incremental,
+			IncrementalRef: *incrementalRef,
 			BuildFlags: application.BuildFlags{
 				Tags:     *tags,
 				Race:     *race,
@@ -528,6 +538,111 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		}
 		printDebtResult(result, stdout, *output)
 		return 0
+	case "compare":
+		fs := flag.NewFlagSet("compare", flag.ContinueOnError)
+		fs.Usage = func() { commandHelp("compare", stderr) }
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
+		baseProfile := fs.String("base", "", "Base coverage profile (required)")
+		fs.StringVar(baseProfile, "b", "", "Base coverage profile (shorthand)")
+		headProfile := fs.String("head", ".cover/coverage.out", "Head coverage profile to compare against")
+		fs.StringVar(headProfile, "H", ".cover/coverage.out", "Head coverage profile (shorthand)")
+		output := outputFlags(fs)
+		if err := fs.Parse(cmdArgs); err != nil {
+			return 2
+		}
+
+		if *baseProfile == "" {
+			fmt.Fprintln(stderr, "Error: --base flag is required")
+			fs.Usage()
+			return 2
+		}
+
+		result, err := svc.Compare(ctx, application.CompareOptions{
+			ConfigPath:  *configPath,
+			BaseProfile: *baseProfile,
+			HeadProfile: *headProfile,
+			Output:      *output,
+		})
+		if err != nil {
+			return exitCodeWithCI(err, 3, stderr, global)
+		}
+		printCompareResult(result, stdout, *output)
+		return 0
+	case "pr-comment":
+		fs := flag.NewFlagSet("pr-comment", flag.ContinueOnError)
+		fs.Usage = func() { commandHelp("pr-comment", stderr) }
+		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
+		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
+		profilePath := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
+		fs.StringVar(profilePath, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
+		baseProfile := fs.String("base", "", "Base coverage profile for comparison (optional)")
+		prNumber := fs.Int("pr", 0, "Pull request/MR number (required)")
+		owner := fs.String("owner", "", "Repository owner/namespace (auto-detected from env)")
+		repo := fs.String("repo", "", "Repository name (auto-detected from env)")
+		provider := fs.String("provider", "auto", "Git provider: github, gitlab, bitbucket, or auto")
+		updateExisting := fs.Bool("update", true, "Update existing comment instead of creating new")
+		dryRun := fs.Bool("dry-run", false, "Generate comment without posting")
+		if err := fs.Parse(cmdArgs); err != nil {
+			return 2
+		}
+
+		// Parse provider
+		var prProvider application.PRProvider
+		switch strings.ToLower(*provider) {
+		case "github":
+			prProvider = application.ProviderGitHub
+		case "gitlab":
+			prProvider = application.ProviderGitLab
+		case "bitbucket":
+			prProvider = application.ProviderBitbucket
+		case "auto", "":
+			prProvider = application.ProviderAuto
+		default:
+			fmt.Fprintf(stderr, "Error: unknown provider %q (use github, gitlab, bitbucket, or auto)\n", *provider)
+			return 2
+		}
+
+		// Auto-detect owner/repo from environment based on provider
+		ownerVal, repoVal, prNum := *owner, *repo, *prNumber
+		ownerVal, repoVal, prNum = detectPRContext(prProvider, ownerVal, repoVal, prNum)
+
+		if prNum == 0 {
+			fmt.Fprintln(stderr, "Error: --pr flag is required")
+			fs.Usage()
+			return 2
+		}
+		if ownerVal == "" || repoVal == "" {
+			fmt.Fprintln(stderr, "Error: --owner and --repo flags are required (or set provider-specific env vars)")
+			fmt.Fprintln(stderr, "  GitHub: GITHUB_REPOSITORY=owner/repo")
+			fmt.Fprintln(stderr, "  GitLab: CI_PROJECT_NAMESPACE and CI_PROJECT_NAME")
+			fmt.Fprintln(stderr, "  Bitbucket: BITBUCKET_WORKSPACE and BITBUCKET_REPO_SLUG")
+			return 2
+		}
+
+		result, err := svc.PRComment(ctx, application.PRCommentOptions{
+			ConfigPath:     *configPath,
+			ProfilePath:    *profilePath,
+			BaseProfile:    *baseProfile,
+			Provider:       prProvider,
+			PRNumber:       prNum,
+			Owner:          ownerVal,
+			Repo:           repoVal,
+			UpdateExisting: *updateExisting,
+			DryRun:         *dryRun,
+		})
+		if err != nil {
+			return exitCodeWithCI(err, 3, stderr, global)
+		}
+
+		if *dryRun {
+			fmt.Fprintln(stdout, result.CommentBody)
+		} else if result.Created {
+			fmt.Fprintf(stdout, "Created comment: %s\n", result.CommentURL)
+		} else {
+			fmt.Fprintf(stdout, "Updated comment #%d\n", result.CommentID)
+		}
+		return 0
 	case "mcp":
 		if len(cmdArgs) < 1 {
 			fmt.Fprintln(stderr, "Usage: coverctl mcp <subcommand>")
@@ -593,8 +708,95 @@ func BuildService(out *os.File) *application.Service {
 		DiffProvider:      diff.GitDiff{Module: module},
 		AnnotationScanner: annotations.Scanner{},
 		Reporter:          report.Writer{},
+		PRClients:         buildPRClients(),
+		CommentFormatter:  commentFormatter{},
 		Out:               out,
 	}
+}
+
+// buildPRClients creates clients for all supported PR providers.
+func buildPRClients() map[application.PRProvider]application.PRClient {
+	return map[application.PRProvider]application.PRClient{
+		application.ProviderGitHub:    github.NewClient(""),
+		application.ProviderGitLab:    gitlab.NewClient(""),
+		application.ProviderBitbucket: bitbucket.NewClient("", ""),
+	}
+}
+
+// detectPRContext auto-detects owner, repo, and PR number from environment variables.
+// Returns the provided values if already set, otherwise tries to detect from env.
+func detectPRContext(provider application.PRProvider, owner, repo string, prNumber int) (string, string, int) {
+	// If all values are already provided, return them
+	if owner != "" && repo != "" && prNumber != 0 {
+		return owner, repo, prNumber
+	}
+
+	// GitHub: GITHUB_REPOSITORY=owner/repo
+	if (provider == application.ProviderGitHub || provider == application.ProviderAuto) && (owner == "" || repo == "") {
+		if ghRepo := os.Getenv("GITHUB_REPOSITORY"); ghRepo != "" {
+			parts := strings.SplitN(ghRepo, "/", 2)
+			if len(parts) == 2 {
+				if owner == "" {
+					owner = parts[0]
+				}
+				if repo == "" {
+					repo = parts[1]
+				}
+			}
+		}
+	}
+
+	// GitLab: CI_PROJECT_NAMESPACE and CI_PROJECT_NAME
+	if (provider == application.ProviderGitLab || provider == application.ProviderAuto) && (owner == "" || repo == "") {
+		if ns := os.Getenv("CI_PROJECT_NAMESPACE"); ns != "" && owner == "" {
+			owner = ns
+		}
+		if name := os.Getenv("CI_PROJECT_NAME"); name != "" && repo == "" {
+			repo = name
+		}
+		// GitLab can also auto-detect MR number
+		if prNumber == 0 {
+			if mrIID := os.Getenv("CI_MERGE_REQUEST_IID"); mrIID != "" {
+				if n, err := parseInt(mrIID); err == nil {
+					prNumber = n
+				}
+			}
+		}
+	}
+
+	// Bitbucket: BITBUCKET_WORKSPACE and BITBUCKET_REPO_SLUG
+	if (provider == application.ProviderBitbucket || provider == application.ProviderAuto) && (owner == "" || repo == "") {
+		if ws := os.Getenv("BITBUCKET_WORKSPACE"); ws != "" && owner == "" {
+			owner = ws
+		}
+		if slug := os.Getenv("BITBUCKET_REPO_SLUG"); slug != "" && repo == "" {
+			repo = slug
+		}
+		// Bitbucket can also auto-detect PR number
+		if prNumber == 0 {
+			if prID := os.Getenv("BITBUCKET_PR_ID"); prID != "" {
+				if n, err := parseInt(prID); err == nil {
+					prNumber = n
+				}
+			}
+		}
+	}
+
+	return owner, repo, prNumber
+}
+
+// parseInt is a helper to parse integers from strings.
+func parseInt(s string) (int, error) {
+	var n int
+	_, err := fmt.Sscanf(s, "%d", &n)
+	return n, err
+}
+
+// commentFormatter wraps github.FormatCoverageComment to implement CommentFormatter interface.
+type commentFormatter struct{}
+
+func (commentFormatter) FormatCoverageComment(result domain.Result, comparison *application.CompareResult) string {
+	return github.FormatCoverageComment(result, comparison)
 }
 
 func outputFlags(fs *flag.FlagSet) *application.OutputFormat {
@@ -702,7 +904,9 @@ Commands:
   record      Record current coverage to history
   suggest     Suggest optimal coverage thresholds
   debt        Show coverage debt report
+  compare     Compare coverage between two profiles
   ignore      Show configured excludes and ignore advice
+  pr-comment  Post coverage report as PR/MR comment (GitHub, GitLab, Bitbucket)
   mcp         MCP (Model Context Protocol) server for AI agents
 
 Other:
@@ -845,6 +1049,79 @@ func printDebtResult(result application.DebtResult, w io.Writer, format applicat
 	fmt.Fprintf(w, "Total Debt: %.1f%% shortfall across %d items\n", result.TotalDebt, len(result.Items))
 	fmt.Fprintf(w, "Estimated Lines Needing Tests: %d\n", result.TotalLines)
 	fmt.Fprintf(w, "Health Score: %.1f%%\n", result.HealthScore)
+}
+
+func printCompareResult(result application.CompareResult, w io.Writer, format application.OutputFormat) {
+	if format == application.OutputJSON {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		_ = enc.Encode(result)
+		return
+	}
+
+	// Text output
+	fmt.Fprintln(w, "Coverage Comparison")
+	fmt.Fprintln(w, "===================")
+	fmt.Fprintln(w, "")
+
+	// Overall summary
+	deltaSign := "+"
+	if result.Delta < 0 {
+		deltaSign = ""
+	}
+	fmt.Fprintf(w, "Overall: %.1f%% → %.1f%% (%s%.1f%%)\n", result.BaseOverall, result.HeadOverall, deltaSign, result.Delta)
+	fmt.Fprintln(w, "")
+
+	// Domain deltas if available
+	if len(result.DomainDeltas) > 0 {
+		fmt.Fprintln(w, "Domain Changes:")
+		for domain, delta := range result.DomainDeltas {
+			sign := "+"
+			if delta < 0 {
+				sign = ""
+			}
+			if delta > 0.1 || delta < -0.1 {
+				fmt.Fprintf(w, "  %-20s %s%.1f%%\n", domain, sign, delta)
+			}
+		}
+		fmt.Fprintln(w, "")
+	}
+
+	// Improved files
+	if len(result.Improved) > 0 {
+		fmt.Fprintf(w, "Improved Files (%d):\n", len(result.Improved))
+		for i, f := range result.Improved {
+			if i >= 10 {
+				fmt.Fprintf(w, "  ... and %d more\n", len(result.Improved)-10)
+				break
+			}
+			fmt.Fprintf(w, "  %-50s %.1f%% → %.1f%% (+%.1f%%)\n", truncateLeft(f.File, 50), f.BasePct, f.HeadPct, f.Delta)
+		}
+		fmt.Fprintln(w, "")
+	}
+
+	// Regressed files
+	if len(result.Regressed) > 0 {
+		fmt.Fprintf(w, "Regressed Files (%d):\n", len(result.Regressed))
+		for i, f := range result.Regressed {
+			if i >= 10 {
+				fmt.Fprintf(w, "  ... and %d more\n", len(result.Regressed)-10)
+				break
+			}
+			fmt.Fprintf(w, "  %-50s %.1f%% → %.1f%% (%.1f%%)\n", truncateLeft(f.File, 50), f.BasePct, f.HeadPct, f.Delta)
+		}
+		fmt.Fprintln(w, "")
+	}
+
+	// Summary
+	fmt.Fprintf(w, "Summary: %d improved, %d regressed, %d unchanged\n", len(result.Improved), len(result.Regressed), result.Unchanged)
+}
+
+func truncateLeft(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return "..." + s[len(s)-(maxLen-3):]
 }
 
 func runWatch(ctx context.Context, stdout, stderr io.Writer, svc Service, configPath, profile string, domains []string, global GlobalOptions, buildFlags application.BuildFlags) int {
@@ -1164,6 +1441,71 @@ Flags:
 
 Examples:
   coverctl ignore`,
+
+	"compare": `coverctl compare - Compare coverage between two profiles
+
+Usage:
+  coverctl compare [flags]
+
+Flags:
+  -c, --config string    Config file path (default ".coverctl.yaml")
+  -b, --base string      Base coverage profile (required)
+  -H, --head string      Head coverage profile (default ".cover/coverage.out")
+  -o, --output string    Output format: text|json|brief (default "text")
+
+Examples:
+  coverctl compare --base main.out --head feature.out
+  coverctl compare -b main.out -o json`,
+
+	"pr-comment": `coverctl pr-comment - Post coverage report as PR/MR comment
+
+Supports GitHub, GitLab, and Bitbucket. Provider is auto-detected from
+environment variables or can be specified with --provider.
+
+Usage:
+  coverctl pr-comment [flags]
+
+Flags:
+  -c, --config string    Config file path (default ".coverctl.yaml")
+  -p, --profile string   Coverage profile path (default ".cover/coverage.out")
+      --base string      Base coverage profile for comparison (optional)
+      --pr int           Pull request/MR number (required, auto-detected on GitLab/Bitbucket)
+      --owner string     Repository owner/namespace (auto-detected from env)
+      --repo string      Repository name (auto-detected from env)
+      --provider string  Git provider: github, gitlab, bitbucket, or auto (default "auto")
+      --update           Update existing comment instead of creating new (default true)
+      --dry-run          Generate comment without posting
+
+Environment Variables:
+  GitHub:
+    GITHUB_TOKEN           API token for authentication
+    GITHUB_REPOSITORY      Repository in owner/repo format
+
+  GitLab:
+    GITLAB_TOKEN           API token (or CI_JOB_TOKEN in GitLab CI)
+    CI_PROJECT_NAMESPACE   Project namespace (auto-set in GitLab CI)
+    CI_PROJECT_NAME        Project name (auto-set in GitLab CI)
+    CI_MERGE_REQUEST_IID   MR number (auto-set in GitLab CI)
+
+  Bitbucket:
+    BITBUCKET_USERNAME     Username for basic auth
+    BITBUCKET_APP_PASSWORD App password for authentication
+    BITBUCKET_WORKSPACE    Workspace name
+    BITBUCKET_REPO_SLUG    Repository slug
+    BITBUCKET_PR_ID        PR number (auto-set in Bitbucket Pipelines)
+
+Examples:
+  # GitHub (auto-detected)
+  coverctl pr-comment --pr 123
+
+  # GitLab (in CI, auto-detects everything)
+  coverctl pr-comment --provider gitlab
+
+  # Bitbucket with explicit values
+  coverctl pr-comment --provider bitbucket --owner myworkspace --repo myrepo --pr 45
+
+  # Dry run to preview comment
+  coverctl pr-comment --pr 123 --dry-run`,
 
 	"mcp": `coverctl mcp - MCP (Model Context Protocol) server for AI agents
 

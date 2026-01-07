@@ -16,11 +16,14 @@ type Service interface {
 	CheckResult(ctx context.Context, opts application.CheckOptions) (domain.Result, error)
 	ReportResult(ctx context.Context, opts application.ReportOptions) (domain.Result, error)
 	Record(ctx context.Context, opts application.RecordOptions, store application.HistoryStore) error
+	PRComment(ctx context.Context, opts application.PRCommentOptions) (application.PRCommentResult, error)
 
-	// Resources (read-only queries)
+	// Query tools (read-only but exposed as tools for better discoverability)
 	Debt(ctx context.Context, opts application.DebtOptions) (application.DebtResult, error)
 	Trend(ctx context.Context, opts application.TrendOptions, store application.HistoryStore) (application.TrendResult, error)
 	Suggest(ctx context.Context, opts application.SuggestOptions) (application.SuggestResult, error)
+	Badge(ctx context.Context, opts application.BadgeOptions) (application.BadgeResult, error)
+	Compare(ctx context.Context, opts application.CompareOptions) (application.CompareResult, error)
 	Detect(ctx context.Context, opts application.DetectOptions) (application.Config, error)
 }
 
@@ -55,6 +58,9 @@ type CheckInput struct {
 	Run      string   `json:"run,omitempty" jsonschema:"description=Run only tests matching pattern"`
 	Timeout  string   `json:"timeout,omitempty" jsonschema:"description=Test timeout (e.g. '10m', '1h')"`
 	TestArgs []string `json:"testArgs,omitempty" jsonschema:"description=Additional arguments passed to go test"`
+	// Incremental mode
+	Incremental    bool   `json:"incremental,omitempty" jsonschema:"description=Only test packages with changed files"`
+	IncrementalRef string `json:"incrementalRef,omitempty" jsonschema:"description=Git ref to compare against for incremental mode (default: HEAD~1)"`
 }
 
 // ReportInput defines the input parameters for the report tool.
@@ -97,6 +103,49 @@ func coalesce(value, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+// SuggestInput defines the input parameters for the suggest tool.
+type SuggestInput struct {
+	ConfigPath  string `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile     string `json:"profile,omitempty" jsonschema:"description=Path to coverage profile"`
+	Strategy    string `json:"strategy,omitempty" jsonschema:"description=Suggestion strategy: current (default)|aggressive|conservative"`
+	WriteConfig bool   `json:"writeConfig,omitempty" jsonschema:"description=Write suggested thresholds to config file (creates backup if file exists)"`
+}
+
+// DebtInput defines the input parameters for the debt tool.
+type DebtInput struct {
+	ConfigPath string `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile    string `json:"profile,omitempty" jsonschema:"description=Path to coverage profile"`
+}
+
+// BadgeInput defines the input parameters for the badge tool.
+type BadgeInput struct {
+	ConfigPath string `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile    string `json:"profile,omitempty" jsonschema:"description=Path to coverage profile"`
+	Output     string `json:"output,omitempty" jsonschema:"description=Output file path for SVG badge"`
+	Label      string `json:"label,omitempty" jsonschema:"description=Badge label text (default: coverage)"`
+	Style      string `json:"style,omitempty" jsonschema:"description=Badge style: flat (default)|flat-square"`
+}
+
+// CompareInput defines the input parameters for the compare tool.
+type CompareInput struct {
+	ConfigPath  string `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	BaseProfile string `json:"baseProfile" jsonschema:"description=Path to the base coverage profile (required)"`
+	HeadProfile string `json:"headProfile,omitempty" jsonschema:"description=Path to the head coverage profile to compare against"`
+}
+
+// PRCommentInput defines the input parameters for the pr-comment tool.
+type PRCommentInput struct {
+	ConfigPath     string `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile        string `json:"profile,omitempty" jsonschema:"description=Path to coverage profile"`
+	BaseProfile    string `json:"baseProfile,omitempty" jsonschema:"description=Base coverage profile for comparison (optional)"`
+	Provider       string `json:"provider,omitempty" jsonschema:"description=Git provider: github gitlab bitbucket or auto (default: auto)"`
+	PRNumber       int    `json:"prNumber" jsonschema:"description=Pull request/MR number (required for GitHub auto-detected for GitLab/Bitbucket CI)"`
+	Owner          string `json:"owner,omitempty" jsonschema:"description=Repository owner/namespace (auto-detected from env)"`
+	Repo           string `json:"repo,omitempty" jsonschema:"description=Repository name (auto-detected from env)"`
+	UpdateExisting bool   `json:"updateExisting,omitempty" jsonschema:"description=Update existing comment instead of creating new (default: true)"`
+	DryRun         bool   `json:"dryRun,omitempty" jsonschema:"description=Generate comment without posting"`
 }
 
 // generateSummary creates a human-readable summary from the result.

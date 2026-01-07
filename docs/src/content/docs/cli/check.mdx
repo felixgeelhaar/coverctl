@@ -46,6 +46,15 @@ coverctl check [flags]
 | `--timeout` | Test timeout (e.g., `10m`, `1h`) |
 | `--test-arg` | Additional go test argument (repeatable) |
 
+### Incremental Mode
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--incremental` | Only test packages with changed files | `false` |
+| `--incremental-ref` | Git ref to compare against | `HEAD~1` |
+
+Incremental mode speeds up CI by only testing packages that have changed.
+
 ## Examples
 
 ### Basic Usage
@@ -85,6 +94,19 @@ coverctl check --tags integration --timeout 30m
 
 # With race detector
 coverctl check --race --timeout 20m
+```
+
+### Incremental Mode
+
+```bash
+# Only test changed packages (faster CI)
+coverctl check --incremental
+
+# Compare against specific branch
+coverctl check --incremental --incremental-ref origin/main
+
+# Combine with other flags
+coverctl check --incremental --fail-under 80 --ci
 ```
 
 ### Validation Only

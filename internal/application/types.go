@@ -95,6 +95,7 @@ type RunOptions struct {
 	Domains     []domain.Domain
 	ProfilePath string
 	BuildFlags  BuildFlags // Build and test flags
+	Packages    []string   // Specific packages to test (empty = all packages via ./...)
 }
 
 // BuildFlags contains options passed to go test
@@ -220,4 +221,88 @@ type DebtResult struct {
 	TotalDebt   float64 // Sum of all shortfalls
 	TotalLines  int     // Total estimated lines needing tests
 	HealthScore float64 // 0-100 score (higher is better)
+}
+
+// CompareOptions configures the coverage comparison.
+type CompareOptions struct {
+	ConfigPath  string
+	BaseProfile string // Path to base coverage profile
+	HeadProfile string // Path to head coverage profile (or "current" to run tests)
+	Output      OutputFormat
+}
+
+// CompareResult contains the comparison between two coverage profiles.
+type CompareResult struct {
+	BaseOverall  float64            `json:"baseOverall"`
+	HeadOverall  float64            `json:"headOverall"`
+	Delta        float64            `json:"delta"`
+	Improved     []FileDelta        `json:"improved"`
+	Regressed    []FileDelta        `json:"regressed"`
+	Unchanged    int                `json:"unchanged"`
+	DomainDeltas map[string]float64 `json:"domainDeltas"`
+}
+
+// FileDelta represents a coverage change for a single file.
+type FileDelta struct {
+	File    string  `json:"file"`
+	BasePct float64 `json:"basePct"`
+	HeadPct float64 `json:"headPct"`
+	Delta   float64 `json:"delta"`
+}
+
+// PRProvider represents a git hosting provider.
+type PRProvider string
+
+const (
+	// ProviderGitHub is GitHub.com or GitHub Enterprise
+	ProviderGitHub PRProvider = "github"
+	// ProviderGitLab is GitLab.com or self-hosted GitLab
+	ProviderGitLab PRProvider = "gitlab"
+	// ProviderBitbucket is Bitbucket Cloud
+	ProviderBitbucket PRProvider = "bitbucket"
+	// ProviderAuto auto-detects the provider from environment
+	ProviderAuto PRProvider = "auto"
+)
+
+// PRCommentOptions configures the PR comment feature.
+type PRCommentOptions struct {
+	ConfigPath     string
+	ProfilePath    string
+	BaseProfile    string     // Base profile for comparison (optional)
+	Provider       PRProvider // Git hosting provider (auto-detected if empty)
+	PRNumber       int        // PR/MR number to comment on
+	Owner          string     // Repository owner/namespace
+	Repo           string     // Repository name
+	ProjectID      string     // GitLab project ID (alternative to owner/repo)
+	UpdateExisting bool       // Update existing comment instead of creating new
+	DryRun         bool       // Just generate comment, don't post
+}
+
+// PRCommentResult contains the result of a PR comment operation.
+type PRCommentResult struct {
+	CommentID   int64  `json:"commentId,omitempty"`
+	CommentURL  string `json:"commentUrl,omitempty"`
+	CommentBody string `json:"commentBody"`
+	Created     bool   `json:"created"` // true if created, false if updated
+}
+
+// PRClient provides PR comment operations for any git hosting provider.
+type PRClient interface {
+	// Provider returns the provider type
+	Provider() PRProvider
+	// FindCoverageComment finds an existing coverage comment on a PR/MR
+	FindCoverageComment(ctx context.Context, owner, repo string, prNumber int) (int64, error)
+	// CreateComment creates a new comment on a PR/MR
+	CreateComment(ctx context.Context, owner, repo string, prNumber int, body string) (int64, string, error)
+	// UpdateComment updates an existing comment
+	UpdateComment(ctx context.Context, owner, repo string, commentID int64, body string) error
+}
+
+// GitHubClient provides GitHub API operations (alias for backward compatibility).
+type GitHubClient = PRClient
+
+// CommentFormatter generates PR comment content.
+type CommentFormatter interface {
+	// FormatCoverageComment generates markdown for a coverage PR comment
+	FormatCoverageComment(result domain.Result, comparison *CompareResult) string
 }
