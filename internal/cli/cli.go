@@ -26,6 +26,7 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/history"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/report"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/resolver"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/runners"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/watcher"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/wizard"
@@ -150,6 +151,9 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		failUnder := fs.Float64("fail-under", 0, "Fail if overall coverage is below this percentage")
 		ratchet := fs.Bool("ratchet", false, "Fail if coverage decreases from previous recorded value")
 		validate := fs.Bool("validate", false, "Validate config without running tests")
+		// Language selection
+		language := fs.String("language", "", "Override language detection (go, python, nodejs, rust, java)")
+		fs.StringVar(language, "l", "", "Override language detection (shorthand)")
 		// Build/test flags
 		tags := fs.String("tags", "", "Build tags (e.g., integration,e2e)")
 		race := fs.Bool("race", false, "Enable race detector")
@@ -185,6 +189,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 			Domains:        domains,
 			Incremental:    *incremental,
 			IncrementalRef: *incrementalRef,
+			Language:       application.Language(*language),
 			BuildFlags: application.BuildFlags{
 				Tags:     *tags,
 				Race:     *race,
@@ -215,6 +220,9 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
 		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile output path")
 		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile output path (shorthand)")
+		// Language selection
+		language := fs.String("language", "", "Override language detection (go, python, nodejs, rust, java)")
+		fs.StringVar(language, "l", "", "Override language detection (shorthand)")
 		// Build/test flags
 		tags := fs.String("tags", "", "Build tags (e.g., integration,e2e)")
 		race := fs.Bool("race", false, "Enable race detector")
@@ -235,6 +243,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 			ConfigPath: *configPath,
 			Profile:    *profile,
 			Domains:    domains,
+			Language:   application.Language(*language),
 			BuildFlags: application.BuildFlags{
 				Tags:     *tags,
 				Race:     *race,
@@ -703,11 +712,23 @@ func BuildService(out *os.File) *application.Service {
 	// Use the runner registry for language auto-detection.
 	// The registry will detect the project type and delegate to the appropriate runner.
 	registry := runners.NewRegistry(module)
+
+	// Get project directory for resolver
+	projectDir, _ := os.Getwd()
+
+	// Create Go-specific resolver
+	goResolver := gotool.DomainResolver{Module: module}
+
+	// Create multi-language resolver that switches between Go and file-glob
+	// based on the detected project language
+	multiResolver := resolver.NewMultiResolver(goResolver, projectDir, registry)
+
 	return &application.Service{
 		ConfigLoader:      config.Loader{},
-		Autodetector:      autodetect.Detector{Module: module},
-		DomainResolver:    gotool.DomainResolver{Module: module},
+		Autodetector:      autodetect.Detector{Module: module, Registry: registry},
+		DomainResolver:    multiResolver,
 		CoverageRunner:    registry,
+		RunnerRegistry:    registry,
 		ProfileParser:     coverprofile.Parser{},
 		DiffProvider:      diff.GitDiff{Module: module},
 		AnnotationScanner: annotations.Scanner{},

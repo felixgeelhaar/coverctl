@@ -131,6 +131,16 @@ type CoverageRunner interface {
 	Detect(projectDir string) bool
 }
 
+// RunnerRegistry manages multiple coverage runners and selects the appropriate one.
+type RunnerRegistry interface {
+	// GetRunner returns a runner for the specified language.
+	GetRunner(lang Language) (CoverageRunner, error)
+	// DetectRunner auto-detects the appropriate runner for the project directory.
+	DetectRunner(projectDir string) (CoverageRunner, error)
+	// SupportedLanguages returns all languages with available runners.
+	SupportedLanguages() []Language
+}
+
 // ProfileParser parses coverage profiles into domain stats.
 // Implementations exist for each supported format.
 type ProfileParser interface {

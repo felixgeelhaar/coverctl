@@ -625,8 +625,9 @@ func TestServiceCheckDomainFilterNoMatch(t *testing.T) {
 		},
 	}
 	svc := &Service{
-		ConfigLoader: fakeConfigLoader{exists: true, cfg: cfg},
-		Out:          io.Discard,
+		ConfigLoader:   fakeConfigLoader{exists: true, cfg: cfg},
+		CoverageRunner: fakeRunner{profile: "test.out"},
+		Out:            io.Discard,
 	}
 
 	err := svc.Check(context.Background(), CheckOptions{

@@ -18,7 +18,8 @@ type Service struct {
 	ConfigLoader      ConfigLoader
 	Autodetector      Autodetector
 	DomainResolver    DomainResolver
-	CoverageRunner    CoverageRunner
+	CoverageRunner    CoverageRunner    // Default runner (used if RunnerRegistry is nil)
+	RunnerRegistry    RunnerRegistry    // Optional: for multi-language support
 	ProfileParser     ProfileParser
 	DiffProvider      DiffProvider
 	AnnotationScanner AnnotationScanner
@@ -39,6 +40,7 @@ type CheckOptions struct {
 	BuildFlags     BuildFlags   // Build and test flags
 	Incremental    bool         // Only test packages with changed files
 	IncrementalRef string       // Git ref to compare against (default: HEAD~1)
+	Language       Language     // Override language auto-detection (empty = auto)
 }
 
 type RunOnlyOptions struct {
@@ -46,6 +48,7 @@ type RunOnlyOptions struct {
 	Profile    string
 	Domains    []string   // Filter to specific domains (empty = all domains)
 	BuildFlags BuildFlags // Build and test flags
+	Language   Language   // Override language auto-detection (empty = auto)
 }
 
 type ReportOptions struct {
@@ -62,10 +65,47 @@ type ReportOptions struct {
 type DetectOptions struct {
 }
 
+// selectRunner returns the appropriate coverage runner based on language preference.
+// Priority: CLI flag > config file > auto-detection.
+func (s *Service) selectRunner(lang Language, cfgLang Language) (CoverageRunner, error) {
+	// Determine effective language (CLI overrides config)
+	effectiveLang := lang
+	if effectiveLang == "" || effectiveLang == LanguageAuto {
+		effectiveLang = cfgLang
+	}
+
+	// If we have a registry and a specific language is requested, use it
+	if s.RunnerRegistry != nil && effectiveLang != "" && effectiveLang != LanguageAuto {
+		return s.RunnerRegistry.GetRunner(effectiveLang)
+	}
+
+	// If we have a registry, auto-detect
+	if s.RunnerRegistry != nil {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get working directory: %w", err)
+		}
+		return s.RunnerRegistry.DetectRunner(wd)
+	}
+
+	// Fall back to the default runner
+	if s.CoverageRunner != nil {
+		return s.CoverageRunner, nil
+	}
+
+	return nil, fmt.Errorf("no coverage runner configured")
+}
+
 // CheckResult runs coverage tests and evaluates policy, returning the result.
 // This is the pure function version that returns data instead of writing to output.
 func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Result, error) {
 	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return domain.Result{}, err
+	}
+
+	// Select the appropriate runner based on language
+	runner, err := s.selectRunner(opts.Language, cfg.Language)
 	if err != nil {
 		return domain.Result{}, err
 	}
@@ -97,7 +137,7 @@ func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Re
 		}
 	}
 
-	profile, err := s.CoverageRunner.Run(ctx, RunOptions{
+	profile, err := runner.Run(ctx, RunOptions{
 		Domains:     domains,
 		ProfilePath: opts.Profile,
 		BuildFlags:  opts.BuildFlags,
@@ -119,7 +159,7 @@ func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Re
 
 	profiles := []string{profile}
 	if cfg.Integration.Enabled {
-		integrationProfile, err := s.CoverageRunner.RunIntegration(ctx, IntegrationOptions{
+		integrationProfile, err := runner.RunIntegration(ctx, IntegrationOptions{
 			Domains:    domains,
 			Packages:   cfg.Integration.Packages,
 			RunArgs:    cfg.Integration.RunArgs,
@@ -225,7 +265,13 @@ func (s *Service) Check(ctx context.Context, opts CheckOptions) error {
 }
 
 func (s *Service) RunOnly(ctx context.Context, opts RunOnlyOptions) error {
-	_, domains, err := s.loadOrDetect(opts.ConfigPath)
+	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
+	if err != nil {
+		return err
+	}
+
+	// Select the appropriate runner based on language
+	runner, err := s.selectRunner(opts.Language, cfg.Language)
 	if err != nil {
 		return err
 	}
@@ -236,7 +282,7 @@ func (s *Service) RunOnly(ctx context.Context, opts RunOnlyOptions) error {
 		return fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
-	_, err = s.CoverageRunner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile, BuildFlags: opts.BuildFlags})
+	_, err = runner.Run(ctx, RunOptions{Domains: domains, ProfilePath: opts.Profile, BuildFlags: opts.BuildFlags})
 	return err
 }
 
