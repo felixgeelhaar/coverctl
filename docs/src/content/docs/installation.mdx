@@ -7,8 +7,12 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Requirements
 
-- **Go 1.25+** (for module support and coverage features)
+- **Go 1.25+** (for Go projects with module support and coverage features)
 - **Git** (for diff-based coverage features)
+
+:::tip[Multi-Language Support]
+coverctl supports Go, Python, JavaScript/TypeScript, Rust, and Java. It auto-detects your project type during initialization.
+:::
 
 ## Install from Source
 
@@ -23,7 +27,7 @@ This installs the latest release to your `$GOPATH/bin` directory.
 ## Install a Specific Version
 
 ```bash
-go install github.com/felixgeelhaar/coverctl@v1.4.0
+go install github.com/felixgeelhaar/coverctl@v1.7.1
 ```
 
 ## Verify Installation
@@ -35,7 +39,7 @@ coverctl version
 You should see output like:
 
 ```
-coverctl v1.4.0 (abc1234) built 2024-12-23
+coverctl v1.7.1 (9d6cfff) built 2025-01-09
 ```
 
 ## Shell Completions

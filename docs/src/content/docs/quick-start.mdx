@@ -5,13 +5,17 @@ description: Get started with coverctl in 5 minutes
 
 import { Steps } from '@astrojs/starlight/components';
 
-This guide will help you set up coverctl in your Go project and run your first coverage check.
+This guide will help you set up coverctl in your project and run your first coverage check.
 
 ## Prerequisites
 
-- A Go project with tests
-- Go 1.25 or later installed
+- A project with tests (Go, Python, JavaScript, Rust, or Java)
+- For Go projects: Go 1.25 or later installed
 - coverctl installed ([Installation Guide](/coverctl/installation/))
+
+:::note[Language Auto-Detection]
+coverctl automatically detects your project language based on configuration files like `go.mod`, `pyproject.toml`, `package.json`, `Cargo.toml`, or `pom.xml`.
+:::
 
 ## Setup
 
@@ -20,7 +24,7 @@ This guide will help you set up coverctl in your Go project and run your first c
 1. **Navigate to your project**
 
    ```bash
-   cd your-go-project
+   cd your-project
    ```
 
 2. **Initialize coverctl**
@@ -47,7 +51,7 @@ This guide will help you set up coverctl in your Go project and run your first c
    ```
 
    This will:
-   - Run `go test` with coverage instrumentation
+   - Run your language's test runner with coverage instrumentation
    - Evaluate coverage per domain
    - Report pass/fail status for each domain
 

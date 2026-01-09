@@ -156,16 +156,6 @@ func TestPythonRunnerBuildPytestArgs(t *testing.T) {
 	}
 }
 
-// mockPythonRunner creates a runner with mocked tool detection for testing.
-type mockPythonRunner struct {
-	*PythonRunner
-	mockTool string
-}
-
-func (m *mockPythonRunner) detectCoverageTool() string {
-	return m.mockTool
-}
-
 func TestPythonRunnerRun(t *testing.T) {
 	tmpDir := t.TempDir()
 

@@ -10,8 +10,14 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+)
+
+const (
+	// DefaultHTTPTimeout is the default timeout for HTTP requests.
+	DefaultHTTPTimeout = 30 * time.Second
 )
 
 const (
@@ -48,7 +54,7 @@ func NewClient(username, appPassword string) *Client {
 		}
 	}
 	return &Client{
-		httpClient:  &http.Client{},
+		httpClient:  &http.Client{Timeout: DefaultHTTPTimeout},
 		apiURL:      DefaultAPIURL,
 		username:    username,
 		appPassword: appPassword,

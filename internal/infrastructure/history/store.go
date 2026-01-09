@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
@@ -16,6 +17,49 @@ const DefaultMaxEntries = 100
 type FileStore struct {
 	Path       string
 	MaxEntries int
+}
+
+// fileLock represents a file-based lock for concurrent access protection.
+type fileLock struct {
+	file *os.File
+}
+
+// acquireLock creates an exclusive lock on the history file.
+// This prevents race conditions when multiple processes access the file.
+func (s *FileStore) acquireLock() (*fileLock, error) {
+	lockPath := s.Path + ".lock"
+	dir := filepath.Dir(lockPath)
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return nil, err
+	}
+
+	// #nosec G304 -- Path is derived from trusted config
+	file, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, err
+	}
+
+	// Acquire exclusive lock (blocking)
+	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil {
+		_ = file.Close() // Best-effort close on lock failure
+		return nil, err
+	}
+
+	return &fileLock{file: file}, nil
+}
+
+// release releases the file lock.
+func (l *fileLock) release() error {
+	if l.file == nil {
+		return nil
+	}
+	// Release lock - best-effort, always close file afterwards
+	unlockErr := syscall.Flock(int(l.file.Fd()), syscall.LOCK_UN)
+	closeErr := l.file.Close()
+	if unlockErr != nil {
+		return unlockErr
+	}
+	return closeErr
 }
 
 // Load reads the history from the JSON file.
@@ -54,7 +98,15 @@ func (s *FileStore) Save(h domain.History) error {
 
 // Append adds a new entry to the history and saves it.
 // If MaxEntries is set, older entries are removed to maintain the limit.
+// Uses file locking to prevent race conditions with concurrent processes.
 func (s *FileStore) Append(entry domain.HistoryEntry) error {
+	// Acquire exclusive lock to prevent race conditions
+	lock, err := s.acquireLock()
+	if err != nil {
+		return err
+	}
+	defer lock.release()
+
 	h, err := s.Load()
 	if err != nil {
 		return err

@@ -144,7 +144,7 @@ type PRCommentInput struct {
 	PRNumber       int    `json:"prNumber" jsonschema:"description=Pull request/MR number (required for GitHub auto-detected for GitLab/Bitbucket CI)"`
 	Owner          string `json:"owner,omitempty" jsonschema:"description=Repository owner/namespace (auto-detected from env)"`
 	Repo           string `json:"repo,omitempty" jsonschema:"description=Repository name (auto-detected from env)"`
-	UpdateExisting bool   `json:"updateExisting,omitempty" jsonschema:"description=Update existing comment instead of creating new (default: true)"`
+	UpdateExisting *bool  `json:"updateExisting,omitempty" jsonschema:"description=Update existing comment instead of creating new (default: true)"`
 	DryRun         bool   `json:"dryRun,omitempty" jsonschema:"description=Generate comment without posting"`
 }
 

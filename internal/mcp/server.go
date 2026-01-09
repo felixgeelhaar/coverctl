@@ -625,10 +625,10 @@ func (s *Server) handlePRComment(ctx context.Context, input PRCommentInput) (map
 		}, nil
 	}
 
-	// Default UpdateExisting to true if not specified
+	// Default UpdateExisting to true if not specified (nil means not provided)
 	updateExisting := true
-	if input.UpdateExisting {
-		updateExisting = input.UpdateExisting
+	if input.UpdateExisting != nil {
+		updateExisting = *input.UpdateExisting
 	}
 
 	opts := application.PRCommentOptions{

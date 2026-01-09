@@ -9,6 +9,13 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
 )
 
+// mockRunner implements application.CoverageRunner for testing.
+type mockRunner struct {
+	lang string
+}
+
+func (r mockRunner) Language() string { return r.lang }
+
 func TestDetectDomains(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "internal", "policy"), 0o755); err != nil {
@@ -211,5 +218,177 @@ func TestDeduplicateDomains(t *testing.T) {
 	result := deduplicateDomains(input)
 	if len(result) != 2 {
 		t.Fatalf("expected 2 domains, got %d", len(result))
+	}
+}
+
+
+func TestDetectorDetectPython(t *testing.T) {
+	// Save current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+
+	// Create temp directory with Python structure
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src", "mypackage"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	// Change to temp directory
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd) //nolint:errcheck
+
+	d := Detector{}
+	cfg, err := d.detectPython()
+	if err != nil {
+		t.Fatalf("detectPython: %v", err)
+	}
+	if cfg.Language != "python" {
+		t.Errorf("expected python language, got %s", cfg.Language)
+	}
+	if len(cfg.Policy.Domains) == 0 {
+		t.Error("expected at least one domain")
+	}
+}
+
+func TestDetectorDetectJavaScript(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src", "components"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd) //nolint:errcheck
+
+	d := Detector{}
+	cfg, err := d.detectJavaScript()
+	if err != nil {
+		t.Fatalf("detectJavaScript: %v", err)
+	}
+	if cfg.Language != "javascript" {
+		t.Errorf("expected javascript language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectRust(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src", "lib"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd) //nolint:errcheck
+
+	d := Detector{}
+	cfg, err := d.detectRust()
+	if err != nil {
+		t.Fatalf("detectRust: %v", err)
+	}
+	if cfg.Language != "rust" {
+		t.Errorf("expected rust language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectJava(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src", "main", "java", "com"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd) //nolint:errcheck
+
+	d := Detector{}
+	cfg, err := d.detectJava()
+	if err != nil {
+		t.Fatalf("detectJava: %v", err)
+	}
+	if cfg.Language != "java" {
+		t.Errorf("expected java language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectLanguageNoRegistry(t *testing.T) {
+	d := Detector{Registry: nil}
+	lang := d.detectLanguage()
+	if lang != "go" {
+		t.Errorf("expected go language when no registry, got %s", lang)
+	}
+}
+
+func TestDetectJavaDomainsAndroid(t *testing.T) {
+	root := t.TempDir()
+
+	// Create Android project structure
+	if err := os.MkdirAll(filepath.Join(root, "app", "src", "main", "java", "com"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	domains := detectJavaDomains(root)
+	found := false
+	for _, d := range domains {
+		if d.Name == "app" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected app domain for Android project structure")
+	}
+}
+
+func TestDetectPythonDomainsSrcLayout(t *testing.T) {
+	root := t.TempDir()
+
+	// Create Python src layout with packages
+	if err := os.MkdirAll(filepath.Join(root, "src", "mypackage"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "src", "otherpackage"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	// Create an ignored dir
+	if err := os.MkdirAll(filepath.Join(root, "src", "__pycache__"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	domains := detectPythonDomains(root)
+	found := map[string]bool{}
+	for _, d := range domains {
+		found[d.Name] = true
+	}
+
+	if !found["mypackage"] {
+		t.Error("expected mypackage domain")
+	}
+	if !found["otherpackage"] {
+		t.Error("expected otherpackage domain")
+	}
+	if found["__pycache__"] {
+		t.Error("__pycache__ should be ignored")
 	}
 }

@@ -321,10 +321,11 @@ func mergeConfigs(parent, child application.Config) application.Config {
 				delete(domainMap, d.Name)
 			}
 		}
-		// Then add any new domains from child
+		// Then add any new domains from child (domains that only exist in child)
 		for _, d := range child.Policy.Domains {
-			if _, ok := domainMap[d.Name]; ok {
-				merged = append(merged, domainMap[d.Name])
+			if dom, ok := domainMap[d.Name]; ok {
+				merged = append(merged, dom)
+				delete(domainMap, d.Name) // Prevent duplicates if child has duplicate domain names
 			}
 		}
 		result.Policy.Domains = merged
