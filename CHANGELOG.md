@@ -4,6 +4,30 @@ All notable changes to `coverctl` will be documented here. Relicta manages this 
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-01-09
+
+### Added
+- **DDD Domain Layer**: Extract domain value objects (`Threshold`, `DomainName`, `FilePath`, `Percentage`)
+- **Domain Aggregates**: Add `PolicyAggregate` and `CoverageAggregator` for business logic encapsulation
+- **Domain Services**: Add `TrendService` and domain events for event-driven architecture
+- **Application Handlers**: Extract `Check`, `Report`, `Watch`, `History`, `Analytics`, `PRComment` handlers
+
+### Changed
+- **Documentation**: Update for multi-language support (Go, Python, JavaScript, Rust, Java)
+- **Test Coverage**: Improve coverage across domain (85.5%), autodetect (86.3%), gotool (81.1%)
+
+### Security
+- Fix command injection vulnerability in nodejs runner
+- Fix path traversal vulnerability in history store
+- Improve input validation in API clients (GitHub, GitLab, Bitbucket)
+
+## [1.10.0] - 2026-01-07
+
+### Added
+- **Multi-Language Support**: Add coverage runners for Python, JavaScript, Rust, and Java
+- **Auto-Detection**: Automatically detect project language from config files
+- **Multi-Provider PR Comments**: Support for GitHub, GitLab, and Bitbucket PR annotations
+
 ## [1.7.1] - 2025-12-25
 
 ### Changed
