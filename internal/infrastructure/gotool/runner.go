@@ -33,7 +33,7 @@ func (r Runner) Run(ctx context.Context, opts application.RunOptions) (string, e
 	if !filepath.IsAbs(profilePath) {
 		profilePath = filepath.Join(moduleRoot, profilePath)
 	}
-	if err := os.MkdirAll(filepath.Dir(profilePath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(profilePath), 0o750); err != nil {
 		return "", err
 	}
 
@@ -57,7 +57,6 @@ func (r Runner) Run(ctx context.Context, opts application.RunOptions) (string, e
 	if execFn == nil {
 		execFn = runCommand
 	}
-	fmt.Fprintf(os.Stderr, "running go args: %v\n", args)
 	if err := execFn(ctx, moduleRoot, args); err != nil {
 		return "", fmt.Errorf("go test failed: %w", err)
 	}
@@ -81,7 +80,7 @@ func (r Runner) RunIntegration(ctx context.Context, opts application.Integration
 	if err := os.RemoveAll(coverDirPath); err != nil {
 		return "", err
 	}
-	if err := os.MkdirAll(coverDirPath, 0o755); err != nil {
+	if err := os.MkdirAll(coverDirPath, 0o750); err != nil {
 		return "", err
 	}
 
@@ -93,7 +92,7 @@ func (r Runner) RunIntegration(ctx context.Context, opts application.Integration
 	if !filepath.IsAbs(profilePath) {
 		profilePath = filepath.Join(moduleRoot, profilePath)
 	}
-	if err := os.MkdirAll(filepath.Dir(profilePath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(profilePath), 0o750); err != nil {
 		return "", err
 	}
 

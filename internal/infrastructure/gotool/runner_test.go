@@ -411,3 +411,264 @@ func TestListPackagesEmptyLines(t *testing.T) {
 		t.Fatalf("expected 2 packages, got %d: %v", len(pkgs), pkgs)
 	}
 }
+
+func TestAppendBuildFlags(t *testing.T) {
+	tests := []struct {
+		name     string
+		flags    application.BuildFlags
+		expected []string
+	}{
+		{
+			name:     "empty flags",
+			flags:    application.BuildFlags{},
+			expected: []string{},
+		},
+		{
+			name:     "tags only",
+			flags:    application.BuildFlags{Tags: "integration,e2e"},
+			expected: []string{"-tags=integration,e2e"},
+		},
+		{
+			name:     "race only",
+			flags:    application.BuildFlags{Race: true},
+			expected: []string{"-race"},
+		},
+		{
+			name:     "short only",
+			flags:    application.BuildFlags{Short: true},
+			expected: []string{"-short"},
+		},
+		{
+			name:     "verbose only",
+			flags:    application.BuildFlags{Verbose: true},
+			expected: []string{"-v"},
+		},
+		{
+			name:     "run pattern",
+			flags:    application.BuildFlags{Run: "TestFoo"},
+			expected: []string{"-run=TestFoo"},
+		},
+		{
+			name:     "timeout",
+			flags:    application.BuildFlags{Timeout: "5m"},
+			expected: []string{"-timeout=5m"},
+		},
+		{
+			name:     "test args",
+			flags:    application.BuildFlags{TestArgs: []string{"-parallel=4", "-count=1"}},
+			expected: []string{"-parallel=4", "-count=1"},
+		},
+		{
+			name: "all flags",
+			flags: application.BuildFlags{
+				Tags:     "integration",
+				Race:     true,
+				Short:    true,
+				Verbose:  true,
+				Run:      "TestAll",
+				Timeout:  "10m",
+				TestArgs: []string{"-count=1"},
+			},
+			expected: []string{"-tags=integration", "-race", "-short", "-v", "-run=TestAll", "-timeout=10m", "-count=1"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			args := appendBuildFlags(nil, tc.flags)
+			if len(args) != len(tc.expected) {
+				t.Fatalf("expected %d args, got %d: %v", len(tc.expected), len(args), args)
+			}
+			for i, exp := range tc.expected {
+				if args[i] != exp {
+					t.Fatalf("arg %d: expected %s, got %s", i, exp, args[i])
+				}
+			}
+		})
+	}
+}
+
+func TestRunnerRunWithBuildFlags(t *testing.T) {
+	tmp := t.TempDir()
+	profile := filepath.Join(tmp, "coverage.out")
+	var capturedArgs []string
+	runner := Runner{
+		Module: ModuleResolver{},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			capturedArgs = args
+			for _, arg := range args {
+				if strings.HasPrefix(arg, "-coverprofile=") {
+					path := strings.TrimPrefix(arg, "-coverprofile=")
+					return os.WriteFile(path, []byte("mode: atomic\n"), 0o644)
+				}
+			}
+			return nil
+		},
+	}
+	_, err := runner.Run(context.Background(), application.RunOptions{
+		ProfilePath: profile,
+		BuildFlags: application.BuildFlags{
+			Tags:    "integration",
+			Race:    true,
+			Short:   true,
+			Verbose: true,
+			Run:     "TestFoo",
+			Timeout: "5m",
+		},
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	// Verify build flags are in captured args
+	argsStr := strings.Join(capturedArgs, " ")
+	expectedFlags := []string{"-tags=integration", "-race", "-short", "-v", "-run=TestFoo", "-timeout=5m"}
+	for _, flag := range expectedFlags {
+		if !strings.Contains(argsStr, flag) {
+			t.Fatalf("expected flag %s in args: %v", flag, capturedArgs)
+		}
+	}
+}
+
+func TestRunnerRunDefaultProfilePath(t *testing.T) {
+	var capturedProfilePath string
+	runner := Runner{
+		Module: ModuleResolver{},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			for _, arg := range args {
+				if strings.HasPrefix(arg, "-coverprofile=") {
+					capturedProfilePath = strings.TrimPrefix(arg, "-coverprofile=")
+					// Don't actually write to the default path to avoid test interference
+					// Just verify the path is correct
+					return nil
+				}
+			}
+			return nil
+		},
+	}
+	out, err := runner.Run(context.Background(), application.RunOptions{})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	// Default should be .cover/coverage.out
+	if !strings.Contains(out, filepath.Join(".cover", "coverage.out")) {
+		t.Fatalf("expected default profile path, got %s", out)
+	}
+	// Verify capturedProfilePath matches out
+	if capturedProfilePath != out {
+		t.Fatalf("expected profile path %s, got %s", out, capturedProfilePath)
+	}
+}
+
+func TestRunnerRunWithPackages(t *testing.T) {
+	tmp := t.TempDir()
+	profile := filepath.Join(tmp, "coverage.out")
+	var capturedArgs []string
+	runner := Runner{
+		Module: ModuleResolver{},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			capturedArgs = args
+			for _, arg := range args {
+				if strings.HasPrefix(arg, "-coverprofile=") {
+					path := strings.TrimPrefix(arg, "-coverprofile=")
+					return os.WriteFile(path, []byte("mode: atomic\n"), 0o644)
+				}
+			}
+			return nil
+		},
+	}
+	_, err := runner.Run(context.Background(), application.RunOptions{
+		ProfilePath: profile,
+		Packages:    []string{"./cmd/...", "./internal/..."},
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	// Verify packages are in captured args
+	argsStr := strings.Join(capturedArgs, " ")
+	if !strings.Contains(argsStr, "./cmd/...") || !strings.Contains(argsStr, "./internal/...") {
+		t.Fatalf("expected packages in args: %v", capturedArgs)
+	}
+}
+
+func TestRunnerRunWithDomains(t *testing.T) {
+	tmp := t.TempDir()
+	profile := filepath.Join(tmp, "coverage.out")
+	var capturedArgs []string
+	min := 80.0
+	runner := Runner{
+		Module: ModuleResolver{},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			capturedArgs = args
+			for _, arg := range args {
+				if strings.HasPrefix(arg, "-coverprofile=") {
+					path := strings.TrimPrefix(arg, "-coverprofile=")
+					return os.WriteFile(path, []byte("mode: atomic\n"), 0o644)
+				}
+			}
+			return nil
+		},
+	}
+	_, err := runner.Run(context.Background(), application.RunOptions{
+		ProfilePath: profile,
+		Domains: []domain.Domain{
+			{Name: "core", Match: []string{"./internal/core/..."}, Min: &min},
+			{Name: "api", Match: []string{"./internal/api/..."}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	// Verify coverpkg is in captured args
+	argsStr := strings.Join(capturedArgs, " ")
+	if !strings.Contains(argsStr, "-coverpkg=") {
+		t.Fatalf("expected -coverpkg in args: %v", capturedArgs)
+	}
+}
+
+func TestRunnerRunIntegrationWithBuildFlags(t *testing.T) {
+	tmp := t.TempDir()
+	profile := filepath.Join(tmp, "integration.out")
+	var capturedArgs []string
+	runner := Runner{
+		Module: ModuleResolver{},
+		ExecOutput: func(ctx context.Context, dir string, args []string) ([]byte, error) {
+			return []byte("github.com/felixgeelhaar/coverctl/internal/core\n"), nil
+		},
+		Exec: func(ctx context.Context, dir string, args []string) error {
+			if len(args) > 0 && args[0] == "test" && strings.Contains(strings.Join(args, " "), "-c") {
+				capturedArgs = args
+			}
+			if len(args) > 2 && args[0] == "tool" && args[1] == "covdata" {
+				for i, arg := range args {
+					if arg == "-o" && i+1 < len(args) {
+						return os.WriteFile(args[i+1], []byte("mode: atomic\n"), 0o644)
+					}
+				}
+			}
+			return nil
+		},
+		ExecEnv: func(ctx context.Context, dir string, env []string, cmd string, args []string) error {
+			return nil
+		},
+	}
+	_, err := runner.RunIntegration(context.Background(), application.IntegrationOptions{
+		Packages: []string{"./internal/core"},
+		CoverDir: filepath.Join(tmp, "covdata"),
+		Profile:  profile,
+		BuildFlags: application.BuildFlags{
+			Tags: "integration",
+			Race: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("run integration: %v", err)
+	}
+	// Verify build flags are in captured args
+	argsStr := strings.Join(capturedArgs, " ")
+	if !strings.Contains(argsStr, "-tags=integration") {
+		t.Fatalf("expected -tags=integration in args: %v", capturedArgs)
+	}
+	if !strings.Contains(argsStr, "-race") {
+		t.Fatalf("expected -race in args: %v", capturedArgs)
+	}
+}

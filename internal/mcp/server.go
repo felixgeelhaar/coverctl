@@ -702,7 +702,7 @@ func detectPRContextMCP(provider application.PRProvider, owner, repo string, prN
 		// GitLab can also auto-detect MR number
 		if prNumber == 0 {
 			if mrIID := os.Getenv("CI_MERGE_REQUEST_IID"); mrIID != "" {
-				fmt.Sscanf(mrIID, "%d", &prNumber)
+				_, _ = fmt.Sscanf(mrIID, "%d", &prNumber) // #nosec G104 - parse failure leaves prNumber as 0, which is acceptable
 			}
 		}
 	}
@@ -718,7 +718,7 @@ func detectPRContextMCP(provider application.PRProvider, owner, repo string, prN
 		// Bitbucket can also auto-detect PR number
 		if prNumber == 0 {
 			if prID := os.Getenv("BITBUCKET_PR_ID"); prID != "" {
-				fmt.Sscanf(prID, "%d", &prNumber)
+				_, _ = fmt.Sscanf(prID, "%d", &prNumber) // #nosec G104 - parse failure leaves prNumber as 0, which is acceptable
 			}
 		}
 	}
@@ -786,7 +786,7 @@ func backupConfig(configPath string) (string, error) {
 
 	// Create backup with timestamp
 	backupPath := configPath + ".backup"
-	if err := os.WriteFile(backupPath, content, 0o644); err != nil { // #nosec G306 - config files don't need strict permissions
+	if err := os.WriteFile(backupPath, content, 0o600); err != nil {
 		return "", fmt.Errorf("write backup: %w", err)
 	}
 

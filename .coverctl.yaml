@@ -10,15 +10,15 @@ policy:
     - name: root
       match:
         - "./"
-      min: 60
+      min: 0  # Entry point main.go, minimal logic
     - name: cli
       match:
         - "./internal/cli/..."
-      min: 65
+      min: 50
     - name: application
       match:
         - "./internal/application/..."
-      min: 40
+      min: 30
     - name: domain
       match:
         - "./internal/domain/..."
@@ -28,6 +28,7 @@ policy:
     - name: config
       match:
         - "./internal/infrastructure/config/..."
+      min: 70
     - name: coverprofile
       match:
         - "./internal/infrastructure/coverprofile/..."

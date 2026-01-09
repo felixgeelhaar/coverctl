@@ -40,7 +40,7 @@ func (s *FileStore) Load() (domain.History, error) {
 // Save writes the history to the JSON file.
 func (s *FileStore) Save(h domain.History) error {
 	dir := filepath.Dir(s.Path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (s *FileStore) Save(h domain.History) error {
 		return err
 	}
 
-	return os.WriteFile(s.Path, data, 0644)
+	return os.WriteFile(s.Path, data, 0o600)
 }
 
 // Append adds a new entry to the history and saves it.
