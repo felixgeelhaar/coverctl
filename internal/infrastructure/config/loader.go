@@ -19,6 +19,8 @@ type Loader struct{}
 type fileConfig struct {
 	Version     int             `yaml:"version"`
 	Extends     string          `yaml:"extends,omitempty"` // Path to parent config for inheritance
+	Language    string          `yaml:"language,omitempty"` // Project language (auto, go, python, etc.)
+	Profile     fileProfile     `yaml:"profile,omitempty"`  // Coverage profile settings
 	Policy      filePolicy      `yaml:"policy"`
 	Exclude     []string        `yaml:"exclude,omitempty"`
 	Files       []fileFileRule  `yaml:"files,omitempty"`
@@ -26,6 +28,11 @@ type fileConfig struct {
 	Merge       fileMerge       `yaml:"merge,omitempty"`
 	Integration fileIntegration `yaml:"integration,omitempty"`
 	Annotations fileAnnotations `yaml:"annotations,omitempty"`
+}
+
+type fileProfile struct {
+	Format string `yaml:"format,omitempty"` // Coverage format (auto, go, lcov, cobertura, jacoco)
+	Path   string `yaml:"path,omitempty"`   // Default profile path
 }
 
 type filePolicy struct {
@@ -237,7 +244,12 @@ func buildAppConfig(cfg fileConfig) application.Config {
 	}
 
 	return application.Config{
-		Version: cfg.Version,
+		Version:  cfg.Version,
+		Language: application.Language(cfg.Language),
+		Profile: application.ProfileConfig{
+			Format: application.Format(cfg.Profile.Format),
+			Path:   cfg.Profile.Path,
+		},
 		Policy:  policy,
 		Exclude: cfg.Exclude,
 		Files:   fileRules,
@@ -269,6 +281,19 @@ func mergeConfigs(parent, child application.Config) application.Config {
 	// Version: use child if set
 	if child.Version != 0 {
 		result.Version = child.Version
+	}
+
+	// Language: use child if set
+	if child.Language != "" {
+		result.Language = child.Language
+	}
+
+	// Profile: use child values if set
+	if child.Profile.Format != "" {
+		result.Profile.Format = child.Profile.Format
+	}
+	if child.Profile.Path != "" {
+		result.Profile.Path = child.Profile.Path
 	}
 
 	// DefaultMin: use child if set (non-zero)
@@ -344,7 +369,12 @@ func Write(w io.Writer, cfg application.Config) error {
 		version = 1
 	}
 	out := fileConfig{
-		Version: version,
+		Version:  version,
+		Language: string(cfg.Language),
+		Profile: fileProfile{
+			Format: string(cfg.Profile.Format),
+			Path:   cfg.Profile.Path,
+		},
 		Policy: filePolicy{
 			Default: fileDefault{Min: cfg.Policy.DefaultMin},
 			Domains: make([]fileDomain, 0, len(cfg.Policy.Domains)),

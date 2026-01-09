@@ -77,6 +77,8 @@ func (f fakeParser) ParseAll(paths []string) (map[string]domain.CoverageStat, er
 	return f.stats, f.err
 }
 
+func (f fakeParser) Format() Format { return FormatGo }
+
 type fakeReporter struct {
 	last domain.Result
 	err  error

@@ -7,11 +7,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 	"github.com/felixgeelhaar/coverctl/internal/pathutil"
 )
 
+// Parser implements ProfileParser for Go coverage profile format.
 type Parser struct{}
+
+// Format returns the format this parser handles.
+func (Parser) Format() application.Format {
+	return application.FormatGo
+}
 
 func (Parser) Parse(path string) (map[string]domain.CoverageStat, error) {
 	return (Parser{}).ParseAll([]string{path})

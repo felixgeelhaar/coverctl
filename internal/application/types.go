@@ -17,11 +17,51 @@ const (
 	OutputBrief OutputFormat = "brief"
 )
 
+// Language represents a programming language.
+type Language string
+
+const (
+	// LanguageAuto auto-detects the project language.
+	LanguageAuto Language = "auto"
+	// LanguageGo is the Go programming language.
+	LanguageGo Language = "go"
+	// LanguagePython is the Python programming language.
+	LanguagePython Language = "python"
+	// LanguageTypeScript is the TypeScript programming language.
+	LanguageTypeScript Language = "typescript"
+	// LanguageJavaScript is the JavaScript programming language.
+	LanguageJavaScript Language = "javascript"
+	// LanguageJava is the Java programming language.
+	LanguageJava Language = "java"
+	// LanguageRust is the Rust programming language.
+	LanguageRust Language = "rust"
+)
+
+// Format represents a coverage profile format.
+type Format string
+
+const (
+	// FormatAuto auto-detects the coverage format.
+	FormatAuto Format = "auto"
+	// FormatGo is the Go coverage profile format.
+	FormatGo Format = "go"
+	// FormatLCOV is the LCOV coverage format.
+	FormatLCOV Format = "lcov"
+	// FormatCobertura is the Cobertura XML coverage format.
+	FormatCobertura Format = "cobertura"
+	// FormatJaCoCo is the JaCoCo XML coverage format.
+	FormatJaCoCo Format = "jacoco"
+	// FormatLLVMCov is the LLVM coverage JSON format.
+	FormatLLVMCov Format = "llvm-cov"
+)
+
 var ErrConfigNotFound = errors.New("config not found")
 
 // Config represents validated, application-ready configuration.
 type Config struct {
 	Version     int
+	Language    Language      // Project language (auto-detected if empty)
+	Profile     ProfileConfig // Coverage profile configuration
 	Policy      domain.Policy
 	Exclude     []string
 	Files       []domain.FileRule
@@ -29,6 +69,12 @@ type Config struct {
 	Merge       MergeConfig
 	Integration IntegrationConfig
 	Annotations AnnotationsConfig
+}
+
+// ProfileConfig configures coverage profile handling.
+type ProfileConfig struct {
+	Format Format // Coverage format (auto, go, lcov, cobertura, jacoco)
+	Path   string // Default profile path
 }
 
 type FileRule = domain.FileRule
@@ -74,9 +120,15 @@ type CoverageRunner interface {
 	RunIntegration(ctx context.Context, opts IntegrationOptions) (string, error)
 }
 
+// ProfileParser parses coverage profiles into domain stats.
+// Implementations exist for each supported format.
 type ProfileParser interface {
+	// Parse reads a coverage profile and returns file-level stats.
 	Parse(path string) (map[string]domain.CoverageStat, error)
+	// ParseAll merges multiple profiles into unified stats.
 	ParseAll(paths []string) (map[string]domain.CoverageStat, error)
+	// Format returns the format this parser handles.
+	Format() Format
 }
 
 type DiffProvider interface {

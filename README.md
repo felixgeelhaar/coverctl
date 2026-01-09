@@ -251,8 +251,35 @@ jobs:
           sarif_file: verdict.sarif
 ```
 
+## Roadmap: Multi-Language Support
+
+coverctl is evolving from a Go-only tool to a **universal coverage enforcement platform**. See our design documents for details:
+
+- [Product Requirements (PRD)](docs/design/language-agnostic-prd.md) - Goals, personas, and feature requirements
+- [Technical Design (TDD)](docs/design/language-agnostic-tdd.md) - Architecture, implementation details, and code examples
+
+### Planned Language Support
+
+| Language | Format | Status |
+|----------|--------|--------|
+| Go | Go coverage profile | ✅ Supported |
+| Python | LCOV, Cobertura | 🔜 Phase 1 |
+| TypeScript/JavaScript | LCOV | 🔜 Phase 1 |
+| Java | Cobertura, JaCoCo | 🔜 Phase 1 |
+| Rust | LLVM-cov | 🔜 Phase 2 |
+
+### Claude Code Plugin
+
+coverctl will be available as a Claude Code plugin for AI-assisted coverage enforcement:
+
+```bash
+/plugin install coverctl
+/coverctl:check
+/coverctl:suggest
+```
+
 ## Docs & governance
 
-- Product/architecture docs live under `docs/` (TDD/PRD). `AGENTS.md` covers contributor expectations.
+- Product/architecture docs live under `docs/design/` (TDD/PRD). `AGENTS.md` covers contributor expectations.
 - The `scripts/build-artifacts.sh` helper compiles cross-platform binaries for release artifacts.
 - Keep `CHANGELOG.md` tracked so Relicta can automatically append release notes during `relicta release`.
