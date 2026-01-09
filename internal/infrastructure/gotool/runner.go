@@ -12,11 +12,34 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
 
+// Runner implements the CoverageRunner interface for Go projects.
 type Runner struct {
 	Module     ModuleInfo
 	Exec       func(ctx context.Context, dir string, args []string) error
 	ExecOutput func(ctx context.Context, dir string, args []string) ([]byte, error)
 	ExecEnv    func(ctx context.Context, dir string, env []string, cmd string, args []string) error
+}
+
+// Name returns the runner's identifier.
+func (r Runner) Name() string {
+	return "go"
+}
+
+// Language returns the language this runner supports.
+func (r Runner) Language() application.Language {
+	return application.LanguageGo
+}
+
+// Detect checks if this runner can handle the current project.
+// Returns true if go.mod or go.sum exists in the project directory.
+func (r Runner) Detect(projectDir string) bool {
+	markers := []string{"go.mod", "go.sum"}
+	for _, marker := range markers {
+		if _, err := os.Stat(filepath.Join(projectDir, marker)); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (r Runner) Run(ctx context.Context, opts application.RunOptions) (string, error) {

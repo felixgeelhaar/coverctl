@@ -66,6 +66,18 @@ func (f fakeRunner) RunIntegration(ctx context.Context, opts IntegrationOptions)
 	return f.profile, f.err
 }
 
+func (f fakeRunner) Name() string {
+	return "fake"
+}
+
+func (f fakeRunner) Language() Language {
+	return LanguageGo
+}
+
+func (f fakeRunner) Detect(projectDir string) bool {
+	return true
+}
+
 type fakeParser struct {
 	stats map[string]domain.CoverageStat
 	err   error

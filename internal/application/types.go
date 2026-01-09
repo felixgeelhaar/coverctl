@@ -115,9 +115,20 @@ type DomainResolver interface {
 	ModulePath(ctx context.Context) (string, error)
 }
 
+// CoverageRunner executes tests with coverage instrumentation for a specific language.
+// Implementations exist for Go, Python, Node.js, Rust, and Java.
 type CoverageRunner interface {
+	// Run executes tests with coverage and returns the profile path.
 	Run(ctx context.Context, opts RunOptions) (string, error)
+	// RunIntegration runs integration tests with coverage collection.
 	RunIntegration(ctx context.Context, opts IntegrationOptions) (string, error)
+	// Name returns the runner's identifier (e.g., "go", "python", "nodejs").
+	Name() string
+	// Language returns the language this runner supports.
+	Language() Language
+	// Detect checks if this runner can handle the current project.
+	// Returns true if the project uses this runner's language.
+	Detect(projectDir string) bool
 }
 
 // ProfileParser parses coverage profiles into domain stats.
