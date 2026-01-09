@@ -71,11 +71,14 @@ func FormatCoverageComment(result domain.Result, comparison *application.Compare
 		b.WriteString("\n")
 
 		for _, d := range result.Domains {
-			statusIcon := ":white_check_mark:"
-			if d.Status == domain.StatusFail {
+			var statusIcon string
+			switch d.Status {
+			case domain.StatusFail:
 				statusIcon = ":x:"
-			} else if d.Status == domain.StatusWarn {
+			case domain.StatusWarn:
 				statusIcon = ":warning:"
+			default:
+				statusIcon = ":white_check_mark:"
 			}
 
 			b.WriteString(fmt.Sprintf("| %s | %.1f%% | %s |", d.Domain, d.Percent, statusIcon))

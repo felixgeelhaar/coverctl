@@ -78,7 +78,7 @@ func NewClientWithHTTP(token string, httpClient *http.Client, apiURL string) *Cl
 type note struct {
 	ID      int64  `json:"id"`
 	Body    string `json:"body"`
-	NoteURL string `json:"noteable_iid"`
+	NoteURL string `json:"noteable_iid"` //nolint:misspell // GitLab API field name
 }
 
 // projectPath returns the URL-encoded project path for API calls.

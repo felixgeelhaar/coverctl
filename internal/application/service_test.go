@@ -1321,7 +1321,6 @@ func TestSelectRunnerWithRegistry(t *testing.T) {
 	}
 }
 
-
 func TestEvaluateFileRulesWithAnnotations(t *testing.T) {
 	files := map[string]domain.CoverageStat{
 		"service.go": {Covered: 8, Total: 10},
@@ -1583,7 +1582,6 @@ func TestNormalizeCoverageFileModulePrefix(t *testing.T) {
 	}
 }
 
-
 func TestServiceIgnoreSuccess(t *testing.T) {
 	svc := &Service{
 		ConfigLoader: fakeConfigLoader{
@@ -1645,7 +1643,6 @@ func TestServiceDetectSuccess(t *testing.T) {
 		t.Errorf("expected go language, got %s", cfg.Language)
 	}
 }
-
 
 func TestDiffFilesDisabled(t *testing.T) {
 	svc := &Service{}
@@ -2656,7 +2653,7 @@ func TestReportUncoveredResultWithCoveredFiles(t *testing.T) {
 func TestReportUncoveredResultWithUncoveredFiles(t *testing.T) {
 	svc := &Service{}
 	files := map[string]domain.CoverageStat{
-		"file1.go": {Covered: 0, Total: 100}, // 0% covered
+		"file1.go": {Covered: 0, Total: 100},  // 0% covered
 		"file2.go": {Covered: 50, Total: 100}, // 50% covered
 	}
 	result, err := svc.reportUncoveredResult(files, nil, nil)
@@ -2677,8 +2674,8 @@ func TestReportUncoveredResultWithUncoveredFiles(t *testing.T) {
 func TestReportUncoveredResultWithExcludes(t *testing.T) {
 	svc := &Service{}
 	files := map[string]domain.CoverageStat{
-		"file1.go":         {Covered: 0, Total: 100}, // 0% covered but not excluded
-		"vendor/file2.go":  {Covered: 0, Total: 100}, // 0% covered but excluded
+		"file1.go":        {Covered: 0, Total: 100}, // 0% covered but not excluded
+		"vendor/file2.go": {Covered: 0, Total: 100}, // 0% covered but excluded
 	}
 	result, err := svc.reportUncoveredResult(files, []string{"vendor/**"}, nil)
 	if err != nil {

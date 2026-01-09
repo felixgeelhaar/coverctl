@@ -102,8 +102,8 @@ func (p *Parser) Parse(path string) (map[string]domain.CoverageStat, error) {
 			}
 			currentFile = ""
 
-		// Branch coverage lines (BRDA, BRF, BRH) - ignored for now
-		// Function coverage lines (FN, FNDA, FNF, FNH) - ignored for now
+			// Branch coverage lines (BRDA, BRF, BRH) - ignored for now
+			// Function coverage lines (FN, FNDA, FNF, FNH) - ignored for now
 		}
 	}
 

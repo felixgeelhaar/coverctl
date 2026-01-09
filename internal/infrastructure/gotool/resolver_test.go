@@ -102,18 +102,6 @@ func TestCollectPatterns(t *testing.T) {
 		{name: "both", match: []string{"./internal/cli/...", "./internal/application/..."}},
 	}
 
-	// Convert to domain.Domain format
-	var ds []struct {
-		Name  string
-		Match []string
-	}
-	for _, d := range domains {
-		ds = append(ds, struct {
-			Name  string
-			Match []string
-		}{Name: d.name, Match: d.match})
-	}
-
 	// Manual test since we can't import domain package here without cycle
 	patterns := make(map[string]struct{})
 	for _, d := range domains {

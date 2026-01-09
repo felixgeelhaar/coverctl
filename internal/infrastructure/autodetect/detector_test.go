@@ -221,7 +221,6 @@ func TestDeduplicateDomains(t *testing.T) {
 	}
 }
 
-
 func TestDetectorDetectPython(t *testing.T) {
 	// Save current working directory
 	cwd, err := os.Getwd()

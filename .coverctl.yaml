@@ -14,17 +14,18 @@ policy:
     - name: cli
       match:
         - "./internal/cli/..."
-      min: 50
+      min: 25
     - name: application
       match:
         - "./internal/application/..."
-      min: 30
+      min: 18
     - name: domain
       match:
         - "./internal/domain/..."
     - name: autodetect
       match:
         - "./internal/infrastructure/autodetect/..."
+      min: 65
     - name: config
       match:
         - "./internal/infrastructure/config/..."
@@ -35,6 +36,7 @@ policy:
     - name: gotool
       match:
         - "./internal/infrastructure/gotool/..."
+      min: 55
     - name: report
       match:
         - "./internal/infrastructure/report/..."

@@ -29,9 +29,9 @@ const (
 
 // Client implements the PRClient interface for Bitbucket API.
 type Client struct {
-	httpClient *http.Client
-	apiURL     string
-	username   string
+	httpClient  *http.Client
+	apiURL      string
+	username    string
 	appPassword string
 }
 
@@ -85,7 +85,7 @@ func NewClientWithHTTP(username, appPassword string, httpClient *http.Client, ap
 
 // comment represents a Bitbucket PR comment.
 type comment struct {
-	ID      int64  `json:"id"`
+	ID      int64 `json:"id"`
 	Content struct {
 		Raw string `json:"raw"`
 	} `json:"content"`
@@ -122,7 +122,7 @@ func (c *Client) FindCoverageComment(ctx context.Context, workspace, repoSlug st
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return 0, fmt.Errorf("Bitbucket API error: %s - %s", resp.Status, string(body))
+		return 0, fmt.Errorf("bitbucket API error: %s - %s", resp.Status, string(body))
 	}
 
 	var comments commentList
@@ -171,7 +171,7 @@ func (c *Client) CreateComment(ctx context.Context, workspace, repoSlug string, 
 
 	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := io.ReadAll(resp.Body)
-		return 0, "", fmt.Errorf("Bitbucket API error: %s - %s", resp.Status, string(respBody))
+		return 0, "", fmt.Errorf("bitbucket API error: %s - %s", resp.Status, string(respBody))
 	}
 
 	var comment comment
@@ -212,7 +212,7 @@ func (c *Client) UpdateComment(ctx context.Context, workspace, repoSlug string, 
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("Bitbucket API error: %s - %s", resp.Status, string(respBody))
+		return fmt.Errorf("bitbucket API error: %s - %s", resp.Status, string(respBody))
 	}
 
 	return nil

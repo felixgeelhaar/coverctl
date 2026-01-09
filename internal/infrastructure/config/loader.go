@@ -18,7 +18,7 @@ type Loader struct{}
 
 type fileConfig struct {
 	Version     int             `yaml:"version"`
-	Extends     string          `yaml:"extends,omitempty"` // Path to parent config for inheritance
+	Extends     string          `yaml:"extends,omitempty"`  // Path to parent config for inheritance
 	Language    string          `yaml:"language,omitempty"` // Project language (auto, go, python, etc.)
 	Profile     fileProfile     `yaml:"profile,omitempty"`  // Coverage profile settings
 	Policy      filePolicy      `yaml:"policy"`

@@ -18,8 +18,8 @@ type Service struct {
 	ConfigLoader      ConfigLoader
 	Autodetector      Autodetector
 	DomainResolver    DomainResolver
-	CoverageRunner    CoverageRunner    // Default runner (used if RunnerRegistry is nil)
-	RunnerRegistry    RunnerRegistry    // Optional: for multi-language support
+	CoverageRunner    CoverageRunner // Default runner (used if RunnerRegistry is nil)
+	RunnerRegistry    RunnerRegistry // Optional: for multi-language support
 	ProfileParser     ProfileParser
 	DiffProvider      DiffProvider
 	AnnotationScanner AnnotationScanner
@@ -1317,10 +1317,9 @@ func filesToPackages(files []string) []string {
 		if !strings.HasSuffix(file, ".go") {
 			continue
 		}
-		// Skip test files - we want to test the package, not filter by test presence
-		if strings.HasSuffix(file, "_test.go") {
-			// Still include the package, just don't use test file suffix check
-		}
+		// Note: We intentionally include packages with test files
+		// We want to test the package, not filter by test presence
+		_ = strings.HasSuffix(file, "_test.go") // Check exists but we don't filter on it
 
 		// Get the directory (package path)
 		dir := filepath.Dir(file)
@@ -1497,4 +1496,3 @@ func detectProvider() PRProvider {
 	// Default to GitHub for backward compatibility
 	return ProviderGitHub
 }
-

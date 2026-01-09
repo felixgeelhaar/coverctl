@@ -114,21 +114,21 @@ func (d *Detector) GetDefaultProfilePaths(lang application.Language) []string {
 		}
 	case application.LanguageJavaScript, application.LanguageTypeScript:
 		return []string{
-			"coverage/lcov.info",      // nyc/c8/jest default
-			"coverage/coverage.json",  // JSON format
-			"coverage/cobertura.xml",  // Cobertura format
-			".nyc_output/",            // nyc intermediate files
+			"coverage/lcov.info",     // nyc/c8/jest default
+			"coverage/coverage.json", // JSON format
+			"coverage/cobertura.xml", // Cobertura format
+			".nyc_output/",           // nyc intermediate files
 		}
 	case application.LanguageJava:
 		return []string{
-			"target/site/jacoco/jacoco.xml",                           // Maven JaCoCo
-			"build/reports/jacoco/test/jacocoTestReport.xml",          // Gradle JaCoCo
-			"target/site/cobertura/coverage.xml",                      // Maven Cobertura
-			"build/reports/cobertura/coverage.xml",                    // Gradle Cobertura
+			"target/site/jacoco/jacoco.xml",                  // Maven JaCoCo
+			"build/reports/jacoco/test/jacocoTestReport.xml", // Gradle JaCoCo
+			"target/site/cobertura/coverage.xml",             // Maven Cobertura
+			"build/reports/cobertura/coverage.xml",           // Gradle Cobertura
 		}
 	case application.LanguageRust:
 		return []string{
-			"target/coverage/lcov.info",   // cargo-llvm-cov
+			"target/coverage/lcov.info", // cargo-llvm-cov
 			"target/coverage/cobertura.xml",
 			"coverage/lcov.info",
 		}

@@ -19,9 +19,9 @@ import (
 
 // coverage represents the root Cobertura XML element.
 type coverage struct {
-	XMLName  xml.Name  `xml:"coverage"`
-	Packages []pkg     `xml:"packages>package"`
-	Sources  []string  `xml:"sources>source"`
+	XMLName  xml.Name `xml:"coverage"`
+	Packages []pkg    `xml:"packages>package"`
+	Sources  []string `xml:"sources>source"`
 }
 
 type pkg struct {
@@ -30,9 +30,9 @@ type pkg struct {
 }
 
 type class struct {
-	Name     string `xml:"name,attr"`
-	Filename string `xml:"filename,attr"`
-	Lines    []line `xml:"lines>line"`
+	Name     string   `xml:"name,attr"`
+	Filename string   `xml:"filename,attr"`
+	Lines    []line   `xml:"lines>line"`
 	Methods  []method `xml:"methods>method"`
 }
 
