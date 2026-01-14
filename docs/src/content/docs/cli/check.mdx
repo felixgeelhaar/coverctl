@@ -22,6 +22,7 @@ coverctl check [flags]
 | `-c, --config` | Config file path | `.coverctl.yaml` |
 | `-p, --profile` | Coverage profile output path | `.cover/coverage.out` |
 | `--from-profile` | Use existing coverage profile instead of running tests | `false` |
+| `--force-run` | Run coverage even if the profile exists | `false` |
 | `-d, --domain` | Filter to specific domain (repeatable) | all domains |
 | `-o, --output` | Output format: `text`, `json`, `html` | `text` |
 
@@ -123,6 +124,8 @@ coverctl check --validate
 # Evaluate an existing profile without running tests
 coverctl check --from-profile --profile coverage.out
 ```
+
+If you pass `--profile` and the file already exists, `coverctl check` reuses it by default. Use `--force-run` to regenerate the profile.
 
 ## Output
 

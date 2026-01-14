@@ -41,6 +41,7 @@ func TestWriteConfigFile(t *testing.T) {
 
 type fakeService struct {
 	checkErr      error
+	checkOpts     *application.CheckOptions
 	runErr        error
 	detectErr     error
 	detectCfg     application.Config
@@ -59,7 +60,12 @@ type fakeService struct {
 	compareResult application.CompareResult
 }
 
-func (f fakeService) Check(_ context.Context, _ application.CheckOptions) error { return f.checkErr }
+func (f fakeService) Check(_ context.Context, opts application.CheckOptions) error {
+	if f.checkOpts != nil {
+		*f.checkOpts = opts
+	}
+	return f.checkErr
+}
 func (f fakeService) RunOnly(_ context.Context, _ application.RunOnlyOptions) error {
 	return f.runErr
 }
@@ -142,6 +148,22 @@ func TestRunCheckError(t *testing.T) {
 	code := Run([]string{"coverctl", "check"}, &out, &out, fakeService{checkErr: errSentinel})
 	if code != 1 {
 		t.Fatalf("expected exit 1, got %d", code)
+	}
+}
+
+func TestRunCheckUsesExistingProfile(t *testing.T) {
+	var out bytes.Buffer
+	profilePath := filepath.Join(t.TempDir(), "coverage.out")
+	if err := os.WriteFile(profilePath, []byte("mode: set\n"), 0o644); err != nil {
+		t.Fatalf("write profile: %v", err)
+	}
+	var opts application.CheckOptions
+	code := Run([]string{"coverctl", "check", "--profile", profilePath}, &out, &out, fakeService{checkOpts: &opts})
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d", code)
+	}
+	if !opts.FromProfile {
+		t.Fatalf("expected FromProfile when profile exists")
 	}
 }
 
