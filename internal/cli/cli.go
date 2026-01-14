@@ -152,7 +152,6 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		fs.Var(profile, "profile", "Coverage profile output path")
 		fs.Var(profile, "p", "Coverage profile output path (shorthand)")
 		fromProfile := fs.Bool("from-profile", false, "Use existing coverage profile instead of running tests")
-		forceRun := fs.Bool("force-run", false, "Run coverage even if the profile exists")
 		historyPath := fs.String("history", "", "History file path for delta display")
 		showDelta := fs.Bool("show-delta", false, "Show coverage change from previous run")
 		failUnder := fs.Float64("fail-under", 0, "Fail if overall coverage is below this percentage")
@@ -190,11 +189,6 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 			return 0
 		}
 		useExistingProfile := *fromProfile
-		if !useExistingProfile && profile.set && !*forceRun {
-			if _, err := os.Stat(profile.value); err == nil {
-				useExistingProfile = true
-			}
-		}
 		opts := application.CheckOptions{
 			ConfigPath:     *configPath,
 			Output:         *output,
@@ -1305,7 +1299,6 @@ Flags:
   -c, --config string    Config file path (default ".coverctl.yaml")
   -p, --profile string   Coverage profile output path (default ".cover/coverage.out")
       --from-profile     Use existing coverage profile instead of running tests
-      --force-run        Run coverage even if the profile exists
   -d, --domain string    Filter to specific domain (repeatable)
   -o, --output string    Output format: text|json|html|brief (default "text")
                          Use 'brief' for single-line LLM/agent-optimized output
@@ -1786,7 +1779,6 @@ _coverctl() {
                         '-p[Coverage profile path]:file:_files -g "*.out"' \
                         '--profile[Coverage profile path]:file:_files -g "*.out"' \
                         '--from-profile[Use existing coverage profile instead of running tests]' \
-                        '--force-run[Run coverage even if the profile exists]' \
                         '-d[Filter to domain]:domain:' \
                         '--domain[Filter to domain]:domain:' \
                         '-o[Output format]:format:(text json html)' \
@@ -1858,7 +1850,6 @@ complete -c coverctl -n "__fish_use_subcommand" -a "completion" -d "Generate she
 complete -c coverctl -s c -l config -d "Config file path" -r -F
 complete -c coverctl -s p -l profile -d "Coverage profile path" -r -F
 complete -c coverctl -l from-profile -d "Use existing coverage profile instead of running tests"
-complete -c coverctl -l force-run -d "Run coverage even if the profile exists"
 complete -c coverctl -s d -l domain -d "Filter to specific domain" -r
 complete -c coverctl -s o -l output -d "Output format" -r -a "text json html"
 complete -c coverctl -s f -l force -d "Force overwrite"

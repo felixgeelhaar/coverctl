@@ -29,6 +29,8 @@ type Service struct {
 	Out               io.Writer
 }
 
+// CheckOptions configures a coverage check run and its policy evaluation.
+// Even with FromProfile enabled, the policy still evaluates every domain, so failing domains keep failing until the coverage profile actually meets their minima.
 type CheckOptions struct {
 	ConfigPath     string
 	Output         OutputFormat
@@ -41,7 +43,7 @@ type CheckOptions struct {
 	Incremental    bool         // Only test packages with changed files
 	IncrementalRef string       // Git ref to compare against (default: HEAD~1)
 	Language       Language     // Override language auto-detection (empty = auto)
-	FromProfile    bool         // Use existing coverage profile instead of running tests
+	FromProfile    bool         // Use existing coverage profile instead of running tests (policy still evaluates every domain)
 }
 
 type RunOnlyOptions struct {

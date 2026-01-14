@@ -162,8 +162,8 @@ func TestRunCheckUsesExistingProfile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
-	if !opts.FromProfile {
-		t.Fatalf("expected FromProfile when profile exists")
+	if opts.FromProfile {
+		t.Fatalf("expected FromProfile to be false even if profile exists (must be explicit)")
 	}
 }
 
