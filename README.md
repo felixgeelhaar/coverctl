@@ -35,7 +35,7 @@ coverctl watch                              # continuous coverage feedback durin
 | `coverctl ignore` | Show configured `exclude` patterns and the tracked domains | Use this to document generated folders (e.g., `internal/generated/proto/...`) that you wish to skip. |
 | `coverctl badge` | Generate an SVG coverage badge | Use `--style flat-square` for a different style. Output to `coverage.svg` by default. |
 | `coverctl trend` | Show coverage trends over time | Requires history data recorded via `coverctl record`. |
-| `coverctl record` | Record current coverage to history | Use with `--commit` and `--branch` for CI integration. |
+| `coverctl record` | Record current coverage to history | Use with `--commit` and `--branch` for CI integration. Use `--run` or profiles from `coverctl run`/`coverctl check` so history matches instrumentation. |
 | `coverctl suggest` | Suggest optimal coverage thresholds | Strategies: `current`, `aggressive`, `conservative`. Use `--write-config` to apply. |
 | `coverctl debt` | Show coverage debt report | Identifies domains/files below target and estimates remediation effort. |
 | `coverctl mcp serve` | Start MCP server for AI agents | Enables Claude and other AI agents to interact with coverage tools programmatically via STDIO. |

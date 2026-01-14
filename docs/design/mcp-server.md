@@ -167,11 +167,34 @@ type ReportInput struct {
 
 ```go
 type RecordInput struct {
-    ConfigPath  string `json:"configPath,omitempty"`
-    Profile     string `json:"profile,omitempty"`
-    HistoryPath string `json:"historyPath,omitempty"`
-    Commit      string `json:"commit,omitempty" jsonschema:"description=Git commit SHA"`
-    Branch      string `json:"branch,omitempty" jsonschema:"description=Git branch name"`
+    ConfigPath  string   `json:"configPath,omitempty"`
+    Profile     string   `json:"profile,omitempty"`
+    HistoryPath string   `json:"historyPath,omitempty"`
+    Commit      string   `json:"commit,omitempty" jsonschema:"description=Git commit SHA"`
+    Branch      string   `json:"branch,omitempty" jsonschema:"description=Git branch name"`
+    Run         bool     `json:"run,omitempty" jsonschema:"description=Run coverage before recording history"`
+    Domains     []string `json:"domains,omitempty" jsonschema:"description=Filter to specific domains"`
+    Language    string   `json:"language,omitempty" jsonschema:"description=Override language detection (go, python, nodejs, rust, java)"`
+    Tags        string   `json:"tags,omitempty" jsonschema:"description=Build tags (e.g. 'integration,e2e')"`
+    Race        bool     `json:"race,omitempty" jsonschema:"description=Enable race detector"`
+    Short       bool     `json:"short,omitempty" jsonschema:"description=Skip long-running tests (-short flag)"`
+    Verbose     bool     `json:"verbose,omitempty" jsonschema:"description=Verbose test output"`
+    TestRun     string   `json:"testRun,omitempty" jsonschema:"description=Run only tests matching pattern"`
+    Timeout     string   `json:"timeout,omitempty" jsonschema:"description=Test timeout (e.g. '10m', '1h')"`
+    TestArgs    []string `json:"testArgs,omitempty" jsonschema:"description=Additional arguments passed to go test"`
+}
+```
+
+Example:
+
+```json
+{
+  "configPath": ".coverctl.yaml",
+  "historyPath": ".cover/history.json",
+  "run": true,
+  "tags": "integration",
+  "timeout": "30m",
+  "testRun": "TestIntegration.*"
 }
 ```
 

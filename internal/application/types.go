@@ -222,6 +222,14 @@ type RecordOptions struct {
 	HistoryPath string
 	Commit      string
 	Branch      string
+	Run         bool
+	Domains     []string
+	BuildFlags  BuildFlags
+	Language    Language
+}
+
+type RecordResult struct {
+	Warnings []string
 }
 
 type HistoryStore interface {

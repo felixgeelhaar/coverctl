@@ -916,16 +916,37 @@ func (s *Service) Trend(ctx context.Context, opts TrendOptions, store HistorySto
 }
 
 // Record saves current coverage to history.
-func (s *Service) Record(ctx context.Context, opts RecordOptions, store HistoryStore) error {
+func (s *Service) RecordWithWarnings(ctx context.Context, opts RecordOptions, store HistoryStore) (RecordResult, error) {
 	cfg, domains, err := s.loadOrDetect(opts.ConfigPath)
 	if err != nil {
-		return err
+		return RecordResult{}, err
 	}
 
-	profiles := buildProfileList(opts.ProfilePath, cfg.Merge.Profiles)
+	domains = filterDomainsByNames(domains, opts.Domains)
+	if len(domains) == 0 {
+		return RecordResult{}, fmt.Errorf("no matching domains found for: %v", opts.Domains)
+	}
+
+	profilePath := opts.ProfilePath
+	if opts.Run {
+		runner, err := s.selectRunnerMethod(opts.Language, cfg.Language)
+		if err != nil {
+			return RecordResult{}, err
+		}
+		profilePath, err = runner.Run(ctx, RunOptions{
+			Domains:     domains,
+			ProfilePath: opts.ProfilePath,
+			BuildFlags:  opts.BuildFlags,
+		})
+		if err != nil {
+			return RecordResult{}, err
+		}
+	}
+
+	profiles := buildProfileList(profilePath, cfg.Merge.Profiles)
 	covCtx, err := s.prepareCoverageContext(ctx, cfg, domains, profiles)
 	if err != nil {
-		return err
+		return RecordResult{}, err
 	}
 
 	// Calculate overall coverage
@@ -978,7 +999,16 @@ func (s *Service) Record(ctx context.Context, opts RecordOptions, store HistoryS
 		Domains:   domainEntries,
 	}
 
-	return store.Append(entry)
+	if err := store.Append(entry); err != nil {
+		return RecordResult{}, err
+	}
+
+	return RecordResult{Warnings: recordInstrumentationWarnings(domains, covCtx.DomainCoverage)}, nil
+}
+
+func (s *Service) Record(ctx context.Context, opts RecordOptions, store HistoryStore) error {
+	_, err := s.RecordWithWarnings(ctx, opts, store)
+	return err
 }
 
 // timeNow is a variable to allow test injection

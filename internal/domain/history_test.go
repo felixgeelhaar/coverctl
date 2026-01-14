@@ -13,12 +13,13 @@ func TestHistoryLatestEntry(t *testing.T) {
 		}
 	})
 
-	t.Run("returns last entry", func(t *testing.T) {
+	t.Run("returns newest entry by timestamp", func(t *testing.T) {
+		now := time.Now()
 		h := History{
 			Entries: []HistoryEntry{
-				{Timestamp: time.Now().Add(-2 * time.Hour), Overall: 70.0},
-				{Timestamp: time.Now().Add(-1 * time.Hour), Overall: 75.0},
-				{Timestamp: time.Now(), Overall: 80.0},
+				{Timestamp: now.Add(-2 * time.Hour), Overall: 70.0},
+				{Timestamp: now, Overall: 80.0},
+				{Timestamp: now.Add(-1 * time.Hour), Overall: 75.0},
 			},
 		}
 		latest := h.LatestEntry()

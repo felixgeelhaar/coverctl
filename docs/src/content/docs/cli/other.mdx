@@ -202,6 +202,9 @@ Record current coverage to history for trend analysis.
 coverctl record [flags]
 ```
 
+Note: Prefer profiles produced by `coverctl run` or `coverctl check` so the history reflects the same `-coverpkg` instrumentation that policy checks use.
+When using `--run`, pass test selection via `--test-run` (or `--test-arg=-run=...`) since `--run` is reserved to trigger coverage execution.
+
 ### Flags
 
 | Flag | Description | Default |
@@ -211,6 +214,16 @@ coverctl record [flags]
 | `--history` | History file path | `.cover/history.json` |
 | `--commit` | Git commit SHA | auto-detected |
 | `--branch` | Git branch name | auto-detected |
+| `--run` | Run coverage before recording history | `false` |
+| `-l, --language` | Override language detection | auto |
+| `-d, --domain` | Filter to specific domain (repeatable) | all domains |
+| `--tags` | Build tags (e.g., `integration,e2e`) | |
+| `--race` | Enable race detector | `false` |
+| `--short` | Skip long-running tests | `false` |
+| `-v` | Verbose test output | `false` |
+| `--test-run` | Run only tests matching pattern | |
+| `--timeout` | Test timeout (e.g., `10m`, `1h`) | |
+| `--test-arg` | Additional go test argument (repeatable) | |
 
 ### Examples
 
@@ -220,6 +233,9 @@ coverctl record
 
 # Explicit commit and branch
 coverctl record --commit abc1234 --branch main
+
+# Run coverage before recording history
+coverctl record --run --tags integration
 ```
 
 ### CI Integration

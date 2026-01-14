@@ -3,6 +3,8 @@ package application
 import (
 	"fmt"
 	"os"
+	"sort"
+	"strings"
 
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
@@ -64,4 +66,32 @@ func selectRunner(registry RunnerRegistry, defaultRunner CoverageRunner, lang, c
 // This is a thin wrapper around the domain method for backward compatibility.
 func applyDeltas(result *domain.Result, history domain.History) {
 	result.ApplyDeltas(history)
+}
+
+func missingCoverageDomains(domains []domain.Domain, coverage map[string]domain.CoverageStat) []string {
+	if len(domains) == 0 {
+		return nil
+	}
+	missing := make([]string, 0, len(domains))
+	for _, d := range domains {
+		if _, ok := coverage[d.Name]; !ok {
+			missing = append(missing, d.Name)
+		}
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	sort.Strings(missing)
+	return missing
+}
+
+func recordInstrumentationWarnings(domains []domain.Domain, coverage map[string]domain.CoverageStat) []string {
+	missing := missingCoverageDomains(domains, coverage)
+	if len(missing) == 0 {
+		return nil
+	}
+	return []string{fmt.Sprintf(
+		"record: profile did not include coverage for domains: %s; this often happens when the profile is generated without -coverpkg (use coverctl run/check)",
+		strings.Join(missing, ", "),
+	)}
 }

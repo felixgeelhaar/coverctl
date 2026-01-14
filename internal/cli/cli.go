@@ -50,6 +50,10 @@ type Service interface {
 	PRComment(ctx context.Context, opts application.PRCommentOptions) (application.PRCommentResult, error)
 }
 
+type recordWarner interface {
+	RecordWithWarnings(ctx context.Context, opts application.RecordOptions, store application.HistoryStore) (application.RecordResult, error)
+}
+
 // GlobalOptions holds CLI-wide options that affect output behavior
 type GlobalOptions struct {
 	Quiet   bool // Suppress non-essential output
@@ -465,19 +469,57 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		historyPath := fs.String("history", ".cover/history.json", "History file path")
 		commit := fs.String("commit", "", "Git commit SHA (optional)")
 		branch := fs.String("branch", "", "Git branch name (optional)")
+		runCoverage := fs.Bool("run", false, "Run coverage before recording history")
+		language := fs.String("language", "", "Override language detection (go, python, nodejs, rust, java)")
+		fs.StringVar(language, "l", "", "Override language detection (shorthand)")
+		tags := fs.String("tags", "", "Build tags (e.g., integration,e2e)")
+		race := fs.Bool("race", false, "Enable race detector")
+		short := fs.Bool("short", false, "Skip long-running tests")
+		verbose := fs.Bool("v", false, "Verbose test output")
+		testRun := fs.String("test-run", "", "Run only tests matching pattern")
+		timeout := fs.String("timeout", "", "Test timeout (e.g., 10m, 1h)")
+		var testArgs testArgsList
+		fs.Var(&testArgs, "test-arg", "Additional argument passed to go test (repeatable)")
+		var domains domainList
+		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
+		fs.Var(&domains, "d", "Filter to specific domain (shorthand)")
 		if err := fs.Parse(cmdArgs); err != nil {
 			return 2
 		}
 		store := history.FileStore{Path: *historyPath}
-		err := svc.Record(ctx, application.RecordOptions{
+		recordOpts := application.RecordOptions{
 			ConfigPath:  *configPath,
 			ProfilePath: *profile,
 			HistoryPath: *historyPath,
 			Commit:      *commit,
 			Branch:      *branch,
-		}, &store)
+			Run:         *runCoverage,
+			Domains:     domains,
+			BuildFlags: application.BuildFlags{
+				Tags:     *tags,
+				Race:     *race,
+				Short:    *short,
+				Verbose:  *verbose,
+				Run:      *testRun,
+				Timeout:  *timeout,
+				TestArgs: testArgs,
+			},
+			Language: application.Language(*language),
+		}
+		var recordResult application.RecordResult
+		var err error
+		if warnSvc, ok := svc.(recordWarner); ok {
+			recordResult, err = warnSvc.RecordWithWarnings(ctx, recordOpts, &store)
+		} else {
+			err = svc.Record(ctx, recordOpts, &store)
+		}
 		if err != nil {
 			return exitCodeWithCI(err, 3, stderr, global)
+		}
+		if !global.IsQuiet() {
+			for _, warning := range recordResult.Warnings {
+				fmt.Fprintln(stderr, "Warning:", warning)
+			}
 		}
 		if !global.IsQuiet() {
 			fmt.Fprintln(stdout, "Coverage recorded to history")
@@ -1421,10 +1463,21 @@ Flags:
       --history string   History file path (default ".cover/history.json")
       --commit string    Git commit SHA (optional)
       --branch string    Git branch name (optional)
+      --run              Run coverage before recording history
+  -l, --language string  Override language detection (go, python, nodejs, rust, java)
+  -d, --domain string    Filter to specific domain (repeatable)
+      --tags string      Build tags (e.g., integration,e2e)
+      --race             Enable race detector
+      --short            Skip long-running tests
+  -v                  Verbose test output
+      --test-run string  Run only tests matching pattern
+      --timeout string   Test timeout (e.g., 10m, 1h)
+      --test-arg string  Additional argument passed to go test (repeatable)
 
 Examples:
   coverctl record
-  coverctl record --commit abc123 --branch main`,
+  coverctl record --commit abc123 --branch main
+  coverctl record --run --tags integration`,
 
 	"suggest": `coverctl suggest - Suggest optimal coverage thresholds
 
@@ -1725,8 +1778,10 @@ _coverctl() {
                         '--short[Skip long-running tests]' \
                         '-v[Verbose test output]' \
                         '--run[Run tests matching pattern]:pattern:' \
+                        '--test-run[Run tests matching pattern]:pattern:' \
                         '--timeout[Test timeout]:duration:' \
-                        '--test-arg[Additional test argument]:arg:'
+                        '--test-arg[Additional test argument]:arg:' \
+                        '--language[Override language detection]:lang:(go python nodejs rust java)'
                     ;;
                 completion)
                     _arguments '1:shell:(bash zsh fish)'
@@ -1791,8 +1846,10 @@ complete -c coverctl -l race -d "Enable race detector"
 complete -c coverctl -l short -d "Skip long-running tests"
 complete -c coverctl -s v -d "Verbose test output"
 complete -c coverctl -l run -d "Run tests matching pattern" -r
+complete -c coverctl -l test-run -d "Run tests matching pattern" -r
 complete -c coverctl -l timeout -d "Test timeout (e.g., 10m, 1h)" -r
 complete -c coverctl -l test-arg -d "Additional argument passed to go test" -r
+complete -c coverctl -l language -d "Override language detection" -r -a "go python nodejs rust java"
 
 # Completion subcommand
 complete -c coverctl -n "__fish_seen_subcommand_from completion" -a "bash zsh fish"

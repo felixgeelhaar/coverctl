@@ -148,6 +148,10 @@ Overall      82.1%      75%    PASS
 }
 ```
 
+## Troubleshooting
+
+If `coverctl check` disagrees with previously recorded history, make sure the history profile was produced by `coverctl run` or `coverctl check`. Profiles generated with plain `go test -coverprofile` can omit `-coverpkg` instrumentation, which makes history and policy checks diverge.
+
 ## Exit Codes
 
 | Code | Meaning |
