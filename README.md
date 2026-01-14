@@ -28,7 +28,7 @@ coverctl watch                              # continuous coverage feedback durin
 | --- | --- | --- |
 | `coverctl init` | Autodetect domains and launch the Bubble Tea wizard before writing `.coverctl.yaml` | Navigate with ↑/↓, adjust thresholds with ←/→ or +/-, and confirm to persist. Pass `--no-interactive` to skip the UI in scripts. |
 | `coverctl detect` | Autodetect domains and write config | Writes config by default; use `--dry-run` to preview without writing. Pass `--force` to overwrite existing config. |
-| `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. Use `--show-delta` to display coverage changes. Supports `--fail-under N` and `--ratchet`. |
+| `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. Use `--show-delta` to display coverage changes. Supports `--fail-under N`, `--ratchet`, and `--from-profile` for existing profiles. |
 | `coverctl run` | Produce coverage artifacts without evaluating policy | Use `--profile` to customize output path. |
 | `coverctl watch` | Watch for file changes and re-run coverage | Continuous coverage feedback during development. |
 | `coverctl report` | Evaluate an already generated profile | Consumes the same config + domains; ideal for CI artifacts or debugging. Supports `-o html`, `--uncovered`, `--diff <ref>`, and `--merge <profile>`. |

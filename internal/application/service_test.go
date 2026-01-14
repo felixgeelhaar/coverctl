@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -2225,6 +2226,47 @@ func TestServiceCheckResultWithDomains(t *testing.T) {
 	// Should only have core domain in result
 	if len(result.Domains) != 1 {
 		t.Errorf("expected 1 domain, got %d", len(result.Domains))
+	}
+}
+
+func TestServiceCheckResultFromProfileSkipsRunner(t *testing.T) {
+	profilePath := filepath.Join(t.TempDir(), "coverage.out")
+	if err := os.WriteFile(profilePath, []byte("mode: set\n"), 0o644); err != nil {
+		t.Fatalf("write profile: %v", err)
+	}
+
+	var buf bytes.Buffer
+	svc := &Service{
+		ConfigLoader: fakeConfigLoader{
+			exists: true,
+			cfg: Config{
+				Policy: domain.Policy{
+					Domains: []domain.Domain{
+						{Name: "core", Match: []string{"internal/core/**"}},
+					},
+				},
+			},
+		},
+		DomainResolver: fakeResolver{
+			dirs:       map[string][]string{"core": {"internal/core"}},
+			moduleRoot: "/project",
+			modulePath: "github.com/test/project",
+		},
+		ProfileParser: fakeParser{
+			stats: map[string]domain.CoverageStat{
+				"github.com/test/project/internal/core/service.go": {Covered: 80, Total: 100},
+			},
+		},
+		Reporter: &fakeReporter{},
+		Out:      &buf,
+	}
+
+	_, err := svc.CheckResult(context.Background(), CheckOptions{
+		Profile:     profilePath,
+		FromProfile: true,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

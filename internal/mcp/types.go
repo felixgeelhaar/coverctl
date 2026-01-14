@@ -45,11 +45,12 @@ func DefaultConfig() Config {
 
 // CheckInput defines the input parameters for the check tool.
 type CheckInput struct {
-	ConfigPath string   `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
-	Profile    string   `json:"profile,omitempty" jsonschema:"description=Coverage profile output path"`
-	Domains    []string `json:"domains,omitempty" jsonschema:"description=Filter to specific domains"`
-	FailUnder  *float64 `json:"failUnder,omitempty" jsonschema:"description=Fail if coverage below threshold"`
-	Ratchet    bool     `json:"ratchet,omitempty" jsonschema:"description=Fail if coverage decreases"`
+	ConfigPath  string   `json:"configPath,omitempty" jsonschema:"description=Path to .coverctl.yaml config file"`
+	Profile     string   `json:"profile,omitempty" jsonschema:"description=Coverage profile output path"`
+	FromProfile bool     `json:"fromProfile,omitempty" jsonschema:"description=Use existing coverage profile instead of running tests"`
+	Domains     []string `json:"domains,omitempty" jsonschema:"description=Filter to specific domains"`
+	FailUnder   *float64 `json:"failUnder,omitempty" jsonschema:"description=Fail if coverage below threshold"`
+	Ratchet     bool     `json:"ratchet,omitempty" jsonschema:"description=Fail if coverage decreases"`
 	// Build flags for go test
 	Tags     string   `json:"tags,omitempty" jsonschema:"description=Build tags (e.g. 'integration,e2e')"`
 	Race     bool     `json:"race,omitempty" jsonschema:"description=Enable race detector"`

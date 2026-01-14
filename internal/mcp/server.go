@@ -161,6 +161,7 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]
 		ConfigPath:     s.resolveConfigPath(input.ConfigPath),
 		Profile:        coalesce(input.Profile, s.config.ProfilePath),
 		Output:         application.OutputJSON,
+		FromProfile:    input.FromProfile,
 		Domains:        input.Domains,
 		FailUnder:      input.FailUnder,
 		Ratchet:        input.Ratchet,

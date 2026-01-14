@@ -41,6 +41,7 @@ type CheckOptions struct {
 	Incremental    bool         // Only test packages with changed files
 	IncrementalRef string       // Git ref to compare against (default: HEAD~1)
 	Language       Language     // Override language auto-detection (empty = auto)
+	FromProfile    bool         // Use existing coverage profile instead of running tests
 }
 
 type RunOnlyOptions struct {
@@ -142,47 +143,84 @@ func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Re
 		return domain.Result{}, err
 	}
 
-	// Select the appropriate runner based on language
-	runner, err := s.selectRunnerMethod(opts.Language, cfg.Language)
-	if err != nil {
-		return domain.Result{}, err
-	}
-
 	// Filter domains if specific ones are requested
 	domains = filterDomainsByNames(domains, opts.Domains)
 	if len(domains) == 0 {
 		return domain.Result{}, fmt.Errorf("no matching domains found for: %v", opts.Domains)
 	}
 
-	// Handle incremental mode: only test affected packages
-	var packages []string
-	if opts.Incremental && s.DiffProvider != nil {
-		ref := opts.IncrementalRef
-		if ref == "" {
-			ref = "HEAD~1"
+	var profiles []string
+	var fromProfileWarnings []string
+	if opts.FromProfile {
+		if opts.Profile == "" {
+			return domain.Result{}, fmt.Errorf("profile path is required when using --from-profile")
 		}
-		changedFiles, err := s.DiffProvider.ChangedFiles(ctx, ref)
+		if _, err := os.Stat(opts.Profile); err != nil {
+			return domain.Result{}, fmt.Errorf("coverage profile not found: %s", opts.Profile)
+		}
+		profiles = append(profiles, opts.Profile)
+		if cfg.Integration.Enabled {
+			fromProfileWarnings = append(fromProfileWarnings, "integration coverage is enabled but --from-profile skips running integration tests")
+		}
+		if len(cfg.Merge.Profiles) > 0 {
+			profiles = append(profiles, cfg.Merge.Profiles...)
+		}
+	} else {
+		// Select the appropriate runner based on language
+		runner, err := s.selectRunnerMethod(opts.Language, cfg.Language)
 		if err != nil {
-			return domain.Result{}, fmt.Errorf("incremental mode: %w", err)
+			return domain.Result{}, err
 		}
-		packages = filesToPackages(changedFiles)
-		if len(packages) == 0 {
-			// No changed Go files, return passing result
-			return domain.Result{
-				Passed:   true,
-				Warnings: []string{"incremental mode: no Go files changed since " + ref},
-			}, nil
-		}
-	}
 
-	profile, err := runner.Run(ctx, RunOptions{
-		Domains:     domains,
-		ProfilePath: opts.Profile,
-		BuildFlags:  opts.BuildFlags,
-		Packages:    packages,
-	})
-	if err != nil {
-		return domain.Result{}, err
+		// Handle incremental mode: only test affected packages
+		var packages []string
+		if opts.Incremental && s.DiffProvider != nil {
+			ref := opts.IncrementalRef
+			if ref == "" {
+				ref = "HEAD~1"
+			}
+			changedFiles, err := s.DiffProvider.ChangedFiles(ctx, ref)
+			if err != nil {
+				return domain.Result{}, fmt.Errorf("incremental mode: %w", err)
+			}
+			packages = filesToPackages(changedFiles)
+			if len(packages) == 0 {
+				// No changed Go files, return passing result
+				return domain.Result{
+					Passed:   true,
+					Warnings: []string{"incremental mode: no Go files changed since " + ref},
+				}, nil
+			}
+		}
+
+		profile, err := runner.Run(ctx, RunOptions{
+			Domains:     domains,
+			ProfilePath: opts.Profile,
+			BuildFlags:  opts.BuildFlags,
+			Packages:    packages,
+		})
+		if err != nil {
+			return domain.Result{}, err
+		}
+
+		profiles = append(profiles, profile)
+		if cfg.Integration.Enabled {
+			integrationProfile, err := runner.RunIntegration(ctx, IntegrationOptions{
+				Domains:    domains,
+				Packages:   cfg.Integration.Packages,
+				RunArgs:    cfg.Integration.RunArgs,
+				CoverDir:   cfg.Integration.CoverDir,
+				Profile:    cfg.Integration.Profile,
+				BuildFlags: opts.BuildFlags,
+			})
+			if err != nil {
+				return domain.Result{}, err
+			}
+			profiles = append(profiles, integrationProfile)
+		}
+		if len(cfg.Merge.Profiles) > 0 {
+			profiles = append(profiles, cfg.Merge.Profiles...)
+		}
 	}
 
 	moduleRoot, err := s.DomainResolver.ModuleRoot(ctx)
@@ -195,24 +233,6 @@ func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Re
 		return domain.Result{}, err
 	}
 
-	profiles := []string{profile}
-	if cfg.Integration.Enabled {
-		integrationProfile, err := runner.RunIntegration(ctx, IntegrationOptions{
-			Domains:    domains,
-			Packages:   cfg.Integration.Packages,
-			RunArgs:    cfg.Integration.RunArgs,
-			CoverDir:   cfg.Integration.CoverDir,
-			Profile:    cfg.Integration.Profile,
-			BuildFlags: opts.BuildFlags,
-		})
-		if err != nil {
-			return domain.Result{}, err
-		}
-		profiles = append(profiles, integrationProfile)
-	}
-	if len(cfg.Merge.Profiles) > 0 {
-		profiles = append(profiles, cfg.Merge.Profiles...)
-	}
 	fileCoverage, err := s.ProfileParser.ParseAll(profiles)
 	if err != nil {
 		return domain.Result{}, err
@@ -249,6 +269,9 @@ func (s *Service) CheckResult(ctx context.Context, opts CheckOptions) (domain.Re
 	}
 	result := domain.Evaluate(policy, domainCoverage)
 	result.Warnings = domainOverlapWarnings(domainDirs)
+	if len(fromProfileWarnings) > 0 {
+		result.Warnings = append(result.Warnings, fromProfileWarnings...)
+	}
 	fileResults, filesPassed := evaluateFileRules(filteredCoverage, cfg.Files, cfg.Exclude, annotations)
 	result.Files = fileResults
 	if !filesPassed {
