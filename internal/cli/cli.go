@@ -50,6 +50,10 @@ type Service interface {
 	PRComment(ctx context.Context, opts application.PRCommentOptions) (application.PRCommentResult, error)
 }
 
+type recordWarner interface {
+	RecordWithWarnings(ctx context.Context, opts application.RecordOptions, store application.HistoryStore) (application.RecordResult, error)
+}
+
 // GlobalOptions holds CLI-wide options that affect output behavior
 type GlobalOptions struct {
 	Quiet   bool // Suppress non-essential output
@@ -144,8 +148,10 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
 		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
 		output := outputFlags(fs)
-		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile output path")
-		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile output path (shorthand)")
+		profile := &stringFlag{value: ".cover/coverage.out"}
+		fs.Var(profile, "profile", "Coverage profile output path")
+		fs.Var(profile, "p", "Coverage profile output path (shorthand)")
+		fromProfile := fs.Bool("from-profile", false, "Use existing coverage profile instead of running tests")
 		historyPath := fs.String("history", "", "History file path for delta display")
 		showDelta := fs.Bool("show-delta", false, "Show coverage change from previous run")
 		failUnder := fs.Float64("fail-under", 0, "Fail if overall coverage is below this percentage")
@@ -182,10 +188,12 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 			}
 			return 0
 		}
+		useExistingProfile := *fromProfile
 		opts := application.CheckOptions{
 			ConfigPath:     *configPath,
 			Output:         *output,
-			Profile:        *profile,
+			Profile:        profile.value,
+			FromProfile:    useExistingProfile,
 			Domains:        domains,
 			Incremental:    *incremental,
 			IncrementalRef: *incrementalRef,
@@ -465,19 +473,57 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		historyPath := fs.String("history", ".cover/history.json", "History file path")
 		commit := fs.String("commit", "", "Git commit SHA (optional)")
 		branch := fs.String("branch", "", "Git branch name (optional)")
+		runCoverage := fs.Bool("run", false, "Run coverage before recording history")
+		language := fs.String("language", "", "Override language detection (go, python, nodejs, rust, java)")
+		fs.StringVar(language, "l", "", "Override language detection (shorthand)")
+		tags := fs.String("tags", "", "Build tags (e.g., integration,e2e)")
+		race := fs.Bool("race", false, "Enable race detector")
+		short := fs.Bool("short", false, "Skip long-running tests")
+		verbose := fs.Bool("v", false, "Verbose test output")
+		testRun := fs.String("test-run", "", "Run only tests matching pattern")
+		timeout := fs.String("timeout", "", "Test timeout (e.g., 10m, 1h)")
+		var testArgs testArgsList
+		fs.Var(&testArgs, "test-arg", "Additional argument passed to go test (repeatable)")
+		var domains domainList
+		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
+		fs.Var(&domains, "d", "Filter to specific domain (shorthand)")
 		if err := fs.Parse(cmdArgs); err != nil {
 			return 2
 		}
 		store := history.FileStore{Path: *historyPath}
-		err := svc.Record(ctx, application.RecordOptions{
+		recordOpts := application.RecordOptions{
 			ConfigPath:  *configPath,
 			ProfilePath: *profile,
 			HistoryPath: *historyPath,
 			Commit:      *commit,
 			Branch:      *branch,
-		}, &store)
+			Run:         *runCoverage,
+			Domains:     domains,
+			BuildFlags: application.BuildFlags{
+				Tags:     *tags,
+				Race:     *race,
+				Short:    *short,
+				Verbose:  *verbose,
+				Run:      *testRun,
+				Timeout:  *timeout,
+				TestArgs: testArgs,
+			},
+			Language: application.Language(*language),
+		}
+		var recordResult application.RecordResult
+		var err error
+		if warnSvc, ok := svc.(recordWarner); ok {
+			recordResult, err = warnSvc.RecordWithWarnings(ctx, recordOpts, &store)
+		} else {
+			err = svc.Record(ctx, recordOpts, &store)
+		}
 		if err != nil {
 			return exitCodeWithCI(err, 3, stderr, global)
+		}
+		if !global.IsQuiet() {
+			for _, warning := range recordResult.Warnings {
+				fmt.Fprintln(stderr, "Warning:", warning)
+			}
 		}
 		if !global.IsQuiet() {
 			fmt.Fprintln(stdout, "Coverage recorded to history")
@@ -865,6 +911,19 @@ func (p *profileList) Set(value string) error {
 	return nil
 }
 
+type stringFlag struct {
+	value string
+	set   bool
+}
+
+func (s *stringFlag) String() string { return s.value }
+
+func (s *stringFlag) Set(value string) error {
+	s.value = value
+	s.set = true
+	return nil
+}
+
 // testArgsList implements flag.Value for repeatable --test-arg flags
 type testArgsList []string
 
@@ -1239,6 +1298,7 @@ Aliases:
 Flags:
   -c, --config string    Config file path (default ".coverctl.yaml")
   -p, --profile string   Coverage profile output path (default ".cover/coverage.out")
+      --from-profile     Use existing coverage profile instead of running tests
   -d, --domain string    Filter to specific domain (repeatable)
   -o, --output string    Output format: text|json|html|brief (default "text")
                          Use 'brief' for single-line LLM/agent-optimized output
@@ -1263,6 +1323,7 @@ Examples:
   coverctl check --fail-under 80
   coverctl check --ratchet
   coverctl check --validate
+  coverctl check --from-profile --profile coverage.out
   coverctl check --tags integration
   coverctl check --race --timeout 30m
   coverctl c -d core -d api`,
@@ -1421,10 +1482,21 @@ Flags:
       --history string   History file path (default ".cover/history.json")
       --commit string    Git commit SHA (optional)
       --branch string    Git branch name (optional)
+      --run              Run coverage before recording history
+  -l, --language string  Override language detection (go, python, nodejs, rust, java)
+  -d, --domain string    Filter to specific domain (repeatable)
+      --tags string      Build tags (e.g., integration,e2e)
+      --race             Enable race detector
+      --short            Skip long-running tests
+  -v                  Verbose test output
+      --test-run string  Run only tests matching pattern
+      --timeout string   Test timeout (e.g., 10m, 1h)
+      --test-arg string  Additional argument passed to go test (repeatable)
 
 Examples:
   coverctl record
-  coverctl record --commit abc123 --branch main`,
+  coverctl record --commit abc123 --branch main
+  coverctl record --run --tags integration`,
 
 	"suggest": `coverctl suggest - Suggest optimal coverage thresholds
 
@@ -1706,6 +1778,7 @@ _coverctl() {
                         '--config[Config file path]:file:_files -g "*.yaml"' \
                         '-p[Coverage profile path]:file:_files -g "*.out"' \
                         '--profile[Coverage profile path]:file:_files -g "*.out"' \
+                        '--from-profile[Use existing coverage profile instead of running tests]' \
                         '-d[Filter to domain]:domain:' \
                         '--domain[Filter to domain]:domain:' \
                         '-o[Output format]:format:(text json html)' \
@@ -1725,8 +1798,10 @@ _coverctl() {
                         '--short[Skip long-running tests]' \
                         '-v[Verbose test output]' \
                         '--run[Run tests matching pattern]:pattern:' \
+                        '--test-run[Run tests matching pattern]:pattern:' \
                         '--timeout[Test timeout]:duration:' \
-                        '--test-arg[Additional test argument]:arg:'
+                        '--test-arg[Additional test argument]:arg:' \
+                        '--language[Override language detection]:lang:(go python nodejs rust java)'
                     ;;
                 completion)
                     _arguments '1:shell:(bash zsh fish)'
@@ -1774,6 +1849,7 @@ complete -c coverctl -n "__fish_use_subcommand" -a "completion" -d "Generate she
 # Flags for all commands
 complete -c coverctl -s c -l config -d "Config file path" -r -F
 complete -c coverctl -s p -l profile -d "Coverage profile path" -r -F
+complete -c coverctl -l from-profile -d "Use existing coverage profile instead of running tests"
 complete -c coverctl -s d -l domain -d "Filter to specific domain" -r
 complete -c coverctl -s o -l output -d "Output format" -r -a "text json html"
 complete -c coverctl -s f -l force -d "Force overwrite"
@@ -1791,8 +1867,10 @@ complete -c coverctl -l race -d "Enable race detector"
 complete -c coverctl -l short -d "Skip long-running tests"
 complete -c coverctl -s v -d "Verbose test output"
 complete -c coverctl -l run -d "Run tests matching pattern" -r
+complete -c coverctl -l test-run -d "Run tests matching pattern" -r
 complete -c coverctl -l timeout -d "Test timeout (e.g., 10m, 1h)" -r
 complete -c coverctl -l test-arg -d "Additional argument passed to go test" -r
+complete -c coverctl -l language -d "Override language detection" -r -a "go python nodejs rust java"
 
 # Completion subcommand
 complete -c coverctl -n "__fish_seen_subcommand_from completion" -a "bash zsh fish"

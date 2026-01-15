@@ -17,7 +17,9 @@ type mockService struct {
 	checkOpts     application.CheckOptions // Captured options from last call
 	reportResult  domain.Result
 	reportErr     error
+	recordResult  application.RecordResult
 	recordErr     error
+	recordOpts    application.RecordOptions
 	debtResult    application.DebtResult
 	debtErr       error
 	trendResult   application.TrendResult
@@ -42,7 +44,13 @@ func (m *mockService) ReportResult(ctx context.Context, opts application.ReportO
 }
 
 func (m *mockService) Record(ctx context.Context, opts application.RecordOptions, store application.HistoryStore) error {
+	m.recordOpts = opts
 	return m.recordErr
+}
+
+func (m *mockService) RecordWithWarnings(ctx context.Context, opts application.RecordOptions, store application.HistoryStore) (application.RecordResult, error) {
+	m.recordOpts = opts
+	return m.recordResult, m.recordErr
 }
 
 func (m *mockService) Debt(ctx context.Context, opts application.DebtOptions) (application.DebtResult, error) {
@@ -355,7 +363,11 @@ func TestHandleReport(t *testing.T) {
 }
 
 func TestHandleRecord(t *testing.T) {
-	svc := &mockService{}
+	svc := &mockService{
+		recordResult: application.RecordResult{
+			Warnings: []string{"profile missing coverpkg domains"},
+		},
+	}
 	server := New(svc, DefaultConfig(), "test")
 
 	output, err := server.handleRecord(context.Background(), RecordInput{})
@@ -368,6 +380,9 @@ func TestHandleRecord(t *testing.T) {
 	}
 	if summary, ok := output["summary"].(string); !ok || summary != "Coverage recorded to history" {
 		t.Errorf("expected success summary, got %q", summary)
+	}
+	if warnings, ok := output["warnings"].([]string); !ok || len(warnings) != 1 {
+		t.Fatalf("expected warnings in output, got %v", output["warnings"])
 	}
 }
 

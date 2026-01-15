@@ -161,6 +161,7 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]
 		ConfigPath:     s.resolveConfigPath(input.ConfigPath),
 		Profile:        coalesce(input.Profile, s.config.ProfilePath),
 		Output:         application.OutputJSON,
+		FromProfile:    input.FromProfile,
 		Domains:        input.Domains,
 		FailUnder:      input.FailUnder,
 		Ratchet:        input.Ratchet,
@@ -228,6 +229,10 @@ func (s *Server) handleReport(ctx context.Context, input ReportInput) (map[strin
 	return output, nil
 }
 
+type recordWarner interface {
+	RecordWithWarnings(ctx context.Context, opts application.RecordOptions, store application.HistoryStore) (application.RecordResult, error)
+}
+
 func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[string]any, error) {
 	opts := application.RecordOptions{
 		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
@@ -235,11 +240,29 @@ func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[strin
 		HistoryPath: coalesce(input.HistoryPath, s.config.HistoryPath),
 		Commit:      input.Commit,
 		Branch:      input.Branch,
+		Run:         input.Run,
+		Domains:     input.Domains,
+		BuildFlags: application.BuildFlags{
+			Tags:     input.Tags,
+			Race:     input.Race,
+			Short:    input.Short,
+			Verbose:  input.Verbose,
+			Run:      input.TestRun,
+			Timeout:  input.Timeout,
+			TestArgs: input.TestArgs,
+		},
+		Language: application.Language(input.Language),
 	}
 
 	store := &history.FileStore{Path: opts.HistoryPath}
 
-	err := s.svc.Record(ctx, opts, store)
+	var recordResult application.RecordResult
+	var err error
+	if warnSvc, ok := s.svc.(recordWarner); ok {
+		recordResult, err = warnSvc.RecordWithWarnings(ctx, opts, store)
+	} else {
+		err = s.svc.Record(ctx, opts, store)
+	}
 
 	output := map[string]any{
 		"passed": err == nil,
@@ -250,6 +273,9 @@ func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[strin
 		output["summary"] = "Failed to record coverage"
 	} else {
 		output["summary"] = "Coverage recorded to history"
+		if len(recordResult.Warnings) > 0 {
+			output["warnings"] = recordResult.Warnings
+		}
 	}
 
 	return output, nil

@@ -45,7 +45,15 @@ func (h *History) LatestEntry() *HistoryEntry {
 	if len(h.Entries) == 0 {
 		return nil
 	}
-	return &h.Entries[len(h.Entries)-1]
+	latestIndex := 0
+	latestTime := h.Entries[0].Timestamp
+	for i := 1; i < len(h.Entries); i++ {
+		if h.Entries[i].Timestamp.After(latestTime) {
+			latestIndex = i
+			latestTime = h.Entries[i].Timestamp
+		}
+	}
+	return &h.Entries[latestIndex]
 }
 
 // EntriesAfter returns all entries after the given time.

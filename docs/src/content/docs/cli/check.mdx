@@ -21,6 +21,7 @@ coverctl check [flags]
 |------|-------------|---------|
 | `-c, --config` | Config file path | `.coverctl.yaml` |
 | `-p, --profile` | Coverage profile output path | `.cover/coverage.out` |
+| `--from-profile` | Use existing coverage profile instead of running tests | `false` |
 | `-d, --domain` | Filter to specific domain (repeatable) | all domains |
 | `-o, --output` | Output format: `text`, `json`, `html` | `text` |
 
@@ -116,6 +117,15 @@ coverctl check --incremental --fail-under 80 --ci
 coverctl check --validate
 ```
 
+### Use Existing Profile
+
+```bash
+# Evaluate an existing profile without running tests
+coverctl check --from-profile --profile coverage.out
+```
+
+> **Note:** `--from-profile` only skips running tests; policy evaluation still runs against every configured domain. If you re-use a profile that already falls below a domain's `min`, the check will keep failing. To unblock, regenerate a fresh profile with `coverctl run` / `coverctl check`, lower the domain thresholds or remove/adjust the matching rules, or scope the evaluation via `--domain` so that the enforced domains actually meet your coverage targets.
+
 ## Output
 
 ### Text Output (default)
@@ -147,6 +157,10 @@ Overall      82.1%      75%    PASS
   ]
 }
 ```
+
+## Troubleshooting
+
+If `coverctl check` disagrees with previously recorded history, make sure the history profile was produced by `coverctl run` or `coverctl check`. Profiles generated with plain `go test -coverprofile` can omit `-coverpkg` instrumentation, which makes history and policy checks diverge.
 
 ## Exit Codes
 
