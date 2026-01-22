@@ -1,22 +1,33 @@
 # coverctl
 
-**Domain-aware test coverage enforcement for Go teams**  
-Built with strict Domain-Driven Design layers, TDD-first validation, and automated releases powered by Relicta v2.6.1.
+**Declarative, domain-aware coverage enforcement for any language**
+Supports Go, Python, TypeScript/JavaScript, Java, and Rust. Built with strict Domain-Driven Design layers, TDD-first validation, and automated releases powered by Relicta v2.6.1.
 
-![Go](https://img.shields.io/badge/language-Go-00ADD8) ![coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen) ![releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=releases)
+![Multi-Language](https://img.shields.io/badge/languages-Go%20%7C%20Python%20%7C%20TS%2FJS%20%7C%20Java%20%7C%20Rust-blue) ![coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen) ![releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=releases)
 
 ## Overview
 
-coverctl wraps `go test` with the right `-covermode`, `-coverpkg`, and domain policy definitions so coverage policy failures surface at the slice level, not just the module level. It autodetects domains, emits human-readable and JSON reports, surfaces warnings when files overlap multiple domains, and keeps builds consistently above 80% coverage.
+coverctl enforces domain-aware coverage policies across multiple languages. It auto-detects your project's language and parses coverage profiles from various formats (Go cover profiles, LCOV, Cobertura, JaCoCo), so coverage policy failures surface at the domain level, not just the module level. It autodetects domains, emits human-readable and JSON reports, surfaces warnings when files overlap multiple domains, and keeps builds consistently above target coverage.
+
+### Supported Languages
+
+| Language | Coverage Format | Auto-Detection |
+|----------|----------------|----------------|
+| Go | Native `go test -cover` | `go.mod`, `go.sum` |
+| Python | Cobertura, LCOV | `pyproject.toml`, `setup.py`, `requirements.txt` |
+| TypeScript/JavaScript | LCOV | `tsconfig.json`, `package.json` |
+| Java | JaCoCo, Cobertura | `pom.xml`, `build.gradle` |
+| Rust | LCOV (cargo-llvm-cov) | `Cargo.toml` |
 
 ## Getting started
 
 ```bash
+# Install
 go install github.com/felixgeelhaar/coverctl@latest
-git clone git@github.com:felixgeelhaar/coverctl.git
-cd coverctl
-go build ./...
-coverctl init                               # runs an interactive Bubble Tea wizard (use --no-interactive for automation)
+
+# Initialize in any project (Go, Python, TypeScript, Java, or Rust)
+cd your-project
+coverctl init                               # runs an interactive wizard, auto-detects language
 coverctl detect --dry-run                   # preview detected domains without writing config
 coverctl check                              # enforce policy, add -o json for automation
 coverctl watch                              # continuous coverage feedback during development
@@ -50,7 +61,7 @@ Text output (the default) shows domain coverage, required thresholds, and status
 
 ## Build/test flags
 
-The `check`, `run`, and `watch` commands support common Go test flags for customizing test execution:
+The `check`, `run`, and `watch` commands support common test flags for customizing test execution. For Go projects:
 
 | Flag | Description | Example |
 | --- | --- | --- |
@@ -80,7 +91,7 @@ coverctl check --test-arg=-count=1 --test-arg=-parallel=4
 
 ## Coverage policy
 
-`coverctl check` parses the profile produced by `go test -coverpkg=…` and assigns statements to the domains defined in `.coverctl.yaml`. Because the raw Go output aggregates every instrumented package—including helpers, generated files, and adapters you may already exclude—the percentage it reports (often ~18.5%) is not used directly. The policy enforces >80% coverage only within the scoped domains (`cmd/coverctl`, `internal/application`, etc.), so staying focused there while keeping generated folders listed in `exclude` prevents quality from falling through the cracks.
+`coverctl check` parses coverage profiles (Go, LCOV, Cobertura, JaCoCo) and assigns statements to the domains defined in `.coverctl.yaml`. Because raw coverage output often aggregates everything—including helpers, generated files, and adapters you may already exclude—the percentage it reports is not used directly. The policy enforces coverage thresholds only within the scoped domains, so staying focused there while keeping generated folders listed in `exclude` prevents quality from falling through the cracks.
 
 ## Configuration
 
@@ -253,26 +264,41 @@ jobs:
           sarif_file: verdict.sarif
 ```
 
-## Roadmap: Multi-Language Support
+## Multi-Language Support
 
-coverctl is evolving from a Go-only tool to a **universal coverage enforcement platform**. See our design documents for details:
+coverctl is a **universal coverage enforcement platform** supporting multiple languages out of the box. For design details, see:
 
 - [Product Requirements (PRD)](docs/design/language-agnostic-prd.md) - Goals, personas, and feature requirements
 - [Technical Design (TDD)](docs/design/language-agnostic-tdd.md) - Architecture, implementation details, and code examples
 
-### Planned Language Support
+### Language Support Status
 
 | Language | Format | Status |
 |----------|--------|--------|
-| Go | Go coverage profile | ✅ Supported |
-| Python | LCOV, Cobertura | 🔜 Phase 1 |
-| TypeScript/JavaScript | LCOV | 🔜 Phase 1 |
-| Java | Cobertura, JaCoCo | 🔜 Phase 1 |
-| Rust | LLVM-cov | 🔜 Phase 2 |
+| Go | Native coverage profile | ✅ Supported |
+| Python | LCOV, Cobertura | ✅ Supported |
+| TypeScript/JavaScript | LCOV | ✅ Supported |
+| Java | Cobertura, JaCoCo | ✅ Supported |
+| Rust | LCOV (cargo-llvm-cov) | ✅ Supported |
+
+### Usage with Different Languages
+
+coverctl auto-detects your project language, or you can specify it explicitly:
+
+```bash
+# Auto-detect (recommended)
+coverctl check
+
+# Explicit language
+coverctl check --language python --profile coverage.xml
+
+# Explicit format
+coverctl report --format lcov --profile coverage/lcov.info
+```
 
 ### Claude Code Plugin
 
-coverctl will be available as a Claude Code plugin for AI-assisted coverage enforcement:
+coverctl is available as a Claude Code plugin for AI-assisted coverage enforcement:
 
 ```bash
 /plugin install coverctl
