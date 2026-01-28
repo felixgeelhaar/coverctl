@@ -46,6 +46,10 @@ func TestModulePath(t *testing.T) {
 	if path == "" {
 		t.Fatalf("expected module path")
 	}
+	// Module path must be a single path with no newlines (workspace bug fix)
+	if strings.Contains(path, "\n") {
+		t.Errorf("module path contains newline (workspace bug): %q", path)
+	}
 }
 
 func TestResolveDomains(t *testing.T) {

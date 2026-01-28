@@ -84,9 +84,14 @@ func (m ModuleResolver) ModulePath(ctx context.Context) (string, error) {
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
+	// In a Go workspace (go.work), `go list -m` returns all module paths
+	// separated by newlines. We only need the first (root) module path.
 	modulePath := strings.TrimSpace(out.String())
 	if modulePath == "" {
 		return "", errors.New("module path not found")
+	}
+	if idx := strings.IndexByte(modulePath, '\n'); idx >= 0 {
+		modulePath = strings.TrimSpace(modulePath[:idx])
 	}
 	return modulePath, nil
 }
