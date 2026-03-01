@@ -640,3 +640,183 @@ func TestDetectorDetectSwift(t *testing.T) {
 		t.Errorf("expected swift language, got %s", cfg.Language)
 	}
 }
+
+func TestDetectDartDomains(t *testing.T) {
+	root := t.TempDir()
+	dirs := []string{"lib", "lib/src", "lib/models"}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	domains := detectDartDomains(root)
+	if len(domains) < 2 {
+		t.Fatalf("expected at least 2 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectDartDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectDartDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectScalaDomains(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src", "main", "scala", "com"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "src", "main", "scala", "org"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	domains := detectScalaDomains(root)
+	if len(domains) < 2 {
+		t.Fatalf("expected at least 2 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectScalaDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectScalaDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectElixirDomains(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "lib", "my_app"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "lib", "my_app_web"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	domains := detectElixirDomains(root)
+	if len(domains) < 2 {
+		t.Fatalf("expected at least 2 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectElixirDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectElixirDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectShellDomains(t *testing.T) {
+	root := t.TempDir()
+	dirs := []string{"bin", "lib", "scripts"}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	domains := detectShellDomains(root)
+	if len(domains) < 3 {
+		t.Fatalf("expected at least 3 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectShellDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectShellDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectorDetectDart(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "lib", "src"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectDart()
+	if err != nil {
+		t.Fatalf("detectDart: %v", err)
+	}
+	if cfg.Language != "dart" {
+		t.Errorf("expected dart language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectScala(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src", "main", "scala", "com"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectScala()
+	if err != nil {
+		t.Fatalf("detectScala: %v", err)
+	}
+	if cfg.Language != "scala" {
+		t.Errorf("expected scala language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectElixir(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "lib", "my_app"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectElixir()
+	if err != nil {
+		t.Fatalf("detectElixir: %v", err)
+	}
+	if cfg.Language != "elixir" {
+		t.Errorf("expected elixir language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectShell(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "bin"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectShell()
+	if err != nil {
+		t.Fatalf("detectShell: %v", err)
+	}
+	if cfg.Language != "shell" {
+		t.Errorf("expected shell language, got %s", cfg.Language)
+	}
+}

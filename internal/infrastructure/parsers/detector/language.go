@@ -67,6 +67,17 @@ var DefaultLanguageMarkers = []LanguageMarker{
 
 	// Swift
 	{Filename: "Package.swift", Language: application.LanguageSwift, Priority: 100},
+
+	// Dart
+	{Filename: "pubspec.yaml", Language: application.LanguageDart, Priority: 100},
+	{Filename: "pubspec.lock", Language: application.LanguageDart, Priority: 90},
+
+	// Scala
+	{Filename: "build.sbt", Language: application.LanguageScala, Priority: 100},
+
+	// Elixir
+	{Filename: "mix.exs", Language: application.LanguageElixir, Priority: 100},
+	{Filename: "mix.lock", Language: application.LanguageElixir, Priority: 90},
 }
 
 // DetectLanguage detects the primary programming language of a project.
@@ -176,6 +187,23 @@ func (d *Detector) GetDefaultProfilePaths(lang application.Language) []string {
 		return []string{
 			"coverage/lcov.info", // swift test + llvm-cov export
 		}
+	case application.LanguageDart:
+		return []string{
+			"coverage/lcov.info", // dart test --coverage
+		}
+	case application.LanguageScala:
+		return []string{
+			"target/scala-2.13/scoverage-report/scoverage.xml", // sbt-scoverage
+			"target/scala-3/scoverage-report/scoverage.xml",
+		}
+	case application.LanguageElixir:
+		return []string{
+			"cover/lcov.info", // mix test --cover with excoveralls
+		}
+	case application.LanguageShell:
+		return []string{
+			"coverage/cobertura.xml", // kcov output
+		}
 	default:
 		return []string{}
 	}
@@ -204,6 +232,14 @@ func (d *Detector) GetDefaultFormat(lang application.Language) application.Forma
 		return application.FormatLCOV // SimpleCov + simplecov-lcov
 	case application.LanguageSwift:
 		return application.FormatLCOV // llvm-cov export
+	case application.LanguageDart:
+		return application.FormatLCOV // dart test --coverage
+	case application.LanguageScala:
+		return application.FormatCobertura // sbt-scoverage
+	case application.LanguageElixir:
+		return application.FormatLCOV // excoveralls
+	case application.LanguageShell:
+		return application.FormatCobertura // kcov
 	default:
 		return application.FormatAuto
 	}

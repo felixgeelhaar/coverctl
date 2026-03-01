@@ -45,6 +45,14 @@ const (
 	LanguageRuby Language = "ruby"
 	// LanguageSwift is the Swift programming language.
 	LanguageSwift Language = "swift"
+	// LanguageDart is the Dart programming language.
+	LanguageDart Language = "dart"
+	// LanguageScala is the Scala programming language.
+	LanguageScala Language = "scala"
+	// LanguageElixir is the Elixir programming language.
+	LanguageElixir Language = "elixir"
+	// LanguageShell is the Shell/Bash scripting language.
+	LanguageShell Language = "shell"
 )
 
 // Format represents a coverage profile format.

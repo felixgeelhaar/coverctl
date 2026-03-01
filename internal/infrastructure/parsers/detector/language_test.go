@@ -327,6 +327,87 @@ func TestDetector_GetDefaultFormat_Swift(t *testing.T) {
 	assert.Equal(t, application.FormatLCOV, format)
 }
 
+func TestDetector_DetectLanguage_Dart(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "pubspec.yaml")
+
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguageDart, lang)
+}
+
+func TestDetector_DetectLanguage_Scala(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "build.sbt")
+
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguageScala, lang)
+}
+
+func TestDetector_DetectLanguage_Elixir(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "mix.exs")
+
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguageElixir, lang)
+}
+
+func TestDetector_GetDefaultProfilePaths_Dart(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageDart)
+	assert.Contains(t, paths, "coverage/lcov.info")
+}
+
+func TestDetector_GetDefaultProfilePaths_Scala(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageScala)
+	assert.Contains(t, paths, "target/scala-2.13/scoverage-report/scoverage.xml")
+}
+
+func TestDetector_GetDefaultProfilePaths_Elixir(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageElixir)
+	assert.Contains(t, paths, "cover/lcov.info")
+}
+
+func TestDetector_GetDefaultProfilePaths_Shell(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageShell)
+	assert.Contains(t, paths, "coverage/cobertura.xml")
+}
+
+func TestDetector_GetDefaultFormat_Dart(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageDart)
+	assert.Equal(t, application.FormatLCOV, format)
+}
+
+func TestDetector_GetDefaultFormat_Scala(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageScala)
+	assert.Equal(t, application.FormatCobertura, format)
+}
+
+func TestDetector_GetDefaultFormat_Elixir(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageElixir)
+	assert.Equal(t, application.FormatLCOV, format)
+}
+
+func TestDetector_GetDefaultFormat_Shell(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageShell)
+	assert.Equal(t, application.FormatCobertura, format)
+}
+
 // createFile creates an empty file with the given name.
 func createFile(t *testing.T, dir, name string) {
 	t.Helper()

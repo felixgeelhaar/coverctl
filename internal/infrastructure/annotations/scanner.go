@@ -38,6 +38,12 @@ var supportedExtensions = map[string]bool{
 	".hpp":   true,
 	".php":   true,
 	".swift": true,
+	".dart":  true,
+	".scala": true,
+	".ex":    true,
+	".exs":   true,
+	".sh":    true,
+	".bash":  true,
 }
 
 func (Scanner) Scan(_ context.Context, moduleRoot string, files []string) (map[string]application.Annotation, error) {

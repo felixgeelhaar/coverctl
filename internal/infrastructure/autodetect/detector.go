@@ -47,6 +47,14 @@ func (d Detector) Detect() (application.Config, error) {
 		return d.detectRuby()
 	case application.LanguageSwift:
 		return d.detectSwift()
+	case application.LanguageDart:
+		return d.detectDart()
+	case application.LanguageScala:
+		return d.detectScala()
+	case application.LanguageElixir:
+		return d.detectElixir()
+	case application.LanguageShell:
+		return d.detectShell()
 	default:
 		// Fallback to Go detection for unknown languages
 		return d.detectGo()
@@ -507,6 +515,155 @@ func detectSwiftDomains(root string) []domain.Domain {
 
 	if len(domains) == 0 {
 		domains = append(domains, domain.Domain{Name: "project", Match: []string{"Sources/**"}})
+	}
+
+	return domains
+}
+
+// detectDart detects Dart/Flutter project structure.
+func (d Detector) detectDart() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectDartDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageDart}, nil
+}
+
+// detectScala detects Scala project structure.
+func (d Detector) detectScala() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectScalaDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageScala}, nil
+}
+
+// detectElixir detects Elixir project structure.
+func (d Detector) detectElixir() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectElixirDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageElixir}, nil
+}
+
+// detectShell detects Shell/Bash project structure.
+func (d Detector) detectShell() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectShellDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageShell}, nil
+}
+
+// detectDartDomains detects Dart/Flutter project structure.
+func detectDartDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// Flutter app structure
+	flutterDirs := []string{"lib", "lib/src", "lib/models", "lib/services", "lib/widgets"}
+	for _, dir := range flutterDirs {
+		full := filepath.Join(root, dir)
+		info, err := os.Stat(full)
+		if err != nil || !info.IsDir() {
+			continue
+		}
+		name := filepath.Base(dir)
+		domains = append(domains, domain.Domain{
+			Name:  name,
+			Match: []string{dir + "/**"},
+		})
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"lib/**"}})
+	}
+
+	return deduplicateDomains(domains)
+}
+
+// detectScalaDomains detects Scala project structure.
+func detectScalaDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// sbt standard layout: src/main/scala
+	mainPath := filepath.Join(root, "src", "main", "scala")
+	if info, err := os.Stat(mainPath); err == nil && info.IsDir() {
+		entries, _ := os.ReadDir(mainPath)
+		for _, entry := range entries {
+			if entry.IsDir() {
+				domains = append(domains, domain.Domain{
+					Name:  entry.Name(),
+					Match: []string{"src/main/scala/" + entry.Name() + "/**"},
+				})
+			}
+		}
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"**/*.scala"}})
+	}
+
+	return domains
+}
+
+// detectElixirDomains detects Elixir project structure.
+func detectElixirDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// Elixir/Phoenix structure: lib/<app_name>/
+	libPath := filepath.Join(root, "lib")
+	if info, err := os.Stat(libPath); err == nil && info.IsDir() {
+		entries, _ := os.ReadDir(libPath)
+		for _, entry := range entries {
+			if entry.IsDir() && !isIgnoredDir(entry.Name()) {
+				domains = append(domains, domain.Domain{
+					Name:  entry.Name(),
+					Match: []string{"lib/" + entry.Name() + "/**"},
+				})
+			}
+		}
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"lib/**"}})
+	}
+
+	return domains
+}
+
+// detectShellDomains detects Shell/Bash project structure.
+func detectShellDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// Common shell project directories
+	shellDirs := []string{"bin", "lib", "src", "scripts"}
+	for _, dir := range shellDirs {
+		full := filepath.Join(root, dir)
+		info, err := os.Stat(full)
+		if err != nil || !info.IsDir() {
+			continue
+		}
+		domains = append(domains, domain.Domain{
+			Name:  dir,
+			Match: []string{dir + "/**"},
+		})
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"**/*.sh"}})
 	}
 
 	return domains

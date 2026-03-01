@@ -59,6 +59,14 @@ func NewRegistry(module gotool.ModuleInfo, opts ...RegistryOption) *Registry {
 			NewRubyRunner(),
 			// Swift runner
 			NewSwiftRunner(),
+			// Dart runner
+			NewDartRunner(),
+			// Scala runner
+			NewScalaRunner(),
+			// Elixir runner
+			NewElixirRunner(),
+			// Shell runner
+			NewShellRunner(),
 		},
 	}
 

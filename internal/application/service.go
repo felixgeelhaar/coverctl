@@ -1371,6 +1371,10 @@ var sourceExtensionsByLanguage = map[Language]map[string]bool{
 	LanguagePHP:        {".php": true},
 	LanguageRuby:       {".rb": true},
 	LanguageSwift:      {".swift": true},
+	LanguageDart:       {".dart": true},
+	LanguageScala:      {".scala": true, ".sc": true},
+	LanguageElixir:     {".ex": true, ".exs": true},
+	LanguageShell:      {".sh": true, ".bash": true},
 }
 
 // changedFileDirs extracts unique directories from changed files matching source extensions.

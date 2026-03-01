@@ -32,9 +32,9 @@ func TestNewRegistry(t *testing.T) {
 		t.Fatal("expected non-nil registry")
 	}
 
-	// Should have 10 runners: Go, Python, Node.js, Rust, Java, C#, C/C++, PHP, Ruby, Swift
-	if len(registry.runners) != 10 {
-		t.Errorf("expected 10 runners, got %d", len(registry.runners))
+	// Should have 14 runners: Go, Python, Node.js, Rust, Java, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell
+	if len(registry.runners) != 14 {
+		t.Errorf("expected 14 runners, got %d", len(registry.runners))
 	}
 }
 
@@ -55,6 +55,10 @@ func TestRegistrySupportedLanguages(t *testing.T) {
 		application.LanguagePHP:        true,
 		application.LanguageRuby:       true,
 		application.LanguageSwift:      true,
+		application.LanguageDart:       true,
+		application.LanguageScala:      true,
+		application.LanguageElixir:     true,
+		application.LanguageShell:      true,
 	}
 
 	for _, lang := range langs {
@@ -89,6 +93,10 @@ func TestRegistryGetRunner(t *testing.T) {
 		{application.LanguagePHP, "php", false},
 		{application.LanguageRuby, "ruby", false},
 		{application.LanguageSwift, "swift", false},
+		{application.LanguageDart, "dart", false},
+		{application.LanguageScala, "scala", false},
+		{application.LanguageElixir, "elixir", false},
+		{application.LanguageShell, "shell", false},
 	}
 
 	for _, tt := range tests {
@@ -129,6 +137,10 @@ func TestRegistryGetRunnerByName(t *testing.T) {
 		{"php", false},
 		{"ruby", false},
 		{"swift", false},
+		{"dart", false},
+		{"scala", false},
+		{"elixir", false},
+		{"shell", false},
 		{"unknown", true},
 	}
 
@@ -209,6 +221,9 @@ func TestRegistryDetectRunner(t *testing.T) {
 		{name: "PHP project", files: []string{"composer.json"}, wantLang: application.LanguagePHP, wantName: "php"},
 		{name: "Ruby project", files: []string{"Gemfile"}, wantLang: application.LanguageRuby, wantName: "ruby"},
 		{name: "Swift project", files: []string{"Package.swift"}, wantLang: application.LanguageSwift, wantName: "swift"},
+		{name: "Dart project", files: []string{"pubspec.yaml"}, wantLang: application.LanguageDart, wantName: "dart"},
+		{name: "Scala project", files: []string{"build.sbt"}, wantLang: application.LanguageScala, wantName: "scala"},
+		{name: "Elixir project", files: []string{"mix.exs"}, wantLang: application.LanguageElixir, wantName: "elixir"},
 	}
 
 	for _, tt := range tests {

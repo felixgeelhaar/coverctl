@@ -17,7 +17,7 @@
     },
     "language": {
       "type": "string",
-      "enum": ["auto", "go", "python", "javascript", "typescript", "java", "rust", "csharp", "cpp", "php", "ruby", "swift"],
+      "enum": ["auto", "go", "python", "javascript", "typescript", "java", "rust", "csharp", "cpp", "php", "ruby", "swift", "dart", "scala", "elixir", "shell"],
       "default": "auto",
       "description": "Project language for coverage tooling. Auto-detected from project files when set to 'auto'."
     },
@@ -243,6 +243,28 @@
         "default": {"min": 80},
         "domains": [
           {"name": "Sources", "match": ["Sources/**"], "min": 85}
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "language": "dart",
+      "profile": {"format": "lcov", "path": "coverage/lcov.info"},
+      "policy": {
+        "default": {"min": 80},
+        "domains": [
+          {"name": "lib", "match": ["lib/**"], "min": 85}
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "language": "elixir",
+      "profile": {"format": "lcov", "path": "cover/lcov.info"},
+      "policy": {
+        "default": {"min": 75},
+        "domains": [
+          {"name": "lib", "match": ["lib/**"], "min": 80}
         ]
       }
     }
