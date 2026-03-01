@@ -232,7 +232,7 @@ jobs:
 
 ## Security Scan (SARIF)
 
-Run VerdictSec in GitHub Actions and upload SARIF results:
+Run [nox](https://github.com/nox-hq/nox) in GitHub Actions and upload SARIF results:
 
 ```yaml
 jobs:
@@ -243,25 +243,15 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: "1.25"
-      - name: Install verdict
-        run: go install github.com/felixgeelhaar/verdictsec/cmd/verdict@v0.8.0
-      - name: Install verdict engines
+      - name: Install nox
         run: |
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          go install github.com/gitleaks/gitleaks/v8@latest
-          go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
-          go install github.com/anchore/syft/cmd/syft@latest
-          go install honnef.co/go/tools/cmd/staticcheck@latest
-      - name: Run verdict (SARIF)
-        run: verdict scan --sarif -o verdict.sarif || true
+          curl -sL https://github.com/nox-hq/nox/releases/download/v0.7.0/nox_0.7.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin nox
+      - name: Run nox (SARIF)
+        run: nox -format sarif -output . scan . || true
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: verdict.sarif
+          sarif_file: results.sarif
 ```
 
 ## Multi-Language Support
