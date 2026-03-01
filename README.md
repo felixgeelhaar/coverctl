@@ -1,9 +1,9 @@
 # coverctl
 
 **Declarative, domain-aware coverage enforcement for any language**
-Supports Go, Python, TypeScript/JavaScript, Java, and Rust. Built with strict Domain-Driven Design layers, TDD-first validation, and automated releases powered by Relicta v2.6.1.
+Supports 15 languages including Go, Python, TypeScript/JavaScript, Java, Rust, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, and Shell. Built with strict Domain-Driven Design layers, TDD-first validation, and automated releases powered by Relicta v2.6.1.
 
-![Multi-Language](https://img.shields.io/badge/languages-Go%20%7C%20Python%20%7C%20TS%2FJS%20%7C%20Java%20%7C%20Rust-blue) ![coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen) ![releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=releases)
+![Multi-Language](https://img.shields.io/badge/languages-15%20supported-blue) ![coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen) ![releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=releases)
 
 ## Overview
 
@@ -18,6 +18,15 @@ coverctl enforces domain-aware coverage policies across multiple languages. It a
 | TypeScript/JavaScript | LCOV | `tsconfig.json`, `package.json` |
 | Java | JaCoCo, Cobertura | `pom.xml`, `build.gradle` |
 | Rust | LCOV (cargo-llvm-cov) | `Cargo.toml` |
+| C#/.NET | Cobertura (coverlet) | `*.csproj`, `*.sln`, `Directory.Build.props` |
+| C/C++ | LCOV (gcov/lcov) | `CMakeLists.txt`, `meson.build` |
+| PHP | Cobertura (PHPUnit) | `composer.json`, `phpunit.xml` |
+| Ruby | LCOV (SimpleCov) | `Gemfile`, `Rakefile` |
+| Swift | LCOV (llvm-cov) | `Package.swift` |
+| Dart | LCOV (dart test) | `pubspec.yaml` |
+| Scala | Cobertura (scoverage) | `build.sbt` |
+| Elixir | LCOV (mix test) | `mix.exs` |
+| Shell | Cobertura (kcov) | `.bats` files |
 
 ## Getting started
 
@@ -270,6 +279,15 @@ coverctl is a **universal coverage enforcement platform** supporting multiple la
 | TypeScript/JavaScript | LCOV | ✅ Supported |
 | Java | Cobertura, JaCoCo | ✅ Supported |
 | Rust | LCOV (cargo-llvm-cov) | ✅ Supported |
+| C#/.NET | Cobertura (coverlet) | ✅ Supported |
+| C/C++ | LCOV (gcov/lcov) | ✅ Supported |
+| PHP | Cobertura (PHPUnit) | ✅ Supported |
+| Ruby | LCOV (SimpleCov) | ✅ Supported |
+| Swift | LCOV (llvm-cov) | ✅ Supported |
+| Dart | LCOV (dart test) | ✅ Supported |
+| Scala | Cobertura (scoverage) | ✅ Supported |
+| Elixir | LCOV (mix test) | ✅ Supported |
+| Shell | Cobertura (kcov) | ✅ Supported |
 
 ### Usage with Different Languages
 
