@@ -37,6 +37,16 @@ func (d Detector) Detect() (application.Config, error) {
 		return d.detectRust()
 	case application.LanguageJava:
 		return d.detectJava()
+	case application.LanguageCSharp:
+		return d.detectCSharp()
+	case application.LanguageCpp:
+		return d.detectCpp()
+	case application.LanguagePHP:
+		return d.detectPHP()
+	case application.LanguageRuby:
+		return d.detectRuby()
+	case application.LanguageSwift:
+		return d.detectSwift()
 	default:
 		// Fallback to Go detection for unknown languages
 		return d.detectGo()
@@ -304,6 +314,204 @@ func detectJavaDomains(root string) []domain.Domain {
 	return domains
 }
 
+// detectCSharp detects C#/.NET project structure.
+func (d Detector) detectCSharp() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectCSharpDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageCSharp}, nil
+}
+
+// detectCpp detects C/C++ project structure.
+func (d Detector) detectCpp() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectCppDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageCpp}, nil
+}
+
+// detectPHP detects PHP project structure.
+func (d Detector) detectPHP() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectPHPDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguagePHP}, nil
+}
+
+// detectRuby detects Ruby project structure.
+func (d Detector) detectRuby() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectRubyDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageRuby}, nil
+}
+
+// detectSwift detects Swift project structure.
+func (d Detector) detectSwift() (application.Config, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return application.Config{}, err
+	}
+
+	domains := detectSwiftDomains(wd)
+	policy := domain.Policy{DefaultMin: 80, Domains: domains}
+	return application.Config{Version: 1, Policy: policy, Language: application.LanguageSwift}, nil
+}
+
+// detectCSharpDomains detects C#/.NET project structure.
+func detectCSharpDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// Common C#/.NET project directories
+	csharpDirs := []string{"Controllers", "Services", "Models", "Data", "Repositories", "ViewModels", "Middleware"}
+	for _, dir := range csharpDirs {
+		full := filepath.Join(root, dir)
+		info, err := os.Stat(full)
+		if err != nil || !info.IsDir() {
+			continue
+		}
+		domains = append(domains, domain.Domain{
+			Name:  dir,
+			Match: []string{dir + "/**"},
+		})
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"**/*.cs"}})
+	}
+
+	return domains
+}
+
+// detectCppDomains detects C/C++ project structure.
+func detectCppDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// Common C/C++ project directories
+	cppDirs := []string{"src", "include", "lib"}
+	for _, dir := range cppDirs {
+		full := filepath.Join(root, dir)
+		info, err := os.Stat(full)
+		if err != nil || !info.IsDir() {
+			continue
+		}
+		domains = append(domains, domain.Domain{
+			Name:  dir,
+			Match: []string{dir + "/**"},
+		})
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"src/**"}})
+	}
+
+	return domains
+}
+
+// detectPHPDomains detects PHP project structure.
+func detectPHPDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// Common PHP project directories
+	phpDirs := []string{"src", "app", "lib", "modules"}
+	for _, dir := range phpDirs {
+		full := filepath.Join(root, dir)
+		info, err := os.Stat(full)
+		if err != nil || !info.IsDir() {
+			continue
+		}
+		domains = append(domains, domain.Domain{
+			Name:  dir,
+			Match: []string{dir + "/**"},
+		})
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"**/*.php"}})
+	}
+
+	return domains
+}
+
+// detectRubyDomains detects Ruby project structure.
+func detectRubyDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// Rails layout
+	railsDirs := []string{"app/models", "app/controllers", "app/services", "app/jobs", "lib"}
+	for _, dir := range railsDirs {
+		full := filepath.Join(root, dir)
+		info, err := os.Stat(full)
+		if err != nil || !info.IsDir() {
+			continue
+		}
+		// Use the last segment as the domain name
+		name := filepath.Base(dir)
+		domains = append(domains, domain.Domain{
+			Name:  name,
+			Match: []string{dir + "/**"},
+		})
+	}
+
+	// Gem layout: check for lib/ if no Rails dirs found
+	if len(domains) == 0 {
+		libPath := filepath.Join(root, "lib")
+		if info, err := os.Stat(libPath); err == nil && info.IsDir() {
+			domains = append(domains, domain.Domain{
+				Name:  "lib",
+				Match: []string{"lib/**"},
+			})
+		}
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"**/*.rb"}})
+	}
+
+	return deduplicateDomains(domains)
+}
+
+// detectSwiftDomains detects Swift project structure.
+func detectSwiftDomains(root string) []domain.Domain {
+	var domains []domain.Domain
+
+	// SPM: Sources/ directory with target subdirectories
+	sourcesPath := filepath.Join(root, "Sources")
+	if info, err := os.Stat(sourcesPath); err == nil && info.IsDir() {
+		entries, _ := os.ReadDir(sourcesPath)
+		for _, entry := range entries {
+			if entry.IsDir() && !isIgnoredDir(entry.Name()) {
+				domains = append(domains, domain.Domain{
+					Name:  entry.Name(),
+					Match: []string{"Sources/" + entry.Name() + "/**"},
+				})
+			}
+		}
+	}
+
+	if len(domains) == 0 {
+		domains = append(domains, domain.Domain{Name: "project", Match: []string{"Sources/**"}})
+	}
+
+	return domains
+}
+
 // isIgnoredDir returns true if the directory should be ignored.
 func isIgnoredDir(name string) bool {
 	ignored := map[string]bool{
@@ -323,6 +531,12 @@ func isIgnoredDir(name string) bool {
 		".tox":           true,
 		"eggs":           true,
 		".eggs":          true,
+		"vendor":         true,
+		"Pods":           true,
+		".bundle":        true,
+		"bin":            true,
+		"obj":            true,
+		"DerivedData":    true,
 	}
 	return ignored[name]
 }

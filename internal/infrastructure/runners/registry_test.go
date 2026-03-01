@@ -32,9 +32,9 @@ func TestNewRegistry(t *testing.T) {
 		t.Fatal("expected non-nil registry")
 	}
 
-	// Should have 5 runners: Go, Python, Node.js, Rust, Java
-	if len(registry.runners) != 5 {
-		t.Errorf("expected 5 runners, got %d", len(registry.runners))
+	// Should have 10 runners: Go, Python, Node.js, Rust, Java, C#, C/C++, PHP, Ruby, Swift
+	if len(registry.runners) != 10 {
+		t.Errorf("expected 10 runners, got %d", len(registry.runners))
 	}
 }
 
@@ -50,6 +50,11 @@ func TestRegistrySupportedLanguages(t *testing.T) {
 		application.LanguageJavaScript: true, // Node.js runner returns JavaScript
 		application.LanguageRust:       true,
 		application.LanguageJava:       true,
+		application.LanguageCSharp:     true,
+		application.LanguageCpp:        true,
+		application.LanguagePHP:        true,
+		application.LanguageRuby:       true,
+		application.LanguageSwift:      true,
 	}
 
 	for _, lang := range langs {
@@ -79,6 +84,11 @@ func TestRegistryGetRunner(t *testing.T) {
 		{application.LanguageRust, "rust", false},
 		{application.LanguageJava, "java", false},
 		{application.LanguageTypeScript, "nodejs", false}, // TypeScript maps to JavaScript runner
+		{application.LanguageCSharp, "csharp", false},
+		{application.LanguageCpp, "cpp", false},
+		{application.LanguagePHP, "php", false},
+		{application.LanguageRuby, "ruby", false},
+		{application.LanguageSwift, "swift", false},
 	}
 
 	for _, tt := range tests {
@@ -114,6 +124,11 @@ func TestRegistryGetRunnerByName(t *testing.T) {
 		{"nodejs", false},
 		{"rust", false},
 		{"java", false},
+		{"csharp", false},
+		{"cpp", false},
+		{"php", false},
+		{"ruby", false},
+		{"swift", false},
 		{"unknown", true},
 	}
 
@@ -189,6 +204,11 @@ func TestRegistryDetectRunner(t *testing.T) {
 			wantLang: application.LanguageJava,
 			wantName: "java",
 		},
+		{name: "C# project", files: []string{"Directory.Build.props"}, wantLang: application.LanguageCSharp, wantName: "csharp"},
+		{name: "C++ project", files: []string{"CMakeLists.txt"}, wantLang: application.LanguageCpp, wantName: "cpp"},
+		{name: "PHP project", files: []string{"composer.json"}, wantLang: application.LanguagePHP, wantName: "php"},
+		{name: "Ruby project", files: []string{"Gemfile"}, wantLang: application.LanguageRuby, wantName: "ruby"},
+		{name: "Swift project", files: []string{"Package.swift"}, wantLang: application.LanguageSwift, wantName: "swift"},
 	}
 
 	for _, tt := range tests {

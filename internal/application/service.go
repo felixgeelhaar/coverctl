@@ -1366,6 +1366,11 @@ var sourceExtensionsByLanguage = map[Language]map[string]bool{
 	LanguageTypeScript: {".js": true, ".ts": true, ".jsx": true, ".tsx": true, ".mjs": true, ".cjs": true},
 	LanguageRust:       {".rs": true},
 	LanguageJava:       {".java": true, ".kt": true},
+	LanguageCSharp:     {".cs": true},
+	LanguageCpp:        {".c": true, ".cpp": true, ".cc": true, ".cxx": true, ".h": true, ".hpp": true},
+	LanguagePHP:        {".php": true},
+	LanguageRuby:       {".rb": true},
+	LanguageSwift:      {".swift": true},
 }
 
 // changedFileDirs extracts unique directories from changed files matching source extensions.

@@ -17,7 +17,7 @@
     },
     "language": {
       "type": "string",
-      "enum": ["auto", "go", "python", "javascript", "typescript", "java", "rust"],
+      "enum": ["auto", "go", "python", "javascript", "typescript", "java", "rust", "csharp", "cpp", "php", "ruby", "swift"],
       "default": "auto",
       "description": "Project language for coverage tooling. Auto-detected from project files when set to 'auto'."
     },
@@ -208,6 +208,41 @@
         "default": {"min": 75},
         "domains": [
           {"name": "lib", "match": ["src/**"], "min": 80}
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "language": "csharp",
+      "profile": {"format": "cobertura", "path": "TestResults/coverage.cobertura.xml"},
+      "policy": {
+        "default": {"min": 80},
+        "domains": [
+          {"name": "Controllers", "match": ["Controllers/**"], "min": 85},
+          {"name": "Services", "match": ["Services/**"], "min": 90}
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "language": "php",
+      "profile": {"format": "cobertura", "path": "coverage.xml"},
+      "policy": {
+        "default": {"min": 75},
+        "domains": [
+          {"name": "src", "match": ["src/**"], "min": 85},
+          {"name": "app", "match": ["app/**"], "min": 80}
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "language": "swift",
+      "profile": {"format": "lcov", "path": "coverage/lcov.info"},
+      "policy": {
+        "default": {"min": 80},
+        "domains": [
+          {"name": "Sources", "match": ["Sources/**"], "min": 85}
         ]
       }
     }

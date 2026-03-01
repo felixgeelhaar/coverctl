@@ -222,6 +222,111 @@ func TestDetector_GetDefaultFormat_Rust(t *testing.T) {
 	assert.Equal(t, application.FormatLCOV, format)
 }
 
+func TestDetector_DetectLanguage_CSharp(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "Directory.Build.props")
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguageCSharp, lang)
+}
+
+func TestDetector_DetectLanguage_Cpp(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "CMakeLists.txt")
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguageCpp, lang)
+}
+
+func TestDetector_DetectLanguage_PHP(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "composer.json")
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguagePHP, lang)
+}
+
+func TestDetector_DetectLanguage_Ruby(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "Gemfile")
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguageRuby, lang)
+}
+
+func TestDetector_DetectLanguage_Swift(t *testing.T) {
+	tmpdir := t.TempDir()
+	createFile(t, tmpdir, "Package.swift")
+	detector := New()
+	lang, err := detector.DetectLanguage(tmpdir)
+	require.NoError(t, err)
+	assert.Equal(t, application.LanguageSwift, lang)
+}
+
+func TestDetector_GetDefaultProfilePaths_CSharp(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageCSharp)
+	assert.Contains(t, paths, "TestResults/coverage.cobertura.xml")
+}
+
+func TestDetector_GetDefaultProfilePaths_Cpp(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageCpp)
+	assert.Contains(t, paths, "coverage/lcov.info")
+}
+
+func TestDetector_GetDefaultProfilePaths_PHP(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguagePHP)
+	assert.Contains(t, paths, "coverage.xml")
+}
+
+func TestDetector_GetDefaultProfilePaths_Ruby(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageRuby)
+	assert.Contains(t, paths, "coverage/lcov.info")
+}
+
+func TestDetector_GetDefaultProfilePaths_Swift(t *testing.T) {
+	detector := New()
+	paths := detector.GetDefaultProfilePaths(application.LanguageSwift)
+	assert.Contains(t, paths, "coverage/lcov.info")
+}
+
+func TestDetector_GetDefaultFormat_CSharp(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageCSharp)
+	assert.Equal(t, application.FormatCobertura, format)
+}
+
+func TestDetector_GetDefaultFormat_Cpp(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageCpp)
+	assert.Equal(t, application.FormatLCOV, format)
+}
+
+func TestDetector_GetDefaultFormat_PHP(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguagePHP)
+	assert.Equal(t, application.FormatCobertura, format)
+}
+
+func TestDetector_GetDefaultFormat_Ruby(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageRuby)
+	assert.Equal(t, application.FormatLCOV, format)
+}
+
+func TestDetector_GetDefaultFormat_Swift(t *testing.T) {
+	detector := New()
+	format := detector.GetDefaultFormat(application.LanguageSwift)
+	assert.Equal(t, application.FormatLCOV, format)
+}
+
 // createFile creates an empty file with the given name.
 func createFile(t *testing.T, dir, name string) {
 	t.Helper()

@@ -194,6 +194,12 @@ func TestIsIgnoredDir(t *testing.T) {
 		{".git", true},
 		{"node_modules", true},
 		{"venv", true},
+		{"vendor", true},
+		{"Pods", true},
+		{".bundle", true},
+		{"bin", true},
+		{"obj", true},
+		{"DerivedData", true},
 		{"src", false},
 		{"app", false},
 		{"lib", false},
@@ -389,5 +395,248 @@ func TestDetectPythonDomainsSrcLayout(t *testing.T) {
 	}
 	if found["__pycache__"] {
 		t.Error("__pycache__ should be ignored")
+	}
+}
+
+func TestDetectCSharpDomains(t *testing.T) {
+	root := t.TempDir()
+	dirs := []string{"Controllers", "Services", "Models"}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	domains := detectCSharpDomains(root)
+	if len(domains) < 3 {
+		t.Fatalf("expected at least 3 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectCSharpDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectCSharpDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectCppDomains(t *testing.T) {
+	root := t.TempDir()
+	dirs := []string{"src", "include"}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	domains := detectCppDomains(root)
+	if len(domains) < 2 {
+		t.Fatalf("expected at least 2 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectCppDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectCppDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectPHPDomains(t *testing.T) {
+	root := t.TempDir()
+	dirs := []string{"src", "app"}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	domains := detectPHPDomains(root)
+	if len(domains) < 2 {
+		t.Fatalf("expected at least 2 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectPHPDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectPHPDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectRubyDomains(t *testing.T) {
+	root := t.TempDir()
+	dirs := []string{"app/models", "app/controllers", "app/services"}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	domains := detectRubyDomains(root)
+	if len(domains) < 3 {
+		t.Fatalf("expected at least 3 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectRubyDomainsGem(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "lib"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	domains := detectRubyDomains(root)
+	found := false
+	for _, d := range domains {
+		if d.Name == "lib" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected lib domain for gem project structure")
+	}
+}
+
+func TestDetectRubyDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectRubyDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectSwiftDomains(t *testing.T) {
+	root := t.TempDir()
+	dirs := []string{"Sources/MyLib", "Sources/MyApp"}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	domains := detectSwiftDomains(root)
+	if len(domains) < 2 {
+		t.Fatalf("expected at least 2 domains, got %d", len(domains))
+	}
+}
+
+func TestDetectSwiftDomainsFallback(t *testing.T) {
+	root := t.TempDir()
+	domains := detectSwiftDomains(root)
+	if len(domains) != 1 || domains[0].Name != "project" {
+		t.Fatalf("expected project fallback, got %v", domains)
+	}
+}
+
+func TestDetectorDetectCSharp(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "Controllers"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectCSharp()
+	if err != nil {
+		t.Fatalf("detectCSharp: %v", err)
+	}
+	if cfg.Language != "csharp" {
+		t.Errorf("expected csharp language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectCpp(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectCpp()
+	if err != nil {
+		t.Fatalf("detectCpp: %v", err)
+	}
+	if cfg.Language != "cpp" {
+		t.Errorf("expected cpp language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectPHP(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectPHP()
+	if err != nil {
+		t.Fatalf("detectPHP: %v", err)
+	}
+	if cfg.Language != "php" {
+		t.Errorf("expected php language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectRuby(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "lib"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectRuby()
+	if err != nil {
+		t.Fatalf("detectRuby: %v", err)
+	}
+	if cfg.Language != "ruby" {
+		t.Errorf("expected ruby language, got %s", cfg.Language)
+	}
+}
+
+func TestDetectorDetectSwift(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "Sources", "MyLib"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
+	defer os.Chdir(cwd)
+	d := Detector{}
+	cfg, err := d.detectSwift()
+	if err != nil {
+		t.Fatalf("detectSwift: %v", err)
+	}
+	if cfg.Language != "swift" {
+		t.Errorf("expected swift language, got %s", cfg.Language)
 	}
 }

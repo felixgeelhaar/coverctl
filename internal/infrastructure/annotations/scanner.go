@@ -29,8 +29,15 @@ var supportedExtensions = map[string]bool{
 	".tsx":  true,
 	".java": true,
 	".kt":   true,
-	".rs":   true,
-	".rb":   true,
+	".rs":    true,
+	".rb":    true,
+	".cs":    true,
+	".c":     true,
+	".cpp":   true,
+	".h":     true,
+	".hpp":   true,
+	".php":   true,
+	".swift": true,
 }
 
 func (Scanner) Scan(_ context.Context, moduleRoot string, files []string) (map[string]application.Annotation, error) {

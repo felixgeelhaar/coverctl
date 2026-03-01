@@ -35,6 +35,16 @@ const (
 	LanguageJava Language = "java"
 	// LanguageRust is the Rust programming language.
 	LanguageRust Language = "rust"
+	// LanguageCSharp is the C# programming language.
+	LanguageCSharp Language = "csharp"
+	// LanguageCpp is the C/C++ programming language.
+	LanguageCpp Language = "cpp"
+	// LanguagePHP is the PHP programming language.
+	LanguagePHP Language = "php"
+	// LanguageRuby is the Ruby programming language.
+	LanguageRuby Language = "ruby"
+	// LanguageSwift is the Swift programming language.
+	LanguageSwift Language = "swift"
 )
 
 // Format represents a coverage profile format.

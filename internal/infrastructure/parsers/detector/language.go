@@ -44,6 +44,29 @@ var DefaultLanguageMarkers = []LanguageMarker{
 	// Rust
 	{Filename: "Cargo.toml", Language: application.LanguageRust, Priority: 100},
 	{Filename: "Cargo.lock", Language: application.LanguageRust, Priority: 90},
+
+	// C#
+	{Filename: "Directory.Build.props", Language: application.LanguageCSharp, Priority: 100},
+	{Filename: "global.json", Language: application.LanguageCSharp, Priority: 90},
+
+	// C/C++
+	{Filename: "CMakeLists.txt", Language: application.LanguageCpp, Priority: 100},
+	{Filename: "meson.build", Language: application.LanguageCpp, Priority: 95},
+	{Filename: "configure.ac", Language: application.LanguageCpp, Priority: 90},
+
+	// PHP
+	{Filename: "composer.json", Language: application.LanguagePHP, Priority: 100},
+	{Filename: "composer.lock", Language: application.LanguagePHP, Priority: 90},
+	{Filename: "phpunit.xml", Language: application.LanguagePHP, Priority: 95},
+	{Filename: "phpunit.xml.dist", Language: application.LanguagePHP, Priority: 90},
+
+	// Ruby
+	{Filename: "Gemfile", Language: application.LanguageRuby, Priority: 100},
+	{Filename: "Gemfile.lock", Language: application.LanguageRuby, Priority: 90},
+	{Filename: "Rakefile", Language: application.LanguageRuby, Priority: 85},
+
+	// Swift
+	{Filename: "Package.swift", Language: application.LanguageSwift, Priority: 100},
 }
 
 // DetectLanguage detects the primary programming language of a project.
@@ -132,6 +155,27 @@ func (d *Detector) GetDefaultProfilePaths(lang application.Language) []string {
 			"target/coverage/cobertura.xml",
 			"coverage/lcov.info",
 		}
+	case application.LanguageCSharp:
+		return []string{
+			"TestResults/coverage.cobertura.xml", // dotnet test with XPlat Code Coverage
+		}
+	case application.LanguageCpp:
+		return []string{
+			"coverage/lcov.info",       // lcov default
+			"build/coverage/lcov.info", // build-dir variant
+		}
+	case application.LanguagePHP:
+		return []string{
+			"coverage.xml", // PHPUnit --coverage-cobertura
+		}
+	case application.LanguageRuby:
+		return []string{
+			"coverage/lcov.info", // SimpleCov + simplecov-lcov
+		}
+	case application.LanguageSwift:
+		return []string{
+			"coverage/lcov.info", // swift test + llvm-cov export
+		}
 	default:
 		return []string{}
 	}
@@ -150,6 +194,16 @@ func (d *Detector) GetDefaultFormat(lang application.Language) application.Forma
 		return application.FormatJaCoCo // JaCoCo is most common
 	case application.LanguageRust:
 		return application.FormatLCOV // cargo-llvm-cov default
+	case application.LanguageCSharp:
+		return application.FormatCobertura // coverlet default
+	case application.LanguageCpp:
+		return application.FormatLCOV // lcov default
+	case application.LanguagePHP:
+		return application.FormatCobertura // PHPUnit --coverage-cobertura
+	case application.LanguageRuby:
+		return application.FormatLCOV // SimpleCov + simplecov-lcov
+	case application.LanguageSwift:
+		return application.FormatLCOV // llvm-cov export
 	default:
 		return application.FormatAuto
 	}
