@@ -30,7 +30,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'coverctl',
-      description: 'Domain-aware test coverage enforcement for Go teams',
+      description: 'Domain-aware test coverage enforcement for any language',
       social: {
         github: 'https://github.com/felixgeelhaar/coverctl',
       },

@@ -10,7 +10,7 @@ This guide will help you set up coverctl in your project and run your first cove
 ## Prerequisites
 
 - A project with tests in any [supported language](#supported-languages)
-- For Go projects: Go 1.25 or later installed
+- For Go projects: Go 1.25 or later installed (other languages use their native test runners)
 - coverctl installed ([Installation Guide](/coverctl/installation/))
 
 :::note[Language Auto-Detection]
@@ -69,9 +69,11 @@ coverctl automatically detects your project language based on configuration file
 
 </Steps>
 
-## Example Configuration
+## Example Configurations
 
-After running `coverctl init`, you'll have a `.coverctl.yaml` file:
+After running `coverctl init`, you'll have a `.coverctl.yaml` file tailored to your language. Here are examples for different project types:
+
+### Go Project
 
 ```yaml
 version: 1
@@ -91,6 +93,47 @@ policy:
 exclude:
   - "**/generated/**"
   - "**/mocks/**"
+```
+
+### Python Project
+
+```yaml
+version: 1
+language: python
+profile: coverage.xml
+policy:
+  default:
+    min: 75
+  domains:
+    - name: core
+      match: ["src/core/**"]
+      min: 85
+    - name: api
+      match: ["src/api/**"]
+      min: 80
+exclude:
+  - "**/migrations/**"
+```
+
+### TypeScript Project
+
+```yaml
+version: 1
+language: javascript
+profile: coverage/lcov.info
+policy:
+  default:
+    min: 75
+  domains:
+    - name: components
+      match: ["src/components/**"]
+      min: 80
+    - name: services
+      match: ["src/services/**"]
+      min: 85
+exclude:
+  - "**/*.test.ts"
+  - "**/__mocks__/**"
 ```
 
 ## Common Workflows

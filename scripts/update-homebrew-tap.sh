@@ -45,7 +45,7 @@ cat > Formula/coverctl.rb << EOF
 # Homebrew formula for Coverctl
 # To install: brew tap felixgeelhaar/tap && brew install coverctl
 class Coverctl < Formula
-  desc "Declarative, domain-aware coverage enforcement for Go teams"
+  desc "Declarative, domain-aware coverage enforcement for any language"
   homepage "https://github.com/felixgeelhaar/coverctl"
   version "${VERSION}"
   license "MIT"
