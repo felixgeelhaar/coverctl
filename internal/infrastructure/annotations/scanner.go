@@ -21,14 +21,14 @@ const (
 
 // supportedExtensions lists file extensions that can contain coverctl annotations.
 var supportedExtensions = map[string]bool{
-	".go":   true,
-	".py":   true,
-	".js":   true,
-	".ts":   true,
-	".jsx":  true,
-	".tsx":  true,
-	".java": true,
-	".kt":   true,
+	".go":    true,
+	".py":    true,
+	".js":    true,
+	".ts":    true,
+	".jsx":   true,
+	".tsx":   true,
+	".java":  true,
+	".kt":    true,
 	".rs":    true,
 	".rb":    true,
 	".cs":    true,
