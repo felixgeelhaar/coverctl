@@ -19,10 +19,24 @@ const (
 	pragmaDomainPref = "coverctl:domain="
 )
 
+// supportedExtensions lists file extensions that can contain coverctl annotations.
+var supportedExtensions = map[string]bool{
+	".go":   true,
+	".py":   true,
+	".js":   true,
+	".ts":   true,
+	".jsx":  true,
+	".tsx":  true,
+	".java": true,
+	".kt":   true,
+	".rs":   true,
+	".rb":   true,
+}
+
 func (Scanner) Scan(_ context.Context, moduleRoot string, files []string) (map[string]application.Annotation, error) {
 	annotations := make(map[string]application.Annotation)
 	for _, file := range files {
-		if filepath.Ext(file) != ".go" {
+		if !supportedExtensions[filepath.Ext(file)] {
 			continue
 		}
 		path := file

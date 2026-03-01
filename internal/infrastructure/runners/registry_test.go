@@ -78,7 +78,7 @@ func TestRegistryGetRunner(t *testing.T) {
 		{application.LanguageJavaScript, "nodejs", false},
 		{application.LanguageRust, "rust", false},
 		{application.LanguageJava, "java", false},
-		{application.LanguageTypeScript, "", true}, // TypeScript maps to JavaScript runner
+		{application.LanguageTypeScript, "nodejs", false}, // TypeScript maps to JavaScript runner
 	}
 
 	for _, tt := range tests {

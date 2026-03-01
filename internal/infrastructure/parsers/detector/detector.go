@@ -106,9 +106,10 @@ func containsCoberturaMarkers(content []byte) bool {
 
 // containsJaCoCoMarkers checks for JaCoCo-specific XML markers.
 func containsJaCoCoMarkers(content []byte) bool {
-	// Look for <report> element with jacoco markers
-	return bytes.Contains(content, []byte("<report")) &&
-		bytes.Contains(content, []byte("jacoco"))
+	// Look for <report> element with jacoco markers (case-insensitive for DTD)
+	lower := bytes.ToLower(content)
+	return bytes.Contains(lower, []byte("<report")) &&
+		bytes.Contains(lower, []byte("jacoco"))
 }
 
 // isLCOV checks if content appears to be LCOV format.

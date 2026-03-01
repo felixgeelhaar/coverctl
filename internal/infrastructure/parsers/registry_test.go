@@ -136,6 +136,30 @@ func TestRegistry_Format(t *testing.T) {
 	assert.Equal(t, application.FormatAuto, registry.Format())
 }
 
+func TestRegistry_Parse_JaCoCo(t *testing.T) {
+	content := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd">
+<report name="test-project">
+  <package name="com/example/app">
+    <sourcefile name="Main.java">
+      <line nr="3" mi="0" ci="4" mb="0" cb="0"/>
+      <line nr="5" mi="0" ci="3" mb="0" cb="0"/>
+      <line nr="7" mi="2" ci="0" mb="0" cb="0"/>
+    </sourcefile>
+  </package>
+</report>`
+
+	tmpfile := createTempFile(t, "jacoco.xml", content)
+
+	registry := NewRegistry()
+	stats, err := registry.Parse(tmpfile)
+
+	require.NoError(t, err)
+	require.Len(t, stats, 1)
+	assert.Equal(t, 2, stats["com/example/app/Main.java"].Covered)
+	assert.Equal(t, 3, stats["com/example/app/Main.java"].Total)
+}
+
 func TestRegistry_SupportedFormats(t *testing.T) {
 	registry := NewRegistry()
 	formats := registry.SupportedFormats()
@@ -143,6 +167,7 @@ func TestRegistry_SupportedFormats(t *testing.T) {
 	assert.Contains(t, formats, application.FormatGo)
 	assert.Contains(t, formats, application.FormatLCOV)
 	assert.Contains(t, formats, application.FormatCobertura)
+	assert.Contains(t, formats, application.FormatJaCoCo)
 }
 
 func TestRegistry_DetectLanguage(t *testing.T) {

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/felixgeelhaar/coverctl/schemas/coverctl.schema.json",
   "title": "coverctl configuration",
-  "description": "Configuration schema for coverctl - domain-based Go coverage policy enforcement",
+  "description": "Configuration schema for coverctl - multi-language coverage policy enforcement",
   "type": "object",
   "properties": {
     "version": {
@@ -14,6 +14,28 @@
       "type": "string",
       "description": "Path to parent config file for inheritance. Relative paths are resolved from this config's directory. Useful for monorepos where packages inherit shared policies.",
       "examples": ["../../.coverctl.yaml", "../base.coverctl.yaml"]
+    },
+    "language": {
+      "type": "string",
+      "enum": ["auto", "go", "python", "javascript", "typescript", "java", "rust"],
+      "default": "auto",
+      "description": "Project language for coverage tooling. Auto-detected from project files when set to 'auto'."
+    },
+    "profile": {
+      "type": "object",
+      "description": "Coverage profile configuration",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["auto", "go", "lcov", "cobertura", "jacoco"],
+          "default": "auto",
+          "description": "Coverage profile format. Auto-detected from file content when set to 'auto'."
+        },
+        "path": {
+          "type": "string",
+          "description": "Default coverage profile path (e.g., 'coverage.out', 'coverage.xml', 'lcov.info')"
+        }
+      }
     },
     "policy": {
       "type": "object",
@@ -45,7 +67,7 @@
               "match": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "Go package patterns to match (e.g., './internal/...', './pkg/auth')"
+                "description": "Patterns to match source files or packages (e.g., './internal/...', 'src/**', './pkg/auth')"
               },
               "min": {
                 "type": "number",
@@ -169,10 +191,23 @@
     },
     {
       "version": 1,
-      "extends": "../../.coverctl.yaml",
+      "language": "python",
+      "profile": {"format": "cobertura", "path": "coverage.xml"},
       "policy": {
+        "default": {"min": 80},
         "domains": [
-          {"name": "auth", "match": ["./..."], "min": 90}
+          {"name": "core", "match": ["src/core/**"], "min": 90}
+        ]
+      }
+    },
+    {
+      "version": 1,
+      "language": "rust",
+      "profile": {"format": "lcov", "path": "lcov.info"},
+      "policy": {
+        "default": {"min": 75},
+        "domains": [
+          {"name": "lib", "match": ["src/**"], "min": 80}
         ]
       }
     }

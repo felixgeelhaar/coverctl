@@ -1358,6 +1358,41 @@ func calculateCoverageMapPercent(coverage map[string]domain.CoverageStat) float6
 	return domain.Round1(float64(totalCovered) / float64(totalStatements) * 100)
 }
 
+// sourceExtensionsByLanguage maps languages to their source file extensions.
+var sourceExtensionsByLanguage = map[Language]map[string]bool{
+	LanguageGo:         {".go": true},
+	LanguagePython:     {".py": true},
+	LanguageJavaScript: {".js": true, ".ts": true, ".jsx": true, ".tsx": true, ".mjs": true, ".cjs": true},
+	LanguageTypeScript: {".js": true, ".ts": true, ".jsx": true, ".tsx": true, ".mjs": true, ".cjs": true},
+	LanguageRust:       {".rs": true},
+	LanguageJava:       {".java": true, ".kt": true},
+}
+
+// changedFileDirs extracts unique directories from changed files matching source extensions.
+func changedFileDirs(files []string, exts map[string]bool) []string {
+	seen := make(map[string]struct{})
+	var dirs []string
+
+	for _, file := range files {
+		ext := filepath.Ext(file)
+		if !exts[ext] {
+			continue
+		}
+		dir := filepath.Dir(file)
+		if dir == "" || dir == "." {
+			dir = "."
+		}
+		dir = filepath.ToSlash(dir)
+		if _, ok := seen[dir]; !ok {
+			seen[dir] = struct{}{}
+			dirs = append(dirs, dir)
+		}
+	}
+
+	sort.Strings(dirs)
+	return dirs
+}
+
 // WatchCallback is called after each coverage run in watch mode.
 type WatchCallback func(runNumber int, err error)
 

@@ -81,6 +81,11 @@ func (r *Registry) DetectLanguage(projectDir string) application.Language {
 
 // GetRunner returns a runner for a specific language.
 func (r *Registry) GetRunner(lang application.Language) (application.CoverageRunner, error) {
+	// TypeScript uses the JavaScript/Node.js runner
+	if lang == application.LanguageTypeScript {
+		lang = application.LanguageJavaScript
+	}
+
 	for _, runner := range r.runners {
 		if runner.Language() == lang {
 			return runner, nil

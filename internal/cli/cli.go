@@ -19,8 +19,8 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/badge"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/bitbucket"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/config"
-	"github.com/felixgeelhaar/coverctl/internal/infrastructure/coverprofile"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/diff"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/parsers"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/github"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gitlab"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
@@ -775,7 +775,7 @@ func BuildService(out *os.File) *application.Service {
 		DomainResolver:    multiResolver,
 		CoverageRunner:    registry,
 		RunnerRegistry:    registry,
-		ProfileParser:     coverprofile.Parser{},
+		ProfileParser:     parsers.NewRegistry(),
 		DiffProvider:      diff.GitDiff{Module: module},
 		AnnotationScanner: annotations.Scanner{},
 		Reporter:          report.Writer{},

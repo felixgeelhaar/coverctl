@@ -11,6 +11,7 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/coverprofile"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/parsers/cobertura"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/parsers/detector"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/parsers/jacoco"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/parsers/lcov"
 )
 
@@ -28,6 +29,7 @@ func NewRegistry() *Registry {
 			application.FormatGo:        coverprofile.Parser{},
 			application.FormatLCOV:      lcov.New(),
 			application.FormatCobertura: cobertura.New(),
+			application.FormatJaCoCo:    jacoco.New(),
 		},
 	}
 }

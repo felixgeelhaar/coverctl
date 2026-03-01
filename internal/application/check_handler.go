@@ -66,11 +66,22 @@ func (h *CheckHandler) CheckResult(ctx context.Context, opts CheckOptions) (doma
 			if err != nil {
 				return domain.Result{}, fmt.Errorf("incremental mode: %w", err)
 			}
-			packages = filesToPackages(changedFiles)
+
+			lang := runner.Language()
+			if lang == LanguageGo {
+				packages = filesToPackages(changedFiles)
+			} else {
+				exts := sourceExtensionsByLanguage[lang]
+				if exts == nil {
+					exts = map[string]bool{} // no filtering for unknown languages
+				}
+				packages = changedFileDirs(changedFiles, exts)
+			}
+
 			if len(packages) == 0 {
 				return domain.Result{
 					Passed:   true,
-					Warnings: []string{"incremental mode: no Go files changed since " + ref},
+					Warnings: []string{"incremental mode: no " + string(lang) + " source files changed since " + ref},
 				}, nil
 			}
 		}
