@@ -2,9 +2,32 @@
 
 All notable changes to `coverctl` will be documented here. Relicta manages this file automatically.
 
-Release 1.12.0
+## [1.13.0] - 2026-03-01
 
-## [Unreleased]
+### Added
+- **15-Language Coverage Support**: Expand from 5 to 15 supported languages
+  - Add C#/.NET (Cobertura via coverlet)
+  - Add C/C++ (LCOV via gcov/lcov)
+  - Add PHP (Cobertura via PHPUnit)
+  - Add Ruby (LCOV via SimpleCov)
+  - Add Swift (LCOV via llvm-cov)
+  - Add Dart (LCOV via dart test)
+  - Add Scala (Cobertura via scoverage)
+  - Add Elixir (LCOV via mix test)
+  - Add Shell (Cobertura via kcov)
+- **Language-Agnostic Parser Registry**: Multi-format parser registry for automatic format detection
+- **Security Baseline**: Nox security scanner baseline with 570 triaged entries
+
+### Changed
+- **Security Scanning**: Replace VerdictSec with nox for security scanning in CI and docs
+
+### Fixed
+- Resolve SEC-085 vulnerability: remove URL-embedded credentials in Homebrew tap script
+- Use credential store for Homebrew tap clone in CI
+- Resolve gofmt formatting issues in cli and annotations
+- Handle Go workspace in ModulePath resolution
+
+## [1.12.0] - 2026-02-01
 
 ## [1.11.0] - 2026-01-09
 
