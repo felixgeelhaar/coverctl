@@ -46,3 +46,4 @@ dist/
 # Security scan artifacts (nox)
 findings.json
 results.sarif
+.nox/
