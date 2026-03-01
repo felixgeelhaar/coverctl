@@ -42,3 +42,7 @@ dist/
 
 # MCP registry tokens
 .mcpregistry_*
+
+# Security scan artifacts (nox)
+findings.json
+results.sarif

@@ -1,0 +1,349 @@
+{
+  "schema_version": "1.0.0",
+  "entries": [
+    {
+      "fingerprint": "ffdbd5ea586df525d9e0b4b2f558694188a6e490f23840ea563c3f9675861ad0",
+      "rule_id": "IAC-351",
+      "file_path": ".github/workflows/docs.yml",
+      "severity": "critical",
+      "reason": "False positive: references ${{ secrets.GITHUB_TOKEN }} permissions declaration, not a hardcoded secret",
+      "created_at": "2026-03-01T13:08:49.57529Z"
+    },
+    {
+      "fingerprint": "389655a5587ebebbc28fe4c0e02687ddda72aa2600bdbb372d9e36010db649dd",
+      "rule_id": "IAC-351",
+      "file_path": ".github/workflows/release.yml",
+      "severity": "critical",
+      "reason": "False positive: GitHub Actions id-token permission declaration, not a hardcoded secret",
+      "created_at": "2026-03-01T13:08:50.248663Z"
+    },
+    {
+      "fingerprint": "3d249662db38515eee3b85e70f99081a1c3cdb19bd3c745313704949d4a63915",
+      "rule_id": "SEC-085",
+      "file_path": "docs/src/styles/custom.css",
+      "severity": "high",
+      "reason": "False positive: Google Fonts URL with font weight syntax misidentified as embedded password",
+      "created_at": "2026-03-01T13:08:51.089147Z"
+    },
+    {
+      "fingerprint": "49282460933d310b528e6b674f265adc1b6d568771e8bde93b7d152ceca8a3b7",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: defu is a legitimate unjs utility, not a typosquat of debug",
+      "created_at": "2026-03-01T13:09:00.275388Z"
+    },
+    {
+      "fingerprint": "7051e0269788d4224f6a83432005ab5788c64e92423ca1f058ede461e8252797",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: h3 is a legitimate unjs HTTP framework, not a typosquat of d3",
+      "created_at": "2026-03-01T13:09:03.147181Z"
+    },
+    {
+      "fingerprint": "3b4c8ea350f7910adda3c2d47960618e13776edb0883eab53d2e23de03a85069",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: dfa is a legitimate fontkit dependency, not a typosquat of d3",
+      "created_at": "2026-03-01T13:09:05.956427Z"
+    },
+    {
+      "fingerprint": "022255b4b5ae1617b45770e14e5aa1df0f43d4719df11b027537eb166d9bc4e1",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: ohash is a legitimate unjs hashing utility, not a typosquat of lodash",
+      "created_at": "2026-03-01T13:09:08.580045Z"
+    },
+    {
+      "fingerprint": "35767ed11fe09409e817d7517941f3c95616ff484e8381b98ecf248877ce0ce2",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: vfile is a legitimate unified.js virtual file package, not a typosquat of vite",
+      "created_at": "2026-03-01T13:09:11.1643Z"
+    },
+    {
+      "fingerprint": "893da3d5f6d5fd44d8cf062dfdcf28d379edb34714b013030c7924baf3e3b0e6",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: zod is a legitimate TypeScript schema validation library, not a typosquat of got",
+      "created_at": "2026-03-01T13:09:13.96764Z"
+    },
+    {
+      "fingerprint": "927bb38c2303d875be74db9ec374163a5dfa0686a80ea790e6f20af2b5faeba3",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: regex is a legitimate npm package, not a typosquat of redux",
+      "created_at": "2026-03-01T13:09:19.701314Z"
+    },
+    {
+      "fingerprint": "8f4fdf7e5df06292ed7e907c45a4fe2c9a74605b0ed33ad328bc311f8b03ffd7",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: ms is a legitimate millisecond conversion utility, not a typosquat of d3",
+      "created_at": "2026-03-01T13:09:22.714873Z"
+    },
+    {
+      "fingerprint": "21ae73c9a1003825d4f36e482ef32fa10ad3edddb30d6350fc182f54a2dc6e9f",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: bail is a legitimate unified.js package, not a typosquat of babel",
+      "created_at": "2026-03-01T13:09:25.530716Z"
+    },
+    {
+      "fingerprint": "f56c7fae523250091c32a8bfce8b1b71c8eaf98fc6606f9fca40d0b08da9d712",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: csso is a legitimate CSS optimizer, not a typosquat of clsx",
+      "created_at": "2026-03-01T13:09:28.471435Z"
+    },
+    {
+      "fingerprint": "b8b8ab6630b475f703d03a84dbd5545b14951c706f49297f1bf169d19b1588c0",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: acorn is a legitimate JavaScript parser, not a typosquat of cors",
+      "created_at": "2026-03-01T13:09:31.263973Z"
+    },
+    {
+      "fingerprint": "5f7e4c9bb23182e99b4a07dc29cbc63ae89e19255cb539b60411fe2c16ede821",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: trough is a legitimate unified.js package, not a typosquat of through2",
+      "created_at": "2026-03-01T13:09:34.042245Z"
+    },
+    {
+      "fingerprint": "f7b37e66a6f1ee351a31541f0f90a712fab6a769e38502f6a07c3337d4924653",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: sax is a legitimate XML parser, not a typosquat of nx",
+      "created_at": "2026-03-01T13:09:40.010954Z"
+    },
+    {
+      "fingerprint": "7077fba41f88c3a5852c37cc36e399b2a9ee5f5a5c5ecf6e17bd93cefb65b28b",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: arg is a legitimate CLI argument parser, not a typosquat of yargs",
+      "created_at": "2026-03-01T13:09:42.90045Z"
+    },
+    {
+      "fingerprint": "4c3a4ac4b570dc460829da6385a014d15b54dfa02cbce256d9b837c501cb7354",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: pako is a legitimate zlib port for JS, not a typosquat of pino",
+      "created_at": "2026-03-01T13:09:45.76432Z"
+    },
+    {
+      "fingerprint": "ad2769c9df4c3dc619263407a2037a54df67cf20b2d3afc2a477437dc9c2bfd3",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: destr is a legitimate unjs JSON parser, not a typosquat of jest",
+      "created_at": "2026-03-01T13:09:48.684085Z"
+    },
+    {
+      "fingerprint": "2641162f37a87692b024088d20d9164c8e39ddda5bcd2c91b00375ac39c077d2",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: dlv is a legitimate deep property accessor, not a typosquat of d3",
+      "created_at": "2026-03-01T13:09:51.7907Z"
+    },
+    {
+      "fingerprint": "a8121d3f828e8a33983e0fffbd230b968672f6bcb7572ba7d1f5b4393751d3d9",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: clone is a legitimate deep-cloning utility, not a typosquat of cron",
+      "created_at": "2026-03-01T13:09:54.430936Z"
+    },
+    {
+      "fingerprint": "1be29437d2e0762afae44fba4bd34a9cc5e14270f89cea8b9ade21a95d92cbbb",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/docs.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions (actions/checkout) pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:00.692258Z"
+    },
+    {
+      "fingerprint": "1ab4ff7dd585ae0506aba3ea5f7a952095311c4b4b5dd1a3756506aa336560ad",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/docs.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:03.396632Z"
+    },
+    {
+      "fingerprint": "084ad9ae6b858c34788e8ad5a1fc525d0156e176e72a61a624170cb21e68aa58",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/docs.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:06.089184Z"
+    },
+    {
+      "fingerprint": "d15d1eb401f1a7c38bf08a63a2ee9499a99d9b98cc52e0ee2689e841c8a20c16",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/docs.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:09.241356Z"
+    },
+    {
+      "fingerprint": "0ff959cf4bc2a0d2801104a67fb82c5317774413a46298c73f589e06744e61f8",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/docs.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:11.479382Z"
+    },
+    {
+      "fingerprint": "96ab1f84d871bc2523313b1c5e1390c84c2c73c2a07d3c76e1328ee5c4bd412d",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:14.193247Z"
+    },
+    {
+      "fingerprint": "dd4b970a54c386507fafa06dcd8096b14397385bf72e92df3bce2e1b81c98484",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:19.711432Z"
+    },
+    {
+      "fingerprint": "559a3830f5d035fe5636e7d7c3d9be06ecde8683b445b1789c7a68ad0db3bc1a",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:22.43598Z"
+    },
+    {
+      "fingerprint": "b7e90638e28764ac71acac3139cccb721a21561c9ccaccdc90007c46b9f3323a",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:24.987023Z"
+    },
+    {
+      "fingerprint": "10a554843893b7f6e8d60658c1527cdb5a3cb5ac6888bfead125caee5b18cfa0",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:27.674587Z"
+    },
+    {
+      "fingerprint": "3d678c60ced3895f2df8574a97b901870e927ec4c63ce1d57fc37b848f4b5e16",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: golangci-lint-action pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:30.331945Z"
+    },
+    {
+      "fingerprint": "e7de2ae99ce4de2408bc321c8d5c4e85c0823a6581bbc6cae1d3a95780a154a3",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:33.139701Z"
+    },
+    {
+      "fingerprint": "a435c9c2c34426c9fa10b2b06799aacd3f19a7de34d1b4bd3267fef9e2a55047",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:38.844289Z"
+    },
+    {
+      "fingerprint": "2a04886adc0c32e5112375305f05b62daeadf0fd1eb462c0c860756434055353",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:41.28086Z"
+    },
+    {
+      "fingerprint": "e1d074850c49d22227738e130cc27ba25a35754fd8db44d0ac45dc234a623e8b",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/go.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:43.804772Z"
+    },
+    {
+      "fingerprint": "4fcfc59dfeb4689bafbd831ed5db614afb33def15688403fbb1f93cfe8c94750",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/release.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:46.171861Z"
+    },
+    {
+      "fingerprint": "33f22f4c41e5852690b10a6410880938491078ecfd1c91821d0dab8ca8a8d3f9",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/release.yml",
+      "severity": "high",
+      "reason": "Accepted risk: first-party GitHub Actions pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:48.77987Z"
+    },
+    {
+      "fingerprint": "6d730dbe5d85f273990b9dcfdf8afb1b0a6be9072d22b4a31f1a32b93092bb18",
+      "rule_id": "IAC-013",
+      "file_path": ".github/workflows/release.yml",
+      "severity": "high",
+      "reason": "Accepted risk: goreleaser-action pinned to major version tag per project convention",
+      "created_at": "2026-03-01T13:10:51.601831Z"
+    },
+    {
+      "fingerprint": "92229e52da5032b139934babda14c17db6876188c7ce19b27ad451d76d53e9f9",
+      "rule_id": "SEC-085",
+      "file_path": "scripts/update-homebrew-tap.sh",
+      "severity": "high",
+      "reason": "Fixed: replaced URL-embedded token with git http.extraheader credential approach",
+      "created_at": "2026-03-01T13:10:59.100419Z"
+    },
+    {
+      "fingerprint": "3c9ad5a7d8e57c408b2b8ca7ab4d1b98fe976867432f32466879e7d3b9df288b",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: vitefu is a legitimate Svelte/Vite integration package",
+      "created_at": "2026-03-01T13:11:21.431405Z"
+    },
+    {
+      "fingerprint": "4fed3331005917015719a53278faaa0c7117712991d1c1bf8e3db5fa6f22baed",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: mrmime is a legitimate MIME type lookup package by lukeed",
+      "created_at": "2026-03-01T13:11:22.465654Z"
+    },
+    {
+      "fingerprint": "0668b7d967052d20e5832ed5a3926ec8b821d9e4ac057610c2ad118d6c1797a1",
+      "rule_id": "VULN-002",
+      "file_path": "docs/package-lock.json",
+      "severity": "critical",
+      "reason": "False positive: parse5 is a legitimate HTML parser, not a typosquat of parcel",
+      "created_at": "2026-03-01T13:11:23.638592Z"
+    }
+  ]
+}

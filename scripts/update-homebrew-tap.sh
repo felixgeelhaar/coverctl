@@ -29,11 +29,14 @@ echo "  darwin-amd64: $SHA_DARWIN_AMD64"
 echo "  linux-arm64:  $SHA_LINUX_ARM64"
 echo "  linux-amd64:  $SHA_LINUX_AMD64"
 
-# Clone homebrew-tap
+# Clone homebrew-tap (use credential header to avoid embedding token in URL)
 echo "Cloning homebrew-tap..."
 rm -rf tap
-git clone "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/felixgeelhaar/homebrew-tap.git" tap
+git clone \
+    -c "http.https://github.com/.extraheader=Authorization: token ${HOMEBREW_TAP_TOKEN}" \
+    "https://github.com/felixgeelhaar/homebrew-tap.git" tap
 cd tap
+git config http.https://github.com/.extraheader "Authorization: token ${HOMEBREW_TAP_TOKEN}"
 
 # Generate updated formula
 echo "Generating formula..."
