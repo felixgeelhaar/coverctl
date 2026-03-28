@@ -1,8 +1,10 @@
 package detector
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
@@ -194,6 +196,53 @@ github.com/example/pkg/main.go:1.1,5.2 1 1`
 
 	require.NoError(t, err)
 	assert.Equal(t, application.FormatGo, format)
+}
+
+func TestDetector_DetectFormat_LCOVInOutFile(t *testing.T) {
+	// Rust cargo-llvm-cov writes LCOV content to .cover/coverage.out
+	content := `TN:
+SF:src/lib.rs
+FN:1,example::add
+FN:5,example::sub
+FNDA:1,example::add
+FNDA:0,example::sub
+DA:1,1
+DA:2,1
+DA:5,0
+DA:6,0
+LF:4
+LH:2
+end_of_record`
+
+	tmpfile := createTempFile(t, "coverage.out", content)
+
+	detector := New()
+	format, err := detector.DetectFormat(tmpfile)
+
+	require.NoError(t, err)
+	assert.Equal(t, application.FormatLCOV, format, "LCOV content in .out file should be detected as LCOV, not Go")
+}
+
+func TestDetector_DetectFormat_LCOVManyFunctions(t *testing.T) {
+	// Simulate LCOV where DA: lines are past the 4KB sniff boundary
+	// due to many FN:/FNDA: entries (common in large Rust projects)
+	var content strings.Builder
+	content.WriteString("TN:\n")
+	content.WriteString("SF:src/lib.rs\n")
+	// Write enough FN/FNDA lines to push DA past 4KB
+	for i := range 200 {
+		content.WriteString(fmt.Sprintf("FN:%d,function_with_a_long_name_%d\n", i+1, i))
+		content.WriteString(fmt.Sprintf("FNDA:1,function_with_a_long_name_%d\n", i))
+	}
+	content.WriteString("DA:1,1\nDA:2,0\nLF:2\nLH:1\nend_of_record\n")
+
+	tmpfile := createTempFile(t, "coverage.out", content.String())
+
+	detector := New()
+	format, err := detector.DetectFormat(tmpfile)
+
+	require.NoError(t, err)
+	assert.Equal(t, application.FormatLCOV, format, "LCOV with many functions should be detected even when DA: is past 4KB")
 }
 
 // createTempFile creates a temporary file with the given content.
