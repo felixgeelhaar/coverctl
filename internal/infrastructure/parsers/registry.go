@@ -5,6 +5,7 @@ package parsers
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
@@ -85,8 +86,20 @@ func (r *Registry) ParseWithFormat(path string, format application.Format) (map[
 }
 
 // getParser returns the appropriate parser for a detected format.
+// When format is unknown, it uses language detection to select the
+// appropriate parser before falling back to Go format.
 func (r *Registry) getParser(format application.Format, path string) (application.ProfileParser, error) {
-	// If format couldn't be detected, try Go profile as default
+	if format == application.FormatAuto {
+		// Try language-aware format selection based on project directory
+		projectDir := filepath.Dir(path)
+		if lang, err := r.detector.DetectLanguage(projectDir); err == nil && lang != application.LanguageAuto {
+			if defaultFormat := r.detector.GetDefaultFormat(lang); defaultFormat != application.FormatAuto {
+				format = defaultFormat
+			}
+		}
+	}
+
+	// Final fallback to Go format
 	if format == application.FormatAuto {
 		format = application.FormatGo
 	}

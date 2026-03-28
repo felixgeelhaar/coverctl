@@ -200,6 +200,34 @@ func TestRegistry_GetDefaultFormat(t *testing.T) {
 	assert.Equal(t, application.FormatCobertura, registry.GetDefaultFormat(application.LanguagePython))
 }
 
+func TestRegistry_Parse_LanguageAwareFallback(t *testing.T) {
+	// LCOV content in a file with unrecognizable extension,
+	// but in a directory with Cargo.toml (Rust project).
+	// The language-aware fallback should select LCOV parser.
+	lcovContent := `SF:src/lib.rs
+DA:1,1
+DA:2,0
+LF:2
+LH:1
+end_of_record`
+
+	tmpdir := t.TempDir()
+	// Create Cargo.toml to mark as Rust project
+	require.NoError(t, os.WriteFile(filepath.Join(tmpdir, "Cargo.toml"), []byte("[package]\nname = \"test\""), 0o644))
+
+	// Write LCOV content to a file with no recognizable extension
+	profilePath := filepath.Join(tmpdir, "coverage.dat")
+	require.NoError(t, os.WriteFile(profilePath, []byte(lcovContent), 0o644))
+
+	registry := NewRegistry()
+	stats, err := registry.Parse(profilePath)
+
+	require.NoError(t, err)
+	require.Len(t, stats, 1)
+	assert.Equal(t, 1, stats["src/lib.rs"].Covered)
+	assert.Equal(t, 2, stats["src/lib.rs"].Total)
+}
+
 // createTempFile creates a temporary file with the given content.
 func createTempFile(t *testing.T, name, content string) string {
 	t.Helper()
