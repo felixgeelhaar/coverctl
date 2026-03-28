@@ -9,13 +9,6 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
 )
 
-// mockRunner implements application.CoverageRunner for testing.
-type mockRunner struct {
-	lang string
-}
-
-func (r mockRunner) Language() string { return r.lang }
-
 func TestDetectDomains(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "internal", "policy"), 0o755); err != nil {

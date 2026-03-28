@@ -3,10 +3,20 @@
 package history
 
 import (
+	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"syscall"
 )
+
+// safeIntFd converts a uintptr file descriptor to int, guarding against overflow.
+func safeIntFd(fd uintptr) (int, error) {
+	if fd > uintptr(math.MaxInt) {
+		return 0, fmt.Errorf("file descriptor %d overflows int", fd)
+	}
+	return int(fd), nil
+}
 
 // fileLock represents a file-based lock for concurrent access protection.
 type fileLock struct {
@@ -29,7 +39,12 @@ func (s *FileStore) acquireLock() (*fileLock, error) {
 	}
 
 	// Acquire exclusive lock (blocking)
-	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil {
+	fd, err := safeIntFd(file.Fd())
+	if err != nil {
+		_ = file.Close()
+		return nil, err
+	}
+	if err := syscall.Flock(fd, syscall.LOCK_EX); err != nil {
 		_ = file.Close() // Best-effort close on lock failure
 		return nil, err
 	}
@@ -43,7 +58,11 @@ func (l *fileLock) release() error {
 		return nil
 	}
 	// Release lock - best-effort, always close file afterwards
-	unlockErr := syscall.Flock(int(l.file.Fd()), syscall.LOCK_UN)
+	fd, fdErr := safeIntFd(l.file.Fd())
+	if fdErr != nil {
+		return l.file.Close()
+	}
+	unlockErr := syscall.Flock(fd, syscall.LOCK_UN)
 	closeErr := l.file.Close()
 	if unlockErr != nil {
 		return unlockErr

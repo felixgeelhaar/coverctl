@@ -5,9 +5,7 @@ import (
 )
 
 // testPathNormalizer is a simple path normalizer for testing.
-type testPathNormalizer struct {
-	moduleRoot string
-}
+type testPathNormalizer struct{}
 
 func (n *testPathNormalizer) NormalizePath(file string) string {
 	return file
