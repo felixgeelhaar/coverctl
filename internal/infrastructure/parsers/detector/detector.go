@@ -113,19 +113,35 @@ func containsJaCoCoMarkers(content []byte) bool {
 }
 
 // isLCOV checks if content appears to be LCOV format.
+// It looks for at least two distinct LCOV markers to avoid false positives.
+// Markers include TN:, SF:, DA:, FN:, FNDA:, LF:, LH:, and end_of_record.
+// This handles cases where DA: lines appear past the content sniff boundary
+// (e.g., Rust cargo-llvm-cov output with many function entries).
 func isLCOV(content []byte) bool {
 	scanner := bufio.NewScanner(bytes.NewReader(content))
-	var hasSF, hasDA bool
+	markers := 0
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "SF:") {
-			hasSF = true
+		switch {
+		case strings.HasPrefix(line, "TN:"):
+			markers++
+		case strings.HasPrefix(line, "SF:"):
+			markers++
+		case strings.HasPrefix(line, "DA:"):
+			markers++
+		case strings.HasPrefix(line, "FN:"):
+			markers++
+		case strings.HasPrefix(line, "FNDA:"):
+			markers++
+		case strings.HasPrefix(line, "LF:"):
+			markers++
+		case strings.HasPrefix(line, "LH:"):
+			markers++
+		case line == "end_of_record":
+			markers++
 		}
-		if strings.HasPrefix(line, "DA:") {
-			hasDA = true
-		}
-		if hasSF && hasDA {
+		if markers >= 2 {
 			return true
 		}
 	}
