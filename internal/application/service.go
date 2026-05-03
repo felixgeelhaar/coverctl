@@ -1358,24 +1358,20 @@ func calculateCoverageMapPercent(coverage map[string]domain.CoverageStat) float6
 	return domain.Round1(float64(totalCovered) / float64(totalStatements) * 100)
 }
 
-// sourceExtensionsByLanguage maps languages to their source file extensions.
-var sourceExtensionsByLanguage = map[Language]map[string]bool{
-	LanguageGo:         {".go": true},
-	LanguagePython:     {".py": true},
-	LanguageJavaScript: {".js": true, ".ts": true, ".jsx": true, ".tsx": true, ".mjs": true, ".cjs": true},
-	LanguageTypeScript: {".js": true, ".ts": true, ".jsx": true, ".tsx": true, ".mjs": true, ".cjs": true},
-	LanguageRust:       {".rs": true},
-	LanguageJava:       {".java": true, ".kt": true},
-	LanguageCSharp:     {".cs": true},
-	LanguageCpp:        {".c": true, ".cpp": true, ".cc": true, ".cxx": true, ".h": true, ".hpp": true},
-	LanguagePHP:        {".php": true},
-	LanguageRuby:       {".rb": true},
-	LanguageSwift:      {".swift": true},
-	LanguageDart:       {".dart": true},
-	LanguageScala:      {".scala": true, ".sc": true},
-	LanguageElixir:     {".ex": true, ".exs": true},
-	LanguageShell:      {".sh": true, ".bash": true},
-}
+// sourceExtensionsByLanguage is derived from the canonical Languages
+// registry at package init. Single source of truth lives in types.go;
+// adding a language requires updating only that registry.
+var sourceExtensionsByLanguage = func() map[Language]map[string]bool {
+	out := make(map[Language]map[string]bool, len(Languages))
+	for _, def := range Languages {
+		set := make(map[string]bool, len(def.SourceExtensions))
+		for _, ext := range def.SourceExtensions {
+			set[ext] = true
+		}
+		out[def.Code] = set
+	}
+	return out
+}()
 
 // changedFileDirs extracts unique directories from changed files matching source extensions.
 func changedFileDirs(files []string, exts map[string]bool) []string {

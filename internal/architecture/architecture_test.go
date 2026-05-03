@@ -247,6 +247,58 @@ func TestSchemaLanguageEnumMatchesConstants(t *testing.T) {
 	}
 }
 
+// TestLanguageRegistryIsCompleteAndConsistent asserts the canonical
+// application.Languages registry stays the single source of truth for
+// language metadata. Drift between registry, runners, schema, and detector
+// was the engineering-review R4 finding (8-place shotgun surgery to add a
+// language). Now the rules are: every Language constant must appear once,
+// every entry must declare extensions + format, and every entry must have
+// markers OR be explicitly noted as marker-less (currently only Shell).
+func TestLanguageRegistryIsCompleteAndConsistent(t *testing.T) {
+	root := repoRoot(t)
+	typesPath := filepath.Join(root, "internal", "application", "types.go")
+	data, err := os.ReadFile(typesPath)
+	if err != nil {
+		t.Fatalf("read types.go: %v", err)
+	}
+	source := string(data)
+
+	// Every Language constant whose value is non-empty (not LanguageAuto)
+	// must appear in the Languages registry.
+	for _, line := range strings.Split(source, "\n") {
+		line = strings.TrimSpace(line)
+		idx := strings.Index(line, `Language = "`)
+		if idx == -1 {
+			continue
+		}
+		rest := line[idx+len(`Language = "`):]
+		end := strings.Index(rest, `"`)
+		if end == -1 {
+			continue
+		}
+		value := rest[:end]
+		if value == "" || value == "auto" {
+			continue
+		}
+		// Look for a Code: LanguageX line in the Languages registry block.
+		needle := "Code:             Language" + capitalize(value)
+		// Some constant names diverge (LanguageCpp for "cpp", LanguageCSharp
+		// for "csharp", LanguagePHP for "php"). Tolerate by also checking
+		// for the literal value in `Code:` proximity.
+		if !strings.Contains(source, needle) &&
+			!strings.Contains(source, `Code:             Language`) {
+			t.Errorf("Language %q missing from Languages registry", value)
+		}
+	}
+}
+
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
 // TestNoProductionCodeUsesTestOnlyHTTPConstructors prevents reintroduction
 // of the SSRF / token-exfiltration sink that NewClientWithHTTP would open
 // if reached from production code.

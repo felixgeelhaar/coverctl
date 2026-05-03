@@ -55,6 +55,215 @@ const (
 	LanguageShell Language = "shell"
 )
 
+// LanguageMarker pairs a project-root filename with a priority used during
+// language detection. Higher priority wins when multiple markers are present
+// (e.g. tsconfig.json + package.json → TypeScript wins over JavaScript).
+type LanguageMarker struct {
+	Filename string
+	Priority int
+}
+
+// LanguageDef is the single source of truth about a supported language.
+//
+// Adding a new language used to require coordinated edits across eight
+// files (engineering review R4). Now: append one entry here, register the
+// runner in the runners package, ship the schema-enum update generated from
+// this list. Three places, one canonical source.
+//
+// Downstream consumers (parsers/detector for markers + format + profile
+// paths, application/service for source extensions, mcp + cli for surfaced
+// language lists) all derive their lookup tables from this slice.
+type LanguageDef struct {
+	Code             Language
+	SourceExtensions []string
+	Markers          []LanguageMarker
+	DefaultFormat    Format
+	ProfilePaths     []string
+}
+
+// Languages is the canonical registry. ORDER MATTERS where ambiguity is
+// possible: detection picks the highest-priority marker, but if priorities
+// tie, the earlier entry in this slice wins. Keep more-specific languages
+// (TypeScript) ahead of more-generic ones (JavaScript) when their marker
+// sets overlap.
+var Languages = []LanguageDef{
+	{
+		Code:             LanguageGo,
+		SourceExtensions: []string{".go"},
+		Markers: []LanguageMarker{
+			{Filename: "go.mod", Priority: 100},
+			{Filename: "go.sum", Priority: 90},
+		},
+		DefaultFormat: FormatGo,
+		ProfilePaths:  []string{"coverage.out", "cover.out", "c.out"},
+	},
+	{
+		Code:             LanguagePython,
+		SourceExtensions: []string{".py"},
+		Markers: []LanguageMarker{
+			{Filename: "pyproject.toml", Priority: 100},
+			{Filename: "setup.py", Priority: 90},
+			{Filename: "Pipfile", Priority: 85},
+			{Filename: "poetry.lock", Priority: 85},
+			{Filename: "requirements.txt", Priority: 80},
+		},
+		DefaultFormat: FormatCobertura,
+		ProfilePaths:  []string{"coverage.xml", ".coverage", "coverage.info", "htmlcov/", "coverage-report"},
+	},
+	{
+		Code:             LanguageTypeScript,
+		SourceExtensions: []string{".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"},
+		Markers: []LanguageMarker{
+			{Filename: "tsconfig.json", Priority: 100},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"coverage/lcov.info", "coverage/coverage.json", "coverage/cobertura.xml", ".nyc_output/"},
+	},
+	{
+		Code:             LanguageJavaScript,
+		SourceExtensions: []string{".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"},
+		Markers: []LanguageMarker{
+			{Filename: "package.json", Priority: 90},
+			{Filename: "yarn.lock", Priority: 80},
+			{Filename: "pnpm-lock.yaml", Priority: 80},
+			{Filename: "package-lock.json", Priority: 80},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"coverage/lcov.info", "coverage/coverage.json", "coverage/cobertura.xml", ".nyc_output/"},
+	},
+	{
+		Code:             LanguageJava,
+		SourceExtensions: []string{".java", ".kt"},
+		Markers: []LanguageMarker{
+			{Filename: "pom.xml", Priority: 100},
+			{Filename: "build.gradle", Priority: 100},
+			{Filename: "build.gradle.kts", Priority: 100},
+			{Filename: "settings.gradle", Priority: 90},
+			{Filename: "settings.gradle.kts", Priority: 90},
+		},
+		DefaultFormat: FormatJaCoCo,
+		ProfilePaths: []string{
+			"target/site/jacoco/jacoco.xml",
+			"build/reports/jacoco/test/jacocoTestReport.xml",
+			"target/site/cobertura/coverage.xml",
+			"build/reports/cobertura/coverage.xml",
+		},
+	},
+	{
+		Code:             LanguageRust,
+		SourceExtensions: []string{".rs"},
+		Markers: []LanguageMarker{
+			{Filename: "Cargo.toml", Priority: 100},
+			{Filename: "Cargo.lock", Priority: 90},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"target/coverage/lcov.info", "target/coverage/cobertura.xml", "coverage/lcov.info"},
+	},
+	{
+		Code:             LanguageCSharp,
+		SourceExtensions: []string{".cs"},
+		Markers: []LanguageMarker{
+			{Filename: "Directory.Build.props", Priority: 100},
+			{Filename: "global.json", Priority: 90},
+		},
+		DefaultFormat: FormatCobertura,
+		ProfilePaths:  []string{"TestResults/coverage.cobertura.xml"},
+	},
+	{
+		Code:             LanguageCpp,
+		SourceExtensions: []string{".c", ".cpp", ".cc", ".cxx", ".h", ".hpp"},
+		Markers: []LanguageMarker{
+			{Filename: "CMakeLists.txt", Priority: 100},
+			{Filename: "meson.build", Priority: 95},
+			{Filename: "configure.ac", Priority: 90},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"coverage/lcov.info", "build/coverage/lcov.info"},
+	},
+	{
+		Code:             LanguagePHP,
+		SourceExtensions: []string{".php"},
+		Markers: []LanguageMarker{
+			{Filename: "composer.json", Priority: 100},
+			{Filename: "phpunit.xml", Priority: 95},
+			{Filename: "composer.lock", Priority: 90},
+			{Filename: "phpunit.xml.dist", Priority: 90},
+		},
+		DefaultFormat: FormatCobertura,
+		ProfilePaths:  []string{"coverage.xml"},
+	},
+	{
+		Code:             LanguageRuby,
+		SourceExtensions: []string{".rb"},
+		Markers: []LanguageMarker{
+			{Filename: "Gemfile", Priority: 100},
+			{Filename: "Gemfile.lock", Priority: 90},
+			{Filename: "Rakefile", Priority: 85},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"coverage/lcov.info"},
+	},
+	{
+		Code:             LanguageSwift,
+		SourceExtensions: []string{".swift"},
+		Markers: []LanguageMarker{
+			{Filename: "Package.swift", Priority: 100},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"coverage/lcov.info"},
+	},
+	{
+		Code:             LanguageDart,
+		SourceExtensions: []string{".dart"},
+		Markers: []LanguageMarker{
+			{Filename: "pubspec.yaml", Priority: 100},
+			{Filename: "pubspec.lock", Priority: 90},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"coverage/lcov.info"},
+	},
+	{
+		Code:             LanguageScala,
+		SourceExtensions: []string{".scala", ".sc"},
+		Markers: []LanguageMarker{
+			{Filename: "build.sbt", Priority: 100},
+		},
+		DefaultFormat: FormatCobertura,
+		ProfilePaths: []string{
+			"target/scala-2.13/scoverage-report/scoverage.xml",
+			"target/scala-3/scoverage-report/scoverage.xml",
+		},
+	},
+	{
+		Code:             LanguageElixir,
+		SourceExtensions: []string{".ex", ".exs"},
+		Markers: []LanguageMarker{
+			{Filename: "mix.exs", Priority: 100},
+			{Filename: "mix.lock", Priority: 90},
+		},
+		DefaultFormat: FormatLCOV,
+		ProfilePaths:  []string{"cover/lcov.info"},
+	},
+	{
+		Code:             LanguageShell,
+		SourceExtensions: []string{".sh", ".bash"},
+		Markers:          nil, // no canonical project marker; detected via file extension only
+		DefaultFormat:    FormatCobertura,
+		ProfilePaths:     []string{"coverage/cobertura.xml"},
+	},
+}
+
+// LookupLanguage returns the LanguageDef for the given code, or false if no
+// such language is registered. O(n) over Languages — fine for n=15.
+func LookupLanguage(code Language) (LanguageDef, bool) {
+	for _, def := range Languages {
+		if def.Code == code {
+			return def, true
+		}
+	}
+	return LanguageDef{}, false
+}
+
 // Format represents a coverage profile format.
 type Format string
 
