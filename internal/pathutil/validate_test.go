@@ -138,6 +138,100 @@ func TestValidatePath_NullByteVariants(t *testing.T) {
 	}
 }
 
+func TestValidateScopedPath_AcceptsInScope(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "sub", "dir"), 0o750); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	cases := []string{
+		"file.txt",
+		"sub/file.txt",
+		"sub/dir/file.txt",
+		"./sub/file.txt",
+		"sub/../file.txt", // escapes "sub" but stays in root
+		"sub/dir/../file.txt",
+	}
+	for _, p := range cases {
+		t.Run(p, func(t *testing.T) {
+			got, err := ValidateScopedPath(p, root)
+			if err != nil {
+				t.Fatalf("expected ok, got %v", err)
+			}
+			if !filepath.IsAbs(got) {
+				t.Errorf("expected absolute path, got %q", got)
+			}
+		})
+	}
+}
+
+func TestValidateScopedPath_RejectsOutOfScope(t *testing.T) {
+	root := t.TempDir()
+
+	cases := []struct {
+		name string
+		path string
+	}{
+		{"empty", ""},
+		{"null byte", "foo\x00bar"},
+		{"absolute", "/etc/passwd"},
+		{"home expansion attempt", "~/.ssh/authorized_keys"},
+		{"parent escape", "../etc/passwd"},
+		{"deep parent escape", "../../etc/passwd"},
+		{"interior parent escape", "sub/../../../etc/passwd"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ValidateScopedPath(tc.path, root)
+			if err == nil {
+				t.Fatalf("expected error for %q", tc.path)
+			}
+		})
+	}
+}
+
+func TestValidateScopedPath_RejectsSymlinkEscape(t *testing.T) {
+	root := t.TempDir()
+	outside := t.TempDir()
+	target := filepath.Join(outside, "secret.txt")
+	if err := os.WriteFile(target, []byte("secret"), 0o600); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	link := filepath.Join(root, "evil-link")
+	if err := os.Symlink(target, link); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	_, err := ValidateScopedPath("evil-link", root)
+	if err == nil {
+		t.Fatal("expected rejection of symlink that escapes root")
+	}
+	if err != ErrPathEscapesBase {
+		t.Errorf("expected ErrPathEscapesBase, got %v", err)
+	}
+}
+
+func TestValidateScopedPath_PrefixCollisionGuard(t *testing.T) {
+	// Ensures /foo/barbaz is not accepted when root is /foo/bar.
+	parent := t.TempDir()
+	root := filepath.Join(parent, "bar")
+	sibling := filepath.Join(parent, "barbaz")
+	if err := os.MkdirAll(root, 0o750); err != nil {
+		t.Fatalf("setup root: %v", err)
+	}
+	if err := os.MkdirAll(sibling, 0o750); err != nil {
+		t.Fatalf("setup sibling: %v", err)
+	}
+
+	link := filepath.Join(root, "link")
+	if err := os.Symlink(sibling, link); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+	if _, err := ValidateScopedPath("link", root); err == nil {
+		t.Error("expected rejection — symlink target is sibling of root, not inside")
+	}
+}
+
 func TestIsPathSafe(t *testing.T) {
 	tests := []struct {
 		name string
