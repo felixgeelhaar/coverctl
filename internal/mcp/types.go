@@ -9,8 +9,17 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
 
-// Service defines the application operations needed by MCP.
-// This interface allows for easy mocking in tests.
+// Service defines the application operations needed by MCP. Mirrors a
+// strict subset of the CLI's Service interface (internal/cli/cli.go). The
+// two interfaces deliberately diverge on streaming-vs-result semantics —
+// CLI's Check writes formatted output to a stdout writer, MCP's CheckResult
+// returns a domain.Result for JSON serialisation. Both are satisfied by
+// the same concrete *application.Service.
+//
+// Compile-time parity check (in server_test.go): asserts that
+// *application.Service satisfies this interface. If you add a method here,
+// add the corresponding implementation on application.Service or a handler
+// it embeds.
 type Service interface {
 	// Tools (actions that may have side effects)
 	CheckResult(ctx context.Context, opts application.CheckOptions) (domain.Result, error)

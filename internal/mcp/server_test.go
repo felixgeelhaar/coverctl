@@ -10,6 +10,12 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
 
+// Compile-time assertion: *application.Service must satisfy mcp.Service.
+// If a method is added to mcp.Service without a corresponding method on
+// *application.Service, this build break is the early signal. See the
+// commentary on mcp.Service in types.go.
+var _ Service = (*application.Service)(nil)
+
 // mockService implements the Service interface for testing.
 type mockService struct {
 	checkResult   domain.Result
