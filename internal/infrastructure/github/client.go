@@ -52,7 +52,17 @@ func NewClient(token string) *Client {
 	}
 }
 
-// NewClientWithHTTP creates a client with a custom HTTP client (for testing).
+// NewClientWithHTTP creates a client with a custom HTTP client and API URL.
+//
+// SECURITY: this constructor accepts an arbitrary apiURL and is FOR TESTS
+// ONLY. Production callers must use NewClient, which pins the URL to
+// api.github.com. Allowing user-controlled apiURL in a code path that also
+// receives a Bearer token would be an SSRF / token-exfiltration sink: an
+// attacker who can influence the URL (e.g. via MCP input or a config field)
+// could redirect the request to a host they control and harvest the token.
+//
+// A fitness function in internal/architecture/architecture_test.go enforces
+// that no production code (cli, mcp, application) references this function.
 func NewClientWithHTTP(token string, httpClient *http.Client, apiURL string) *Client {
 	if token == "" {
 		token = os.Getenv("GITHUB_TOKEN")

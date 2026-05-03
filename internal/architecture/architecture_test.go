@@ -247,6 +247,52 @@ func TestSchemaLanguageEnumMatchesConstants(t *testing.T) {
 	}
 }
 
+// TestNoProductionCodeUsesTestOnlyHTTPConstructors prevents reintroduction
+// of the SSRF / token-exfiltration sink that NewClientWithHTTP would open
+// if reached from production code.
+//
+// NewClientWithHTTP accepts an arbitrary apiURL alongside a Bearer token.
+// In tests this is fine — the URL points at httptest.Server. In production,
+// any path that lets user input (CLI flag, MCP input, config field) reach
+// that URL would let an attacker redirect the request to a host they
+// control and harvest the token. Pin the rule: only _test.go files may
+// reference NewClientWithHTTP.
+func TestNoProductionCodeUsesTestOnlyHTTPConstructors(t *testing.T) {
+	root := repoRoot(t)
+	productionDirs := []string{
+		filepath.Join(root, "internal", "cli"),
+		filepath.Join(root, "internal", "mcp"),
+		filepath.Join(root, "internal", "application"),
+	}
+
+	for _, dir := range productionDirs {
+		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+				return nil
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			if strings.Contains(string(data), "NewClientWithHTTP") {
+				rel, _ := filepath.Rel(root, path)
+				t.Errorf("%s references NewClientWithHTTP, which is test-only. "+
+					"Use NewClient (pinned API URL) in production code.", rel)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("walk %s: %v", dir, err)
+		}
+	}
+}
+
 // TestNoDuplicatePRCommentDispatch guards against re-introducing the
 // duplicate PR-comment workflow that lived in both PRCommentHandler and
 // Service.PRComment. The fix was to make Service.PRComment delegate to the
