@@ -48,6 +48,7 @@ func TestRegistrySupportedLanguages(t *testing.T) {
 		application.LanguageGo:         true,
 		application.LanguagePython:     true,
 		application.LanguageJavaScript: true, // Node.js runner returns JavaScript
+		application.LanguageTypeScript: true, // alias for JavaScript runner
 		application.LanguageRust:       true,
 		application.LanguageJava:       true,
 		application.LanguageCSharp:     true,
@@ -306,5 +307,32 @@ func TestRegistryWithOptions(t *testing.T) {
 	registry := NewRegistry(module, WithProjectDir("/custom/dir"))
 	if registry.projectDir != "/custom/dir" {
 		t.Errorf("expected projectDir '/custom/dir', got '%s'", registry.projectDir)
+	}
+}
+
+func TestRegistryGetRunner_TypeScriptAliasesToJavaScript(t *testing.T) {
+	module := mockModuleInfo{root: "/test", path: "example.com/test"}
+	registry := NewRegistry(module)
+
+	tsRunner, err := registry.GetRunner(application.LanguageTypeScript)
+	if err != nil {
+		t.Fatalf("expected typescript to resolve via alias, got %v", err)
+	}
+	jsRunner, err := registry.GetRunner(application.LanguageJavaScript)
+	if err != nil {
+		t.Fatalf("expected javascript to resolve, got %v", err)
+	}
+	if tsRunner != jsRunner {
+		t.Errorf("typescript alias must resolve to the same runner instance as javascript")
+	}
+}
+
+func TestRegistryGetRunner_UnknownLanguageErrors(t *testing.T) {
+	module := mockModuleInfo{root: "/test", path: "example.com/test"}
+	registry := NewRegistry(module)
+
+	_, err := registry.GetRunner(application.Language("klingon"))
+	if err == nil {
+		t.Error("expected error for unknown language")
 	}
 }

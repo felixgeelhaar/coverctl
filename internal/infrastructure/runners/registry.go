@@ -12,6 +12,18 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
 )
 
+// languageAliases maps a language name (the one a user might pass via
+// --language or schema language field) to the canonical language served by a
+// registered runner. Runners declare ONE primary language each; aliases let
+// us serve compatible variants from the same runner without duplicating
+// registrations or scattering hardcoded special-cases through the code.
+//
+// Adding an alias is the entire change required to support a new compatible
+// dialect (e.g. KotlinScript → Java, CoffeeScript → JavaScript).
+var languageAliases = map[application.Language]application.Language{
+	application.LanguageTypeScript: application.LanguageJavaScript,
+}
+
 // Registry manages multiple coverage runners and auto-detects which to use.
 type Registry struct {
 	runners    []application.CoverageRunner
@@ -97,11 +109,12 @@ func (r *Registry) DetectLanguage(projectDir string) application.Language {
 	return runner.Language()
 }
 
-// GetRunner returns a runner for a specific language.
+// GetRunner returns a runner for a specific language. Honors languageAliases:
+// passing an aliased language (e.g. typescript) returns the runner registered
+// for the canonical target (javascript).
 func (r *Registry) GetRunner(lang application.Language) (application.CoverageRunner, error) {
-	// TypeScript uses the JavaScript/Node.js runner
-	if lang == application.LanguageTypeScript {
-		lang = application.LanguageJavaScript
+	if canonical, ok := languageAliases[lang]; ok {
+		lang = canonical
 	}
 
 	for _, runner := range r.runners {
@@ -122,11 +135,20 @@ func (r *Registry) GetRunnerByName(name string) (application.CoverageRunner, err
 	return nil, fmt.Errorf("no coverage runner with name: %s", name)
 }
 
-// SupportedLanguages returns all languages supported by the registry.
+// SupportedLanguages returns all languages supported by the registry,
+// including aliased variants (e.g. typescript when javascript is registered).
 func (r *Registry) SupportedLanguages() []application.Language {
-	langs := make([]application.Language, 0, len(r.runners))
+	langs := make([]application.Language, 0, len(r.runners)+len(languageAliases))
+	primary := make(map[application.Language]bool, len(r.runners))
 	for _, runner := range r.runners {
-		langs = append(langs, runner.Language())
+		l := runner.Language()
+		langs = append(langs, l)
+		primary[l] = true
+	}
+	for alias, canonical := range languageAliases {
+		if primary[canonical] {
+			langs = append(langs, alias)
+		}
 	}
 	return langs
 }
