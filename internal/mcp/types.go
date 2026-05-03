@@ -51,14 +51,14 @@ type CheckInput struct {
 	Domains     []string `json:"domains,omitempty" jsonschema:"description=Filter to specific domains"`
 	FailUnder   *float64 `json:"failUnder,omitempty" jsonschema:"description=Fail if coverage below threshold"`
 	Ratchet     bool     `json:"ratchet,omitempty" jsonschema:"description=Fail if coverage decreases"`
-	// Build flags for go test
-	Tags     string   `json:"tags,omitempty" jsonschema:"description=Build tags (e.g. 'integration,e2e')"`
-	Race     bool     `json:"race,omitempty" jsonschema:"description=Enable race detector"`
-	Short    bool     `json:"short,omitempty" jsonschema:"description=Skip long-running tests (-short flag)"`
+	// Build flags forwarded to the detected language's test runner.
+	Tags     string   `json:"tags,omitempty" jsonschema:"description=Build tags forwarded to the test runner (Go: -tags; other runners may ignore)"`
+	Race     bool     `json:"race,omitempty" jsonschema:"description=Enable race detector (Go-specific; ignored by other runners)"`
+	Short    bool     `json:"short,omitempty" jsonschema:"description=Skip long-running tests (Go: -short; other runners may have analogous flags)"`
 	Verbose  bool     `json:"verbose,omitempty" jsonschema:"description=Verbose test output"`
-	Run      string   `json:"run,omitempty" jsonschema:"description=Run only tests matching pattern"`
-	Timeout  string   `json:"timeout,omitempty" jsonschema:"description=Test timeout (e.g. '10m', '1h')"`
-	TestArgs []string `json:"testArgs,omitempty" jsonschema:"description=Additional arguments passed to go test"`
+	Run      string   `json:"run,omitempty" jsonschema:"description=Run only tests matching pattern (Go: -run regex; pytest: -k expression; mapped per runner)"`
+	Timeout  string   `json:"timeout,omitempty" jsonschema:"description=Test timeout in Go duration syntax (e.g. '10m', '1h', '500ms')"`
+	TestArgs []string `json:"testArgs,omitempty" jsonschema:"description=Additional arguments forwarded to the test runner. MCP input is sanitized: flags that load arbitrary code (--rootdir, --cov-config, --require, --init-script, -D, -I, -P, --node-options, etc.) are rejected."`
 	// Incremental mode
 	Incremental    bool   `json:"incremental,omitempty" jsonschema:"description=Only test packages with changed files"`
 	IncrementalRef string `json:"incrementalRef,omitempty" jsonschema:"description=Git ref to compare against for incremental mode (default: HEAD~1)"`
@@ -82,14 +82,14 @@ type RecordInput struct {
 	Branch      string   `json:"branch,omitempty" jsonschema:"description=Git branch name"`
 	Run         bool     `json:"run,omitempty" jsonschema:"description=Run coverage before recording history"`
 	Domains     []string `json:"domains,omitempty" jsonschema:"description=Filter to specific domains"`
-	Language    string   `json:"language,omitempty" jsonschema:"description=Override language detection (go, python, nodejs, rust, java)"`
-	Tags        string   `json:"tags,omitempty" jsonschema:"description=Build tags (e.g. 'integration,e2e')"`
-	Race        bool     `json:"race,omitempty" jsonschema:"description=Enable race detector"`
-	Short       bool     `json:"short,omitempty" jsonschema:"description=Skip long-running tests (-short flag)"`
+	Language    string   `json:"language,omitempty" jsonschema:"description=Override language autodetection. One of: go, python, javascript, typescript, java, rust, csharp, cpp, php, ruby, swift, dart, scala, elixir, shell, auto"`
+	Tags        string   `json:"tags,omitempty" jsonschema:"description=Build tags forwarded to the test runner (Go: -tags; other runners may ignore)"`
+	Race        bool     `json:"race,omitempty" jsonschema:"description=Enable race detector (Go-specific; ignored by other runners)"`
+	Short       bool     `json:"short,omitempty" jsonschema:"description=Skip long-running tests (Go: -short; other runners may have analogous flags)"`
 	Verbose     bool     `json:"verbose,omitempty" jsonschema:"description=Verbose test output"`
-	TestRun     string   `json:"testRun,omitempty" jsonschema:"description=Run only tests matching pattern"`
-	Timeout     string   `json:"timeout,omitempty" jsonschema:"description=Test timeout (e.g. '10m', '1h')"`
-	TestArgs    []string `json:"testArgs,omitempty" jsonschema:"description=Additional arguments passed to go test"`
+	TestRun     string   `json:"testRun,omitempty" jsonschema:"description=Run only tests matching pattern (Go: -run regex; pytest: -k expression; mapped per runner)"`
+	Timeout     string   `json:"timeout,omitempty" jsonschema:"description=Test timeout in Go duration syntax (e.g. '10m', '1h', '500ms')"`
+	TestArgs    []string `json:"testArgs,omitempty" jsonschema:"description=Additional arguments forwarded to the test runner. MCP input is sanitized: flags that load arbitrary code (--rootdir, --cov-config, --require, --init-script, -D, -I, -P, --node-options, etc.) are rejected."`
 }
 
 // InitInput defines the input parameters for the init tool.

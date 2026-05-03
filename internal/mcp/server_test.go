@@ -575,8 +575,11 @@ func TestHandleInit(t *testing.T) {
 	})
 
 	t.Run("uses custom config path from input", func(t *testing.T) {
+		// MCP path inputs are scope-validated against the working directory;
+		// chdir into a temp dir and use a relative path.
 		tmpDir := t.TempDir()
-		customPath := tmpDir + "/custom.yaml"
+		t.Chdir(tmpDir)
+		customPath := "custom.yaml"
 
 		svc := &mockService{
 			detectResult: application.Config{
@@ -596,6 +599,22 @@ func TestHandleInit(t *testing.T) {
 		}
 		if configPathOut, ok := output["configPath"].(string); !ok || configPathOut != customPath {
 			t.Errorf("expected configPath=%q, got %v", customPath, output["configPath"])
+		}
+	})
+
+	t.Run("rejects absolute config path from MCP input", func(t *testing.T) {
+		svc := &mockService{}
+		server := New(svc, DefaultConfig(), "test")
+
+		output, err := server.handleInit(context.Background(), InitInput{ConfigPath: "/etc/coverctl-evil.yaml"})
+		if err != nil {
+			t.Fatalf("handler returned err: %v", err)
+		}
+		if passed, _ := output["passed"].(bool); passed {
+			t.Error("expected passed=false for absolute path input")
+		}
+		if errStr, _ := output["error"].(string); !stringContains(errStr, "configPath") {
+			t.Errorf("expected configPath in error, got %q", errStr)
 		}
 	})
 }

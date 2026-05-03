@@ -77,49 +77,40 @@ func (s *Server) Run(ctx context.Context) error {
 
 // registerTools adds all tool handlers to the server.
 func (s *Server) registerTools() {
-	// Init tool - creates a new coverctl configuration
 	s.server.Tool("init").
-		Description("Initialize a new coverctl configuration file. Auto-detects project structure and creates .coverctl.yaml with domain-based coverage policies.").
+		Description("Initialize coverctl in the current project. Auto-detects the project's language (Go, Python, TypeScript/JavaScript, Java, Rust, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, or Shell), proposes domain boundaries from the directory layout, and writes .coverctl.yaml with default thresholds. Call once per project.").
 		Handler(s.handleInit)
 
-	// Check tool - runs coverage tests with policy enforcement
 	s.server.Tool("check").
-		Description("Run coverage tests and enforce policy thresholds. Executes 'go test -cover' and evaluates results against configured minimums.").
+		Description("Run the project's test suite with coverage and enforce per-domain policy thresholds defined in .coverctl.yaml. Auto-detects the language and invokes the appropriate test runner (go test, pytest, npm test, mvn, gradle, cargo, dotnet, etc.). Returns per-domain pass/fail, file-level coverage, and warnings. Exit-equivalent: passed=true on success, passed=false on policy violation or runner error.").
 		Handler(s.handleCheck)
 
-	// Report tool - analyzes existing coverage without running tests
 	s.server.Tool("report").
-		Description("Analyze an existing coverage profile without running tests. Use this when you already have a coverage.out file.").
+		Description("Analyze an existing coverage profile without re-running tests. Supports Go cover profiles, LCOV (info), Cobertura (XML), and JaCoCo (XML); format auto-detected from file content. Use when a profile is already on disk from a prior CI run or a separate test invocation.").
 		Handler(s.handleReport)
 
-	// Record tool - saves coverage to history
 	s.server.Tool("record").
-		Description("Record current coverage to history for trend tracking. Call this after 'check' to save coverage data.").
+		Description("Append the current coverage snapshot to the project's history file for trend tracking. Captures commit/branch metadata. Run after 'check' (or pass run=true to run coverage first) so subsequent 'compare' and trend resource calls have data points.").
 		Handler(s.handleRecord)
 
-	// Suggest tool - suggests optimal coverage thresholds
 	s.server.Tool("suggest").
-		Description("Analyze current coverage and suggest optimal thresholds. Strategies: 'current' (slightly below current), 'aggressive' (push for improvement), 'conservative' (gradual improvement).").
+		Description("Analyze current coverage and suggest threshold values for each domain. Strategies: 'current' (set thresholds slightly below current observed coverage to lock in the status quo), 'aggressive' (set targets above current to push improvement), 'conservative' (small incremental gains). Use writeConfig=true to apply suggestions; coverctl backs up the existing file first.").
 		Handler(s.handleSuggest)
 
-	// Debt tool - shows coverage gaps
 	s.server.Tool("debt").
-		Description("Calculate coverage debt - the gap between current and required coverage thresholds. Shows which domains/files need the most work.").
+		Description("Compute coverage debt: the gap between current coverage and required thresholds, ranked per domain and per file. Returns a health score (0-100) and the items contributing the most debt. Use this to direct test-writing effort to the highest-impact gaps.").
 		Handler(s.handleDebt)
 
-	// Badge tool - generates coverage badges
 	s.server.Tool("badge").
-		Description("Generate an SVG coverage badge for display in README or CI dashboards. Returns badge data or writes to file.").
+		Description("Generate an SVG coverage badge suitable for embedding in a README or dashboard. Returns the badge SVG and the overall coverage percent; if 'output' is set, also writes the SVG to that path.").
 		Handler(s.handleBadge)
 
-	// Compare tool - compares coverage between two profiles
 	s.server.Tool("compare").
-		Description("Compare coverage between two profiles. Shows overall delta, improved files, regressed files, and domain-level changes.").
+		Description("Diff coverage between two profiles (base vs head). Returns overall delta, files whose coverage improved, files whose coverage regressed, and domain-level deltas. Use to evaluate whether a code change improved or worsened coverage before committing.").
 		Handler(s.handleCompare)
 
-	// PR Comment tool - posts coverage report as PR/MR comment
 	s.server.Tool("pr-comment").
-		Description("Post coverage report as a comment on a PR/MR. Supports GitHub, GitLab, and Bitbucket. Provider is auto-detected from environment or can be specified. Can update existing comments.").
+		Description("Post the coverage report as a comment on a pull/merge request. Supports GitHub, GitLab, and Bitbucket; provider is auto-detected from environment variables or set explicitly. Reuses an existing coverctl comment when present (idempotent). Requires the appropriate provider token in the environment.").
 		Handler(s.handlePRComment)
 }
 
@@ -157,6 +148,16 @@ func (s *Server) registerResources() {
 // Tool handlers
 
 func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"profile", input.Profile},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+	if err := SanitizeBuildFlagsInput(input.Tags, input.Run, input.Timeout, input.TestArgs); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	opts := application.CheckOptions{
 		ConfigPath:     s.resolveConfigPath(input.ConfigPath),
 		Profile:        coalesce(input.Profile, s.config.ProfilePath),
@@ -202,6 +203,13 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]
 }
 
 func (s *Server) handleReport(ctx context.Context, input ReportInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"profile", input.Profile},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	opts := application.ReportOptions{
 		ConfigPath:    s.resolveConfigPath(input.ConfigPath),
 		Profile:       coalesce(input.Profile, s.config.ProfilePath),
@@ -234,6 +242,17 @@ type recordWarner interface {
 }
 
 func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"profile", input.Profile},
+		namedPath{"historyPath", input.HistoryPath},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+	if err := SanitizeBuildFlagsInput(input.Tags, input.TestRun, input.Timeout, input.TestArgs); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	opts := application.RecordOptions{
 		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
 		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
@@ -282,6 +301,10 @@ func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[strin
 }
 
 func (s *Server) handleInit(ctx context.Context, input InitInput) (map[string]any, error) {
+	if err := validateScopedInputs(namedPath{"configPath", input.ConfigPath}); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	// For init, use coalesce (not resolveConfigPath) since we're creating a new file
 	configPath := coalesce(input.ConfigPath, s.config.ConfigPath)
 
@@ -442,6 +465,13 @@ func (s *Server) handleConfigResource(ctx context.Context, uri string, params ma
 }
 
 func (s *Server) handleSuggest(ctx context.Context, input SuggestInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"profile", input.Profile},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	strategy := application.SuggestCurrent
 	switch input.Strategy {
 	case "aggressive":
@@ -507,6 +537,13 @@ func (s *Server) handleSuggest(ctx context.Context, input SuggestInput) (map[str
 }
 
 func (s *Server) handleDebt(ctx context.Context, input DebtInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"profile", input.Profile},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	opts := application.DebtOptions{
 		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
 		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
@@ -539,6 +576,14 @@ func (s *Server) handleDebt(ctx context.Context, input DebtInput) (map[string]an
 }
 
 func (s *Server) handleBadge(ctx context.Context, input BadgeInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"profile", input.Profile},
+		namedPath{"output", input.Output},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	opts := application.BadgeOptions{
 		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
 		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
@@ -569,6 +614,14 @@ func (s *Server) handleBadge(ctx context.Context, input BadgeInput) (map[string]
 }
 
 func (s *Server) handleCompare(ctx context.Context, input CompareInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"baseProfile", input.BaseProfile},
+		namedPath{"headProfile", input.HeadProfile},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	if input.BaseProfile == "" {
 		return map[string]any{
 			"passed":  false,
@@ -614,6 +667,14 @@ func (s *Server) handleCompare(ctx context.Context, input CompareInput) (map[str
 }
 
 func (s *Server) handlePRComment(ctx context.Context, input PRCommentInput) (map[string]any, error) {
+	if err := validateScopedInputs(
+		namedPath{"configPath", input.ConfigPath},
+		namedPath{"profile", input.Profile},
+		namedPath{"baseProfile", input.BaseProfile},
+	); err != nil {
+		return rejectionResponse(err), nil
+	}
+
 	// Parse provider
 	var provider application.PRProvider
 	switch strings.ToLower(input.Provider) {
