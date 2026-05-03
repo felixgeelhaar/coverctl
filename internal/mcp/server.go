@@ -148,6 +148,7 @@ func (s *Server) registerResources() {
 // Tool handlers
 
 func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]any, error) {
+	defer traceTool("check")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},
@@ -203,6 +204,7 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]
 }
 
 func (s *Server) handleReport(ctx context.Context, input ReportInput) (map[string]any, error) {
+	defer traceTool("report")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},
@@ -242,6 +244,7 @@ type recordWarner interface {
 }
 
 func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[string]any, error) {
+	defer traceTool("record")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},
@@ -301,6 +304,7 @@ func (s *Server) handleRecord(ctx context.Context, input RecordInput) (map[strin
 }
 
 func (s *Server) handleInit(ctx context.Context, input InitInput) (map[string]any, error) {
+	defer traceTool("init")()
 	if err := validateScopedInputs(namedPath{"configPath", input.ConfigPath}); err != nil {
 		return rejectionResponse(err), nil
 	}
@@ -465,6 +469,7 @@ func (s *Server) handleConfigResource(ctx context.Context, uri string, params ma
 }
 
 func (s *Server) handleSuggest(ctx context.Context, input SuggestInput) (map[string]any, error) {
+	defer traceTool("suggest")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},
@@ -537,6 +542,7 @@ func (s *Server) handleSuggest(ctx context.Context, input SuggestInput) (map[str
 }
 
 func (s *Server) handleDebt(ctx context.Context, input DebtInput) (map[string]any, error) {
+	defer traceTool("debt")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},
@@ -576,6 +582,7 @@ func (s *Server) handleDebt(ctx context.Context, input DebtInput) (map[string]an
 }
 
 func (s *Server) handleBadge(ctx context.Context, input BadgeInput) (map[string]any, error) {
+	defer traceTool("badge")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},
@@ -614,6 +621,7 @@ func (s *Server) handleBadge(ctx context.Context, input BadgeInput) (map[string]
 }
 
 func (s *Server) handleCompare(ctx context.Context, input CompareInput) (map[string]any, error) {
+	defer traceTool("compare")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"baseProfile", input.BaseProfile},
@@ -667,6 +675,7 @@ func (s *Server) handleCompare(ctx context.Context, input CompareInput) (map[str
 }
 
 func (s *Server) handlePRComment(ctx context.Context, input PRCommentInput) (map[string]any, error) {
+	defer traceTool("pr-comment")()
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},

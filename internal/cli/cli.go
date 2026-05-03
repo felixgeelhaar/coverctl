@@ -59,6 +59,7 @@ type GlobalOptions struct {
 	Quiet   bool // Suppress non-essential output
 	NoColor bool // Disable colored output
 	CI      bool // CI mode: quiet + no-color + GitHub Actions annotations
+	Debug   bool // Emit structured debug logs to stderr
 }
 
 // IsQuiet returns true if output should be suppressed
@@ -120,6 +121,8 @@ loop:
 			global.NoColor = true
 		case "--ci":
 			global.CI = true
+		case "--debug":
+			global.Debug = true
 		default:
 			// First non-global-flag is the command
 			cmd = arg
@@ -140,6 +143,9 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 
 	// Parse global flags and extract command
 	global, cmd, cmdArgs := parseGlobalFlags(args[1:])
+
+	logger := setupLogger(stderr, global)
+	logger.Debug("coverctl invoked", "command", cmd, "version", Version)
 
 	// Handle global flags that exit early
 	if cmd == "--version" || cmd == "-v" {
@@ -1022,6 +1028,7 @@ Global Flags:
   -q, --quiet     Suppress non-essential output
       --no-color  Disable colored output
       --ci        CI mode: quiet + GitHub Actions annotations
+      --debug     Emit JSON structured debug logs to stderr
 
 Commands:
   check, c    Run coverage and enforce policy
@@ -1740,7 +1747,7 @@ _coverctl() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     commands="check run watch init detect report badge trend record suggest debt ignore mcp help version completion c r w i"
-    global_flags="-q --quiet --no-color --ci"
+    global_flags="-q --quiet --no-color --ci --debug"
 
     if [[ ${COMP_CWORD} -eq 1 ]]; then
         COMPREPLY=( $(compgen -W "${commands} ${global_flags}" -- ${cur}) )
