@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/config"
@@ -16,9 +17,10 @@ import (
 
 // Server wraps the application service with MCP protocol handling.
 type Server struct {
-	svc    Service
-	config Config
-	server *mcp.Server
+	svc            Service
+	config         Config
+	server         *mcp.Server
+	prCommentLimit *rateLimiter
 }
 
 // New creates a new MCP server wrapping the given service.
@@ -49,8 +51,9 @@ func New(svc Service, cfg Config, version string) *Server {
 	}
 
 	s := &Server{
-		svc:    svc,
-		config: cfg,
+		svc:            svc,
+		config:         cfg,
+		prCommentLimit: newRateLimiter(),
 	}
 
 	// Create MCP server with capabilities
@@ -719,6 +722,13 @@ func (s *Server) handlePRComment(ctx context.Context, input PRCommentInput) (map
 			"error":   "owner and repo are required (or set provider-specific environment variables)",
 			"summary": "Missing required parameter",
 		}, nil
+	}
+
+	if !input.DryRun {
+		key := fmt.Sprintf("%s/%s/%s#%d", provider, owner, repo, prNumber)
+		if err := s.prCommentLimit.allow(key, time.Now()); err != nil {
+			return rejectionResponse(err), nil
+		}
 	}
 
 	// Default UpdateExisting to true if not specified (nil means not provided)
