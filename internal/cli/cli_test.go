@@ -9,10 +9,62 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
 )
+
+func TestWithRuntimeLimit_Disabled(t *testing.T) {
+	for _, val := range []string{"", "0"} {
+		ctx, cancel, err := withRuntimeLimit(context.Background(), val)
+		if err != nil {
+			t.Errorf("expected ok for %q, got %v", val, err)
+		}
+		cancel()
+		if _, ok := ctx.Deadline(); ok {
+			t.Errorf("expected no deadline for %q", val)
+		}
+	}
+}
+
+func TestWithRuntimeLimit_AppliesDeadline(t *testing.T) {
+	ctx, cancel, err := withRuntimeLimit(context.Background(), "100ms")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer cancel()
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		t.Fatal("expected deadline")
+	}
+	if remaining := time.Until(deadline); remaining > 100*time.Millisecond {
+		t.Errorf("deadline too far: %v", remaining)
+	}
+}
+
+func TestWithRuntimeLimit_FiresOnExpiry(t *testing.T) {
+	ctx, cancel, err := withRuntimeLimit(context.Background(), "10ms")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer cancel()
+	select {
+	case <-ctx.Done():
+		if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			t.Errorf("expected DeadlineExceeded, got %v", ctx.Err())
+		}
+	case <-time.After(time.Second):
+		t.Fatal("deadline did not fire within 1s")
+	}
+}
+
+func TestWithRuntimeLimit_RejectsBadDuration(t *testing.T) {
+	_, _, err := withRuntimeLimit(context.Background(), "10minutes")
+	if err == nil {
+		t.Error("expected error for invalid duration")
+	}
+}
 
 func TestOutputValueSet(t *testing.T) {
 	val := outputValue(application.OutputText)

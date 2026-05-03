@@ -73,6 +73,33 @@ func (g GlobalOptions) UseColor() bool {
 
 var initWizard = wizard.Run
 
+// withRuntimeLimit wraps ctx with a deadline parsed from durationStr. Returns
+// (ctx, cancel, nil) on success. Empty or "0" disables the limit (returns ctx
+// unchanged with a no-op cancel). Invalid duration string returns an error.
+//
+// The runtime limit guards against hung test runners (pytest waiting on a
+// network mock that never responds, mvn stuck on dependency resolution, a
+// Go test goroutine deadlock that ignores context cancellation up to the
+// runner level). It applies a hard ceiling at the CLI boundary so a single
+// stuck invocation cannot hold a CI step for the entire job-level timeout.
+//
+// Independent of the test runner's own --timeout flag (forwarded as a per-
+// test ceiling); --max-runtime caps total runtime including build + run.
+func withRuntimeLimit(ctx context.Context, durationStr string) (context.Context, context.CancelFunc, error) {
+	if durationStr == "" || durationStr == "0" {
+		return ctx, func() {}, nil
+	}
+	d, err := time.ParseDuration(durationStr)
+	if err != nil {
+		return ctx, func() {}, fmt.Errorf("invalid --max-runtime %q: %w", durationStr, err)
+	}
+	if d <= 0 {
+		return ctx, func() {}, nil
+	}
+	c, cancel := context.WithTimeout(ctx, d)
+	return c, cancel, nil
+}
+
 // parseGlobalFlags extracts global flags from args and returns:
 // - GlobalOptions with parsed flags
 // - command name (first non-flag argument)
@@ -167,6 +194,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		verbose := fs.Bool("v", false, "Verbose test output")
 		run := fs.String("run", "", "Run only tests matching pattern")
 		timeout := fs.String("timeout", "", "Test timeout (e.g., 10m, 1h)")
+		maxRuntime := fs.String("max-runtime", "15m", "Hard ceiling on total command runtime (kills hung runners). 0 disables.")
 		var testArgs testArgsList
 		fs.Var(&testArgs, "test-arg", "Additional argument passed to go test (repeatable)")
 		var domains domainList
@@ -178,6 +206,12 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		if err := fs.Parse(cmdArgs); err != nil {
 			return 2
 		}
+		runtimeCtx, runtimeCancel, err := withRuntimeLimit(ctx, *maxRuntime)
+		if err != nil {
+			return exitCodeWithCI(err, 2, stderr, global)
+		}
+		defer runtimeCancel()
+		ctx = runtimeCtx
 		// Validate-only mode: just check config file syntax
 		if *validate {
 			if err := validateConfig(*configPath); err != nil {
@@ -219,7 +253,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 			opts.FailUnder = failUnder
 		}
 		opts.Ratchet = *ratchet
-		err := svc.Check(ctx, opts)
+		err = svc.Check(ctx, opts)
 		return exitCodeWithCI(err, 1, stderr, global)
 	case "run", "r":
 		fs := flag.NewFlagSet("run", flag.ContinueOnError)
@@ -238,6 +272,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		verbose := fs.Bool("v", false, "Verbose test output")
 		run := fs.String("run", "", "Run only tests matching pattern")
 		timeout := fs.String("timeout", "", "Test timeout (e.g., 10m, 1h)")
+		maxRuntime := fs.String("max-runtime", "15m", "Hard ceiling on total command runtime (kills hung runners). 0 disables.")
 		var testArgs testArgsList
 		fs.Var(&testArgs, "test-arg", "Additional argument passed to go test (repeatable)")
 		var domains domainList
@@ -246,8 +281,14 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		if err := fs.Parse(cmdArgs); err != nil {
 			return 2
 		}
+		runtimeCtx, runtimeCancel, err := withRuntimeLimit(ctx, *maxRuntime)
+		if err != nil {
+			return exitCodeWithCI(err, 2, stderr, global)
+		}
+		defer runtimeCancel()
+		ctx = runtimeCtx
 
-		err := svc.RunOnly(ctx, application.RunOnlyOptions{
+		err = svc.RunOnly(ctx, application.RunOnlyOptions{
 			ConfigPath: *configPath,
 			Profile:    *profile,
 			Domains:    domains,
@@ -482,6 +523,7 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		verbose := fs.Bool("v", false, "Verbose test output")
 		testRun := fs.String("test-run", "", "Run only tests matching pattern")
 		timeout := fs.String("timeout", "", "Test timeout (e.g., 10m, 1h)")
+		maxRuntime := fs.String("max-runtime", "15m", "Hard ceiling on total command runtime (kills hung runners). 0 disables.")
 		var testArgs testArgsList
 		fs.Var(&testArgs, "test-arg", "Additional argument passed to go test (repeatable)")
 		var domains domainList
@@ -490,6 +532,12 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 		if err := fs.Parse(cmdArgs); err != nil {
 			return 2
 		}
+		runtimeCtx, runtimeCancel, err := withRuntimeLimit(ctx, *maxRuntime)
+		if err != nil {
+			return exitCodeWithCI(err, 2, stderr, global)
+		}
+		defer runtimeCancel()
+		ctx = runtimeCtx
 		store := history.FileStore{Path: *historyPath}
 		recordOpts := application.RecordOptions{
 			ConfigPath:  *configPath,
@@ -511,7 +559,6 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 			Language: application.Language(*language),
 		}
 		var recordResult application.RecordResult
-		var err error
 		if warnSvc, ok := svc.(recordWarner); ok {
 			recordResult, err = warnSvc.RecordWithWarnings(ctx, recordOpts, &store)
 		} else {
@@ -1314,7 +1361,8 @@ Build/Test Flags:
       --short            Skip long-running tests
   -v                     Verbose test output
       --run string       Run only tests matching pattern
-      --timeout string   Test timeout (e.g., 10m, 1h)
+      --timeout string   Test timeout forwarded to runner (e.g., 10m, 1h)
+      --max-runtime string  Hard ceiling on total runtime (default "15m"; 0 disables)
       --test-arg string  Additional argument passed to go test (repeatable)
 
 Examples:
@@ -1347,7 +1395,8 @@ Build/Test Flags:
       --short            Skip long-running tests
   -v                     Verbose test output
       --run string       Run only tests matching pattern
-      --timeout string   Test timeout (e.g., 10m, 1h)
+      --timeout string   Test timeout forwarded to runner (e.g., 10m, 1h)
+      --max-runtime string  Hard ceiling on total runtime (default "15m"; 0 disables)
       --test-arg string  Additional argument passed to go test (repeatable)
 
 Examples:
@@ -1375,7 +1424,8 @@ Build/Test Flags:
       --short            Skip long-running tests
   -v                     Verbose test output
       --run string       Run only tests matching pattern
-      --timeout string   Test timeout (e.g., 10m, 1h)
+      --timeout string   Test timeout forwarded to runner (e.g., 10m, 1h)
+      --max-runtime string  Hard ceiling on total runtime (default "15m"; 0 disables)
       --test-arg string  Additional argument passed to go test (repeatable)
 
 Examples:
@@ -1490,7 +1540,8 @@ Flags:
       --short            Skip long-running tests
   -v                  Verbose test output
       --test-run string  Run only tests matching pattern
-      --timeout string   Test timeout (e.g., 10m, 1h)
+      --timeout string   Test timeout forwarded to runner (e.g., 10m, 1h)
+      --max-runtime string  Hard ceiling on total runtime (default "15m"; 0 disables)
       --test-arg string  Additional argument passed to go test (repeatable)
 
 Examples:
@@ -1727,7 +1778,7 @@ _coverctl() {
             ;;
     esac
 
-    COMPREPLY=( $(compgen -W "-c --config -p --profile -d --domain -o --output -f --force -h --help -q --quiet --no-color --ci --uncovered --diff --merge --show-delta --history --fail-under --ratchet --validate --tags --race --short -v --run --timeout --test-arg" -- ${cur}) )
+    COMPREPLY=( $(compgen -W "-c --config -p --profile -d --domain -o --output -f --force -h --help -q --quiet --no-color --ci --uncovered --diff --merge --show-delta --history --fail-under --ratchet --validate --tags --race --short -v --run --timeout --max-runtime --test-arg" -- ${cur}) )
 }
 complete -F _coverctl coverctl`
 
