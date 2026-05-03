@@ -1488,94 +1488,22 @@ func (s *Service) Watch(ctx context.Context, opts WatchOptions, watcher FileWatc
 	}
 }
 
-// PRComment posts a coverage report as a comment on a PR/MR.
-// Supports GitHub, GitLab, and Bitbucket providers.
+// PRComment posts a coverage report as a comment on a PR/MR. Supports
+// GitHub, GitLab, and Bitbucket providers. Delegates to PRCommentHandler;
+// the implementation lives there to keep service.go from re-encoding the
+// same workflow twice.
 func (s *Service) PRComment(ctx context.Context, opts PRCommentOptions) (PRCommentResult, error) {
-	if s.CommentFormatter == nil {
-		return PRCommentResult{}, fmt.Errorf("comment formatter not configured")
+	h := &PRCommentHandler{
+		ConfigLoader:      s.ConfigLoader,
+		Autodetector:      s.Autodetector,
+		DomainResolver:    s.DomainResolver,
+		ProfileParser:     s.ProfileParser,
+		DiffProvider:      s.DiffProvider,
+		AnnotationScanner: s.AnnotationScanner,
+		PRClients:         s.PRClients,
+		CommentFormatter:  s.CommentFormatter,
 	}
-
-	// Select or auto-detect provider
-	provider := opts.Provider
-	if provider == "" || provider == ProviderAuto {
-		provider = detectProvider()
-	}
-
-	// Get the appropriate client
-	client, ok := s.PRClients[provider]
-	if !ok || client == nil {
-		return PRCommentResult{}, fmt.Errorf("%s client not configured", provider)
-	}
-
-	// Get coverage result using existing ReportResult method
-	profilePath := opts.ProfilePath
-	if profilePath == "" {
-		profilePath = "coverage.out"
-	}
-	result, err := s.ReportResult(ctx, ReportOptions{
-		ConfigPath: opts.ConfigPath,
-		Profile:    profilePath,
-	})
-	if err != nil {
-		return PRCommentResult{}, fmt.Errorf("generate coverage report: %w", err)
-	}
-
-	// Generate comparison if base profile provided
-	var comparison *CompareResult
-	if opts.BaseProfile != "" {
-		comp, err := s.Compare(ctx, CompareOptions{
-			ConfigPath:  opts.ConfigPath,
-			BaseProfile: opts.BaseProfile,
-			HeadProfile: profilePath,
-		})
-		if err != nil {
-			return PRCommentResult{}, fmt.Errorf("compare coverage: %w", err)
-		}
-		comparison = &comp
-	}
-
-	// Format comment
-	commentBody := s.CommentFormatter.FormatCoverageComment(result, comparison)
-
-	// Handle dry-run mode
-	if opts.DryRun {
-		return PRCommentResult{
-			CommentBody: commentBody,
-		}, nil
-	}
-
-	// Check for existing comment if UpdateExisting is true
-	if opts.UpdateExisting {
-		existingID, err := client.FindCoverageComment(ctx, opts.Owner, opts.Repo, opts.PRNumber)
-		if err != nil {
-			return PRCommentResult{}, fmt.Errorf("find existing comment: %w", err)
-		}
-
-		if existingID != 0 {
-			// Update existing comment
-			if err := client.UpdateComment(ctx, opts.Owner, opts.Repo, existingID, commentBody); err != nil {
-				return PRCommentResult{}, fmt.Errorf("update comment: %w", err)
-			}
-			return PRCommentResult{
-				CommentID:   existingID,
-				CommentBody: commentBody,
-				Created:     false,
-			}, nil
-		}
-	}
-
-	// Create new comment
-	commentID, commentURL, err := client.CreateComment(ctx, opts.Owner, opts.Repo, opts.PRNumber, commentBody)
-	if err != nil {
-		return PRCommentResult{}, fmt.Errorf("create comment: %w", err)
-	}
-
-	return PRCommentResult{
-		CommentID:   commentID,
-		CommentURL:  commentURL,
-		CommentBody: commentBody,
-		Created:     true,
-	}, nil
+	return h.PRComment(ctx, opts)
 }
 
 // detectProvider auto-detects the git hosting provider from environment variables.
