@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/felixgeelhaar/mcp-go v1.9.0
 	github.com/fsnotify/fsnotify v1.10.0
-	github.com/mattn/go-isatty v0.0.20
+	github.com/mattn/go-isatty v0.0.22
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/sys v0.43.0
 	gopkg.in/yaml.v3 v3.0.1
