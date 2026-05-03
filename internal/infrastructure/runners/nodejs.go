@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // NodeRunner implements CoverageRunner for Node.js/TypeScript projects.
@@ -224,31 +225,21 @@ func (r *NodeRunner) buildNpmArgs(opts application.RunOptions, profile string) [
 	return args
 }
 
-// runNodeCommand executes a Node.js command.
+// runNodeCommand executes a Node.js command via cmdrun for forensic logging.
+// jest / c8 / nyc all run as `npx <tool> <args>`; npm runs directly as
+// `npm <args>`.
 func runNodeCommand(ctx context.Context, dir string, tool string, args []string) error {
-	var cmd *exec.Cmd
-
+	var binary string
+	var fullArgs []string
 	switch tool {
-	case "jest":
-		// Use npx to run jest
-		fullArgs := append([]string{"jest"}, args...)
-		// #nosec G204 -- Tool is validated against known values
-		cmd = exec.CommandContext(ctx, "npx", fullArgs...)
-	case "c8", "nyc":
-		// Use npx to run c8/nyc - tool is validated by switch case
-		fullArgs := append([]string{tool}, args...)
-		// #nosec G204 -- Tool is validated against known values (c8, nyc)
-		cmd = exec.CommandContext(ctx, "npx", fullArgs...)
+	case "jest", "c8", "nyc":
+		binary = "npx"
+		fullArgs = append([]string{tool}, args...)
 	case "npm":
-		cmd = exec.CommandContext(ctx, "npm", args...)
+		binary = "npm"
+		fullArgs = args
 	default:
 		return fmt.Errorf("unsupported tool: %s", tool)
 	}
-
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, binary, fullArgs)
 }

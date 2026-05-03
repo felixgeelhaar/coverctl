@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // RubyRunner implements CoverageRunner for Ruby projects.
@@ -168,26 +168,16 @@ func (r *RubyRunner) buildMinitestArgs(opts application.RunOptions) []string {
 
 // runRubyCommand executes a Ruby/Bundler command with coverage enabled.
 func runRubyCommand(ctx context.Context, dir string, tool string, args []string) error {
-	var cmd *exec.Cmd
-
 	switch tool {
-	case "rspec":
-		// bundle exec rspec <args>
-		cmd = exec.CommandContext(ctx, "bundle", args...)
-	case "minitest":
-		// bundle exec rake test <args>
-		cmd = exec.CommandContext(ctx, "bundle", args...)
+	case "rspec", "minitest":
+		// Both forms call `bundle <args>` (`bundle exec rspec ...` or
+		// `bundle exec rake test ...`); the action verb is the first arg.
 	default:
 		return fmt.Errorf("unsupported tool: %s", tool)
 	}
-
-	if dir != "" {
-		cmd.Dir = dir
-	}
-
-	// Set COVERAGE=true to activate SimpleCov
-	cmd.Env = append(os.Environ(), "COVERAGE=true")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Env:    append(os.Environ(), "COVERAGE=true"), // activates SimpleCov
+	}.Exec(ctx, dir, "bundle", args)
 }

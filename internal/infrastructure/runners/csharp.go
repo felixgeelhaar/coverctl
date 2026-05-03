@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // CSharpRunner implements CoverageRunner for C#/.NET projects.
@@ -160,16 +160,9 @@ func (r *CSharpRunner) buildArgs(opts application.RunOptions, resultsDir string)
 	return args
 }
 
-// runCSharpCommand executes a dotnet command.
+// runCSharpCommand executes a dotnet command via cmdrun for forensic logging.
 func runCSharpCommand(ctx context.Context, dir string, cmd string, args []string) error {
-	// #nosec G204 -- cmd is always "dotnet", args are constructed from validated inputs
-	c := exec.CommandContext(ctx, cmd, args...)
-	if dir != "" {
-		c.Dir = dir
-	}
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	return c.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, cmd, args)
 }
 
 // copyFile copies the contents of src to dst, creating dst if it does not exist.

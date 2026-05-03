@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // DartRunner implements CoverageRunner for Dart and Flutter projects.
@@ -168,13 +168,7 @@ func (r *DartRunner) buildFlutterArgs(opts application.RunOptions) []string {
 	return args
 }
 
-// runDartCommand executes a dart or flutter command.
+// runDartCommand executes a dart or flutter command via cmdrun for forensic logging.
 func runDartCommand(ctx context.Context, dir string, tool string, args []string) error {
-	cmd := exec.CommandContext(ctx, tool, args...)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, tool, args)
 }

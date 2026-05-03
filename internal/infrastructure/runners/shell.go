@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // ShellRunner implements CoverageRunner for Shell/Bash projects.
@@ -325,13 +326,7 @@ func (r *ShellRunner) collectCoberturaProfile(coverageDir, profile string) error
 	return nil
 }
 
-// runShellCommand executes a shell coverage command.
+// runShellCommand executes a shell coverage command via cmdrun for forensic logging.
 func runShellCommand(ctx context.Context, dir string, tool string, args []string) error {
-	cmd := exec.CommandContext(ctx, tool, args...)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, tool, args)
 }

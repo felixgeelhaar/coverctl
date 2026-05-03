@@ -10,6 +10,7 @@ import (
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
 	"github.com/felixgeelhaar/coverctl/internal/domain"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // Runner implements the CoverageRunner interface for Go projects.
@@ -245,13 +246,13 @@ func buildCoverPkg(domains []domain.Domain) string {
 }
 
 func runCommand(ctx context.Context, dir string, args []string) error {
-	cmd := exec.CommandContext(ctx, "go", args...)
-	cmd.Dir = dir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, "go", args)
 }
 
+// runCommandOutput runs `go <args>` and returns combined stdout/stderr. Kept
+// as direct exec — cmdrun's Exec writes to a Writer; capturing into a buffer
+// is a different concern and used only for short-lived `go list` style queries
+// where the cmdrun forensic-log overhead has no value.
 func runCommandOutput(ctx context.Context, dir string, args []string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = dir
@@ -259,10 +260,5 @@ func runCommandOutput(ctx context.Context, dir string, args []string) ([]byte, e
 }
 
 func runCommandEnv(ctx context.Context, dir string, env []string, cmdPath string, args []string) error {
-	cmd := exec.CommandContext(ctx, cmdPath, args...)
-	cmd.Dir = dir
-	cmd.Env = env
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr, Env: env}.Exec(ctx, dir, cmdPath, args)
 }

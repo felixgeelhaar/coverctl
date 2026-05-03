@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // ElixirRunner implements CoverageRunner for Elixir projects.
@@ -114,14 +114,12 @@ func (r *ElixirRunner) buildArgs(opts application.RunOptions) []string {
 	return args
 }
 
-// runElixirCommand executes a mix command with MIX_ENV=test.
+// runElixirCommand executes a mix command with MIX_ENV=test via cmdrun for
+// forensic logging.
 func runElixirCommand(ctx context.Context, dir string, cmd string, args []string) error {
-	c := exec.CommandContext(ctx, cmd, args...)
-	if dir != "" {
-		c.Dir = dir
-	}
-	c.Env = append(os.Environ(), "MIX_ENV=test")
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	return c.Run()
+	return cmdrun.Runner{
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Env:    append(os.Environ(), "MIX_ENV=test"),
+	}.Exec(ctx, dir, cmd, args)
 }

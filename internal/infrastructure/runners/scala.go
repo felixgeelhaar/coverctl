@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // ScalaRunner implements CoverageRunner for Scala projects.
@@ -162,33 +162,23 @@ func (r *ScalaRunner) buildMillArgs(opts application.RunOptions) []string {
 	return args
 }
 
-// runScalaCommand executes a Scala build command.
+// runScalaCommand executes a Scala build command via cmdrun for forensic
+// logging. Project-local wrappers take precedence over PATH-installed binaries.
 func runScalaCommand(ctx context.Context, dir string, tool string, args []string) error {
-	var cmd *exec.Cmd
-
+	var binary string
 	switch tool {
 	case "mill":
-		// Try local mill wrapper first, fall back to mill from PATH
-		wrapperPath := filepath.Join(dir, "mill")
-		if _, err := os.Stat(wrapperPath); err == nil {
-			cmd = exec.CommandContext(ctx, "./mill", args...)
+		if _, err := os.Stat(filepath.Join(dir, "mill")); err == nil {
+			binary = "./mill"
 		} else {
-			cmd = exec.CommandContext(ctx, "mill", args...)
+			binary = "mill"
 		}
 	default: // sbt
-		// Try sbt wrapper if present, fall back to sbt from PATH
-		wrapperPath := filepath.Join(dir, "sbt")
-		if _, err := os.Stat(wrapperPath); err == nil {
-			cmd = exec.CommandContext(ctx, "./sbt", args...)
+		if _, err := os.Stat(filepath.Join(dir, "sbt")); err == nil {
+			binary = "./sbt"
 		} else {
-			cmd = exec.CommandContext(ctx, "sbt", args...)
+			binary = "sbt"
 		}
 	}
-
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, binary, args)
 }

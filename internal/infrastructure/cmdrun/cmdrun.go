@@ -38,6 +38,10 @@ type Runner struct {
 	Logger *slog.Logger // nil → slog.Default
 	Stdout io.Writer
 	Stderr io.Writer
+	// Env, when non-nil, replaces the entire environment passed to the child
+	// process. Caller is responsible for including the parent environment if
+	// it should be inherited (typically: append(os.Environ(), "K=V")).
+	Env []string
 }
 
 // fingerprint is a short, stable identifier for an arg list. Lets log
@@ -82,6 +86,9 @@ func (r Runner) Exec(ctx context.Context, dir, binary string, args []string) err
 	cmd := exec.CommandContext(ctx, binary, args...) // #nosec G204 - binary is a constant per-runner identifier; args are caller-validated
 	if dir != "" {
 		cmd.Dir = dir
+	}
+	if r.Env != nil {
+		cmd.Env = r.Env
 	}
 	cmd.Stdout = ioOrDefault(r.Stdout, nil)
 	cmd.Stderr = ioOrDefault(r.Stderr, nil)

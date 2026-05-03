@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // PHPRunner implements CoverageRunner for PHP projects.
@@ -161,13 +162,9 @@ func (r *PHPRunner) buildArgs(opts application.RunOptions, profile string, phpun
 	return args
 }
 
-// runPHPCommand executes a PHP command.
+// runPHPCommand executes a PHP command via cmdrun for forensic logging
+// (security review T7/T8: resolved binary path, args fingerprint, exit code,
+// duration emitted at debug level).
 func runPHPCommand(ctx context.Context, dir string, _ string, args []string) error {
-	cmd := exec.CommandContext(ctx, "php", args...)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, "php", args)
 }

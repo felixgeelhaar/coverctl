@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // RustRunner implements CoverageRunner for Rust projects.
@@ -188,13 +189,8 @@ func (r *RustRunner) buildTarpaulinArgs(opts application.RunOptions, profile str
 	return args
 }
 
-// runRustCommand executes a Rust/Cargo command.
-func runRustCommand(ctx context.Context, dir string, tool string, args []string) error {
-	cmd := exec.CommandContext(ctx, "cargo", args...)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+// runRustCommand executes a Rust/Cargo command via cmdrun for forensic
+// logging.
+func runRustCommand(ctx context.Context, dir string, _ string, args []string) error {
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, "cargo", args)
 }

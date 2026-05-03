@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // SwiftRunner implements CoverageRunner for Swift projects.
@@ -165,16 +166,10 @@ func (r *SwiftRunner) findTestBinary(projectDir string) (string, error) {
 	return "", fmt.Errorf("no test binary found in %s/.build/debug", projectDir)
 }
 
-// runSwiftCommand executes a Swift or Xcode toolchain command.
+// runSwiftCommand executes a Swift or Xcode toolchain command. Tool is
+// validated by caller (swift, xcrun) before reaching cmdrun.
 func runSwiftCommand(ctx context.Context, dir string, tool string, args []string) error {
-	// #nosec G204 -- Tool is validated by caller (swift, xcrun)
-	cmd := exec.CommandContext(ctx, tool, args...)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, tool, args)
 }
 
 // runSwiftCommandOutput executes a Swift or Xcode toolchain command and returns stdout.

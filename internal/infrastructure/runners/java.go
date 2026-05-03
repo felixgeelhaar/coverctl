@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // JavaRunner implements CoverageRunner for Java projects.
@@ -187,33 +187,24 @@ func (r *JavaRunner) buildGradleArgs(opts application.RunOptions) []string {
 	return args
 }
 
-// runJavaCommand executes a Java build command.
+// runJavaCommand executes a Java build command via cmdrun for forensic
+// logging. Project-local wrappers (gradlew, mvnw) take precedence over
+// PATH-installed gradle / mvn.
 func runJavaCommand(ctx context.Context, dir string, tool string, args []string) error {
-	var cmd *exec.Cmd
-
+	var binary string
 	switch tool {
 	case "gradle":
-		// Try gradle wrapper first, fall back to gradle
-		wrapperPath := filepath.Join(dir, "gradlew")
-		if _, err := os.Stat(wrapperPath); err == nil {
-			cmd = exec.CommandContext(ctx, "./gradlew", args...)
+		if _, err := os.Stat(filepath.Join(dir, "gradlew")); err == nil {
+			binary = "./gradlew"
 		} else {
-			cmd = exec.CommandContext(ctx, "gradle", args...)
+			binary = "gradle"
 		}
 	default: // maven
-		// Try mvn wrapper first, fall back to mvn
-		wrapperPath := filepath.Join(dir, "mvnw")
-		if _, err := os.Stat(wrapperPath); err == nil {
-			cmd = exec.CommandContext(ctx, "./mvnw", args...)
+		if _, err := os.Stat(filepath.Join(dir, "mvnw")); err == nil {
+			binary = "./mvnw"
 		} else {
-			cmd = exec.CommandContext(ctx, "mvn", args...)
+			binary = "mvn"
 		}
 	}
-
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, binary, args)
 }
