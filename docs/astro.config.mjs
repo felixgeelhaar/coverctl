@@ -31,9 +31,13 @@ export default defineConfig({
     starlight({
       title: 'coverctl',
       description: 'Domain-aware test coverage enforcement for any language',
-      social: {
-        github: 'https://github.com/felixgeelhaar/coverctl',
-      },
+      social: [
+        {
+          icon: 'github',
+          label: 'GitHub',
+          href: 'https://github.com/felixgeelhaar/coverctl',
+        },
+      ],
       editLink: {
         baseUrl: 'https://github.com/felixgeelhaar/coverctl/edit/main/docs/',
       },
