@@ -1,186 +1,49 @@
 # coverctl
 
-**Declarative, domain-aware coverage enforcement for any language**
-Supports 15 languages including Go, Python, TypeScript/JavaScript, Java, Rust, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, and Shell. Built with strict Domain-Driven Design layers, TDD-first validation, and automated releases powered by Relicta v2.6.1.
+**Coverage feedback for AI coding agents — every language, every change.**
 
-![Multi-Language](https://img.shields.io/badge/languages-15%20supported-blue) ![coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen) ![releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=releases)
+coverctl gives Claude Code, Cursor, Cline, Aider and any MCP-capable AI coding agent inline coverage signal during the edit loop: which domains regressed, which functions are uncovered, what to test next. Domain-aware policy, fifteen languages, no SaaS account, no source upload.
 
-## Overview
+![MCP](https://img.shields.io/badge/MCP-server-blueviolet) ![Languages](https://img.shields.io/badge/languages-15-blue) ![Releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=release)
 
-coverctl enforces domain-aware coverage policies across multiple languages. It auto-detects your project's language and parses coverage profiles from various formats (Go cover profiles, LCOV, Cobertura, JaCoCo), so coverage policy failures surface at the domain level, not just the module level. It autodetects domains, emits human-readable and JSON reports, surfaces warnings when files overlap multiple domains, and keeps builds consistently above target coverage.
+## Why this exists
 
-### Supported Languages
+AI coding agents write code blind to coverage. They edit, you commit, the regression surfaces in CI minutes or hours later — too late to course-correct in the same session. Existing coverage tools (Codecov, Coveralls, native `go test -cover`) target humans reading dashboards or PR comments, not agents reasoning inline.
 
-| Language | Coverage Format | Auto-Detection |
-|----------|----------------|----------------|
-| Go | Native `go test -cover` | `go.mod`, `go.sum` |
-| Python | Cobertura, LCOV | `pyproject.toml`, `setup.py`, `requirements.txt` |
-| TypeScript/JavaScript | LCOV | `tsconfig.json`, `package.json` |
-| Java | JaCoCo, Cobertura | `pom.xml`, `build.gradle` |
-| Rust | LCOV (cargo-llvm-cov) | `Cargo.toml` |
-| C#/.NET | Cobertura (coverlet) | `*.csproj`, `*.sln`, `Directory.Build.props` |
-| C/C++ | LCOV (gcov/lcov) | `CMakeLists.txt`, `meson.build` |
-| PHP | Cobertura (PHPUnit) | `composer.json`, `phpunit.xml` |
-| Ruby | LCOV (SimpleCov) | `Gemfile`, `Rakefile` |
-| Swift | LCOV (llvm-cov) | `Package.swift` |
-| Dart | LCOV (dart test) | `pubspec.yaml` |
-| Scala | Cobertura (scoverage) | `build.sbt` |
-| Elixir | LCOV (mix test) | `mix.exs` |
-| Shell | Cobertura (kcov) | `.bats` files |
+coverctl is built for the agent loop:
 
-## Getting started
+- **MCP-native.** First-class Model Context Protocol server. Every coverage capability — check, report, debt, suggest, compare — is an agent-callable tool.
+- **Domain-aware.** Enforce stricter coverage on critical paths (`auth/`, `payment/`) than on utility code, declared once in `.coverctl.yaml`. Agent gets per-domain pass/fail, not just an overall percentage that hides gaps.
+- **Multi-language by design.** Agents touch any language; coverage tooling must too. 15 languages: Go, Python, TS/JS, Java, Rust, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell.
+- **Local-first.** No SaaS account, no source-coverage upload, no third-party dependency in the agent's reach.
+- **Hardened MCP surface.** Untrusted-input sanitization on every agent-supplied test argument blocks the prompt-injection → arbitrary-code-execution pivot through pytest/gradle/mvn/npm test runners.
+
+## Quickstart for AI agents
+
+### Claude Code
 
 ```bash
-# Install
-go install github.com/felixgeelhaar/coverctl@latest
-
-# Initialize in any project (Go, Python, TypeScript, Java, or Rust)
-cd your-project
-coverctl init                               # runs an interactive wizard, auto-detects language
-coverctl detect --dry-run                   # preview detected domains without writing config
-coverctl check                              # enforce policy, add -o json for automation
-coverctl watch                              # continuous coverage feedback during development
+brew install felixgeelhaar/tap/coverctl
 ```
 
-## CLI reference
+Add to `~/.config/claude-code/mcp.json`:
 
-| Command | What it does | Notes |
-| --- | --- | --- |
-| `coverctl init` | Autodetect domains and launch the Bubble Tea wizard before writing `.coverctl.yaml` | Navigate with ↑/↓, adjust thresholds with ←/→ or +/-, and confirm to persist. Pass `--no-interactive` to skip the UI in scripts. |
-| `coverctl detect` | Autodetect domains and write config | Writes config by default; use `--dry-run` to preview without writing. Pass `--force` to overwrite existing config. |
-| `coverctl check` | Run coverage, aggregate domains, enforce policy | `-o json` emits machine-readable results; exit code `1` signals policy violations. Use `--show-delta` to display coverage changes. Supports `--fail-under N`, `--ratchet`, and `--from-profile`. |
-| `coverctl run` | Produce coverage artifacts without evaluating policy | Use `--profile` to customize output path. |
-| `coverctl watch` | Watch for file changes and re-run coverage | Continuous coverage feedback during development. |
-| `coverctl report` | Evaluate an already generated profile | Consumes the same config + domains; ideal for CI artifacts or debugging. Supports `-o html`, `--uncovered`, `--diff <ref>`, and `--merge <profile>`. |
-| `coverctl ignore` | Show configured `exclude` patterns and the tracked domains | Use this to document generated folders (e.g., `internal/generated/proto/...`) that you wish to skip. |
-| `coverctl badge` | Generate an SVG coverage badge | Use `--style flat-square` for a different style. Output to `coverage.svg` by default. |
-| `coverctl trend` | Show coverage trends over time | Requires history data recorded via `coverctl record`. |
-| `coverctl record` | Record current coverage to history | Use with `--commit` and `--branch` for CI integration. Use `--run` or profiles from `coverctl run`/`coverctl check` so history matches instrumentation. |
-| `coverctl suggest` | Suggest optimal coverage thresholds | Strategies: `current`, `aggressive`, `conservative`. Use `--write-config` to apply. |
-| `coverctl debt` | Show coverage debt report | Identifies domains/files below target and estimates remediation effort. |
-| `coverctl mcp serve` | Start MCP server for AI agents | Enables Claude and other AI agents to interact with coverage tools programmatically via STDIO. |
-
-Text output (the default) shows domain coverage, required thresholds, and statuses. JSON adds warnings for overlap detection and is suitable for dashboards when you pass `-o json`. HTML output (`-o html`) generates a visual report with coverage percentages and status indicators. Use `coverctl ignore` to review the `exclude` list, which is how generated folders such as proto artifacts can be omitted before running `coverctl check`.
-
-> **Note:** `coverctl check --from-profile` skips running tests but still runs policy evaluation on every configured domain, so reused profiles that already fall below a domain's `min` will continue to fail until you regenerate them, relax thresholds, scope domains, or adjust domain matches.
-
-## Init wizard
-
-`coverctl init` now launches a short Bubble Tea wizard that reviews the detected domains, lets you adjust coverage minima with arrow keys or +/- shortcuts, and confirms the policy before persisting `.coverctl.yaml`. Use `--no-interactive` when you need to run the command in CI or scripted workflows and you just want to write the autodetected configuration.
-
-## Build/test flags
-
-The `check`, `run`, and `watch` commands support common test flags for customizing test execution. For Go projects:
-
-| Flag | Description | Example |
-| --- | --- | --- |
-| `--tags` | Build tags | `--tags integration,e2e` |
-| `--race` | Enable race detector | `--race` |
-| `--short` | Skip long-running tests | `--short` |
-| `-v` | Verbose test output | `-v` |
-| `--run` | Run only tests matching pattern | `--run TestFoo` |
-| `--timeout` | Test timeout | `--timeout 30m` |
-| `--test-arg` | Additional go test argument (repeatable) | `--test-arg=-count=1` |
-
-Examples:
-
-```bash
-# Run integration tests with build tag
-coverctl check --tags integration
-
-# Run with race detector and extended timeout
-coverctl check --race --timeout 30m
-
-# Run specific tests with verbose output
-coverctl run --run TestMyFunction -v
-
-# Pass multiple extra arguments to go test
-coverctl check --test-arg=-count=1 --test-arg=-parallel=4
+```json
+{
+  "mcpServers": {
+    "coverctl": {
+      "command": "coverctl",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
 ```
 
-## Coverage policy
+Ask the agent: *"Run coverctl check and tell me which domains regressed."*
 
-`coverctl check` parses coverage profiles (Go, LCOV, Cobertura, JaCoCo) and assigns statements to the domains defined in `.coverctl.yaml`. Because raw coverage output often aggregates everything—including helpers, generated files, and adapters you may already exclude—the percentage it reports is not used directly. The policy enforces coverage thresholds only within the scoped domains, so staying focused there while keeping generated folders listed in `exclude` prevents quality from falling through the cracks.
+### Claude Desktop
 
-## Configuration
-
-The schema lives in `schemas/coverctl.schema.json`. Configs are versioned; set `version: 1` today and keep it in place so future schema upgrades can be detected safely. A policy looks like:
-
-```yaml
-version: 1
-policy:
-  default:
-    min: 75
-  domains:
-    - name: core
-      match: ["./internal/core/..."]
-      min: 85
-    - name: api
-      match: ["./internal/api/..."]
-exclude:
-  - internal/generated/*
-```
-
-The autodetect command covers `cmd/`, `pkg/`, and directories inside `internal/`, skipping `generated`/`mocks`.
-
-Advanced options you can enable as needed:
-
-```yaml
-version: 1
-files:
-  - match: ["internal/core/*.go"]
-    min: 90
-diff:
-  enabled: true
-  base: origin/main
-integration:
-  enabled: true
-  packages: ["./internal/integration/..."]
-  run_args: ["-test.run", "TestIntegration"]
-  cover_dir: ".cover/integration"
-  profile: ".cover/integration.out"
-merge:
-  profiles: [".cover/unit.out", ".cover/integration.out"]
-annotations:
-  enabled: true
-```
-
-- `files` enforces per-file minima for any matching paths.
-- `diff` enforces coverage only on files changed since the base ref.
-- `integration` builds `go test -c` binaries and runs them with `GOCOVERDIR` (Go 1.20+).
-- `merge` combines multiple coverprofiles into a single policy evaluation.
-- `annotations` enables `// coverctl:ignore` and `// coverctl:domain=NAME` pragmas.
-
-Need a starting point? Copy `templates/coverctl.yaml` and adjust domains and thresholds to fit your repo.
-
-## MCP Server (AI Agent Integration)
-
-coverctl includes a Model Context Protocol (MCP) server that enables AI agents like Claude to interact with coverage tools programmatically. Start it with:
-
-```bash
-coverctl mcp serve
-```
-
-### Available Tools
-
-| Tool | Description |
-| --- | --- |
-| `check` | Run coverage tests and enforce policy thresholds |
-| `report` | Analyze an existing coverage profile |
-| `record` | Record current coverage to history |
-
-### Available Resources
-
-| URI | Description |
-| --- | --- |
-| `coverctl://debt` | Coverage debt metrics |
-| `coverctl://trend` | Coverage trends over time |
-| `coverctl://suggest` | Threshold recommendations |
-| `coverctl://config` | Current configuration |
-
-### Claude Desktop Configuration
-
-Add to `~/.config/claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+`~/.config/claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 ```json
 {
@@ -188,40 +51,161 @@ Add to `~/.config/claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%
     "coverctl": {
       "command": "coverctl",
       "args": ["mcp", "serve"],
-      "cwd": "/path/to/your/go/project"
+      "cwd": "/path/to/your/project"
     }
   }
 }
 ```
 
-Once configured, Claude can run coverage checks, analyze reports, and provide recommendations based on your project's coverage data.
+### Cursor / Cline / other MCP clients
 
-## Architecture
+Any MCP-capable client works. Point it at `coverctl mcp serve` over stdio.
 
-- `internal/domain`: coverage stats, policy evaluation, warning aggregation.
-- `internal/application`: services (`check`, `run`, `report`, `detect`) orchestrate config loading, domain resolution, coverage runs, and reporting.
-- `internal/infrastructure`: adapters for config files, Go tooling (`go test`), profile parsing, reporters, and autodetection.
-- `internal/cli`: CLI parsing, output, and wiring for the root command entrypoint.
-- `main.go`: root entrypoint so `go install github.com/felixgeelhaar/coverctl@latest` works. (The `cmd/coverctl` wrapper remains for compatibility.)
+## MCP tool reference
 
-## Testing & contribution guidelines
+| Tool | Purpose |
+| --- | --- |
+| `init` | Auto-detect project structure and create `.coverctl.yaml` with domain policies. |
+| `check` | Run tests with coverage and enforce policy. Returns per-domain pass/fail, files, warnings. |
+| `report` | Analyze an existing coverage profile without running tests. |
+| `record` | Record current coverage to history for trend tracking. |
+| `compare` | Compare two coverage profiles. Returns delta, improved/regressed files, domain changes. |
+| `debt` | Coverage gap per domain — where to spend effort, ranked. |
+| `suggest` | Recommend thresholds (`current` / `aggressive` / `conservative`). |
+| `badge` | Generate SVG coverage badge. |
+| `pr-comment` | Post coverage report to GitHub / GitLab / Bitbucket PR. |
 
-- Practice TDD: add or update tests before implementing behavior changes.
-- Keep test coverage ≥80% using `go test ./... -cover`.
-- Follow Conventional Commits (`feat:`, `fix:`, etc.) for Relicta’s version bump logic.
-- `main` is protected: merge via PRs after CI passes (see `.github/workflows/go.yml`). This keeps the release workflow deterministic and reviewable.
-- Pull requests that touch reporting should document CLI output or sample JSON to keep churn visible.
+### MCP resources (read-only context)
 
-## Releases
+| URI | Content |
+| --- | --- |
+| `coverctl://debt` | Coverage debt as JSON. |
+| `coverctl://trend` | Trend over recorded history. |
+| `coverctl://suggest` | Threshold suggestions. |
+| `coverctl://config` | Detected project config. |
 
-- Relicta v2.6.1 (`relicta.config.yaml`) drives releases: it creates semver tags, updates `CHANGELOG.md`, and publishes GitHub releases.
-- `.github/workflows/release.yml` triggers `relicta release --yes` on protected `main` (after each merge). The Relicta `pre_release_hook` runs `scripts/build-artifacts.sh` to compile Linux/macOS/Windows CLI tarballs/zips that the GitHub plugin attaches as release assets.
-- Configure a secret named `RELICTA_TOKEN` (or rely on `${{ secrets.GITHUB_TOKEN }}`) with contents/workflows/packages permissions so Relicta can push tags, update the changelog, and attach artifacts.
-- **Do not manually push `v*` tags**; let Relicta own the tag lifecycle to avoid conflicts.
+### Security note for MCP users
+
+MCP input is downstream of LLM output, which can be downstream of untrusted text (PR descriptions, fetched pages). coverctl rejects test-runner flags that allow arbitrary code loading (`--rootdir`, `--cov-config`, `-D`, `-I`, `--require`, `--init-script`, `--node-options`, etc.) when they come from MCP. CLI invocations from a human terminal are not sanitized — the human is the trust boundary there.
+
+## Quickstart for humans
+
+```bash
+brew install felixgeelhaar/tap/coverctl
+
+cd your-project
+coverctl init      # auto-detect language + domains, write .coverctl.yaml
+coverctl check     # enforce policy; exit 1 on violation
+```
+
+## CLI reference
+
+The CLI is the substrate behind the MCP server; humans can use it directly.
+
+| Command | Purpose |
+| --- | --- |
+| `init` / `i` | Interactive wizard, auto-detects language and domains. `--no-interactive` for CI. |
+| `check` / `c` | Run coverage and enforce policy. `-o json` for machine output, `--fail-under N`, `--ratchet`, `--from-profile`. |
+| `run` / `r` | Produce coverage artifacts without policy evaluation. |
+| `watch` / `w` | Re-run coverage on file change during development. |
+| `report` | Evaluate an existing profile. `-o html`, `--uncovered`, `--diff <ref>`, `--merge <profile>`. |
+| `detect` | Auto-detect domains and write config. `--dry-run` to preview. |
+| `badge` | SVG coverage badge. `--style flat-square`. |
+| `compare` | Diff two profiles. |
+| `debt` | Coverage debt report. |
+| `trend` | Coverage trend from recorded history. |
+| `record` | Append current coverage to history. `--commit`, `--branch` for CI. |
+| `suggest` | Threshold suggestions. `--write-config` to apply. |
+| `pr-comment` | Post coverage to GitHub/GitLab/Bitbucket PR. |
+| `ignore` | Show configured excludes and tracked domains. |
+| `mcp serve` | Start MCP server (stdio). |
+
+Global flags: `-q/--quiet`, `--no-color`, `--ci` (combines quiet + GitHub Actions annotations).
+
+### Test-execution flags
+
+`check`, `run`, `record` accept toolchain flags forwarded to the underlying test runner:
+
+| Flag | Example |
+| --- | --- |
+| `--tags` | `--tags integration,e2e` |
+| `--race` | (Go race detector) |
+| `--short` | Skip long-running tests |
+| `-v` | Verbose test output |
+| `--run` | `--run TestFoo` |
+| `--timeout` | `--timeout 30m` |
+| `--test-arg` | Repeatable: `--test-arg=-count=1 --test-arg=-parallel=4` |
+| `--language` / `-l` | Override autodetection: `go`, `python`, `nodejs`, `rust`, `java`, ... |
+
+## Configuration
+
+`.coverctl.yaml` (schema: [`schemas/coverctl.schema.json`](schemas/coverctl.schema.json)):
+
+```yaml
+version: 1
+policy:
+  default:
+    min: 75
+  domains:
+    - name: auth
+      match: ["./internal/auth/..."]
+      min: 90       # critical path — stricter
+    - name: api
+      match: ["./internal/api/..."]
+      min: 80
+    - name: utils
+      match: ["./internal/utils/..."]
+      # falls back to default min: 75
+exclude:
+  - internal/generated/*
+```
+
+Domain-aware enforcement is the point: overall coverage hides regressions in critical paths. coverctl evaluates each domain against its own minimum and fails the build if any domain falls below.
+
+### Advanced
+
+```yaml
+files:
+  - match: ["internal/core/*.go"]
+    min: 90                          # per-file overrides
+diff:
+  enabled: true
+  base: origin/main                  # only enforce on changed files
+integration:
+  enabled: true                      # Go 1.20+ GOCOVERDIR integration tests
+  packages: ["./internal/integration/..."]
+  cover_dir: ".cover/integration"
+  profile: ".cover/integration.out"
+merge:
+  profiles: [".cover/unit.out", ".cover/integration.out"]
+annotations:
+  enabled: true                      # // coverctl:ignore, // coverctl:domain=NAME
+```
+
+Multi-package monorepo? Use `extends:` for inherited policies.
+
+Starting point: copy `templates/coverctl.yaml`.
+
+## Supported languages
+
+| Language | Format | Detection markers |
+| --- | --- | --- |
+| Go | Native cover profile | `go.mod`, `go.sum` |
+| Python | Cobertura, LCOV | `pyproject.toml`, `setup.py`, `requirements.txt` |
+| TypeScript / JavaScript | LCOV | `tsconfig.json`, `package.json` |
+| Java | JaCoCo, Cobertura | `pom.xml`, `build.gradle` |
+| Rust | LCOV (cargo-llvm-cov) | `Cargo.toml` |
+| C# / .NET | Cobertura (coverlet) | `*.csproj`, `*.sln` |
+| C / C++ | LCOV (gcov/lcov) | `CMakeLists.txt`, `meson.build` |
+| PHP | Cobertura (PHPUnit) | `composer.json`, `phpunit.xml` |
+| Ruby | LCOV (SimpleCov) | `Gemfile`, `Rakefile` |
+| Swift | LCOV (llvm-cov) | `Package.swift` |
+| Dart | LCOV (dart test) | `pubspec.yaml` |
+| Scala | Cobertura (scoverage) | `build.sbt` |
+| Elixir | LCOV (mix test) | `mix.exs` |
+| Shell | Cobertura (kcov) | `*.bats` |
 
 ## GitHub Action
-
-Use the built-in composite action to run coverctl in CI:
 
 ```yaml
 jobs:
@@ -239,83 +223,28 @@ jobs:
           output: text
 ```
 
-## Security Scan (SARIF)
+## Architecture
 
-Run [nox](https://github.com/nox-hq/nox) in GitHub Actions and upload SARIF results:
+- `internal/domain` — coverage stats, policy evaluation, value objects.
+- `internal/application` — orchestration: check, run, report, detect, record, compare, debt, suggest.
+- `internal/infrastructure` — runners (15 languages), parsers (Go/LCOV/Cobertura/JaCoCo), config, history, PR clients (GitHub/GitLab/Bitbucket).
+- `internal/cli` — CLI parsing, output formatters.
+- `internal/mcp` — MCP server, input sanitization, tool/resource handlers.
 
-```yaml
-jobs:
-  security:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install nox
-        run: |
-          curl -sL https://github.com/nox-hq/nox/releases/download/v0.7.0/nox_0.7.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin nox
-      - name: Run nox (SARIF)
-        run: nox -format sarif -output . scan . || true
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: results.sarif
-```
+Strict DDD: dependencies point inward. Domain knows nothing of CLI, MCP, or infrastructure.
 
-## Multi-Language Support
+## Contributing
 
-coverctl is a **universal coverage enforcement platform** supporting multiple languages out of the box. For design details, see:
+- TDD: tests before behavior changes.
+- Coverage ≥80% (`go test ./... -cover`).
+- Conventional Commits (`feat:`, `fix:`, `chore:`, ...) for Relicta version-bump logic.
+- `main` is protected; merge via PR after CI green (`.github/workflows/go.yml`).
+- Run `gofmt -w` and `golangci-lint v2` before pushing.
 
-- [Product Requirements (PRD)](docs/design/language-agnostic-prd.md) - Goals, personas, and feature requirements
-- [Technical Design (TDD)](docs/design/language-agnostic-tdd.md) - Architecture, implementation details, and code examples
+## Releases
 
-### Language Support Status
+Managed by [Relicta](https://github.com/felixgeelhaar/relicta). Do not push `v*` tags manually.
 
-| Language | Format | Status |
-|----------|--------|--------|
-| Go | Native coverage profile | ✅ Supported |
-| Python | LCOV, Cobertura | ✅ Supported |
-| TypeScript/JavaScript | LCOV | ✅ Supported |
-| Java | Cobertura, JaCoCo | ✅ Supported |
-| Rust | LCOV (cargo-llvm-cov) | ✅ Supported |
-| C#/.NET | Cobertura (coverlet) | ✅ Supported |
-| C/C++ | LCOV (gcov/lcov) | ✅ Supported |
-| PHP | Cobertura (PHPUnit) | ✅ Supported |
-| Ruby | LCOV (SimpleCov) | ✅ Supported |
-| Swift | LCOV (llvm-cov) | ✅ Supported |
-| Dart | LCOV (dart test) | ✅ Supported |
-| Scala | Cobertura (scoverage) | ✅ Supported |
-| Elixir | LCOV (mix test) | ✅ Supported |
-| Shell | Cobertura (kcov) | ✅ Supported |
+## Security
 
-### Usage with Different Languages
-
-coverctl auto-detects your project language, or you can specify it explicitly:
-
-```bash
-# Auto-detect (recommended)
-coverctl check
-
-# Explicit language
-coverctl check --language python --profile coverage.xml
-
-# Explicit format
-coverctl report --format lcov --profile coverage/lcov.info
-```
-
-### Claude Code Plugin
-
-coverctl is available as a Claude Code plugin for AI-assisted coverage enforcement:
-
-```bash
-/plugin install coverctl
-/coverctl:check
-/coverctl:suggest
-```
-
-## Docs & governance
-
-- Product/architecture docs live under `docs/design/` (TDD/PRD). `AGENTS.md` covers contributor expectations.
-- The `scripts/build-artifacts.sh` helper compiles cross-platform binaries for release artifacts.
-- Keep `CHANGELOG.md` tracked so Relicta can automatically append release notes during `relicta release`.
+See [SECURITY.md](SECURITY.md) for disclosure policy. MCP-input sanitization (`internal/mcp/sanitize.go`) is the primary defense against prompt-injection-driven argument attacks; report bypasses privately.
