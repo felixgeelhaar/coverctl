@@ -26,6 +26,14 @@ jobs:
       - name: Run tests
         run: go test -race ./...
 
+      # Sigstore keyless signing requires cosign on the runner.
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # SBOM generation requires syft on the runner.
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:

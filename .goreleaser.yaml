@@ -40,6 +40,45 @@ checksum:
   name_template: 'checksums.txt'
   algorithm: sha256
 
+# Sigstore keyless signing of the checksums file. Verifying the signature on
+# checksums.txt transitively verifies every artifact (each artifact's hash
+# is bound by the signed checksums). Uses GitHub OIDC to mint short-lived
+# certificates from Fulcio; no long-lived signing key to manage or rotate.
+#
+# Verify with:
+#   cosign verify-blob \
+#     --certificate-identity-regexp '^https://github.com/felixgeelhaar/coverctl/.*' \
+#     --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+#     --signature checksums.txt.sig \
+#     --certificate checksums.txt.pem \
+#     checksums.txt
+signs:
+  - id: cosign-checksums
+    cmd: cosign
+    artifacts: checksum
+    signature: '${artifact}.sig'
+    certificate: '${artifact}.pem'
+    args:
+      - sign-blob
+      - '--yes'
+      - '--output-signature=${signature}'
+      - '--output-certificate=${certificate}'
+      - '${artifact}'
+    output: true
+
+# SBOM generation per build using Syft (CycloneDX JSON, the OWASP-canonical
+# format). One SBOM per OS/arch artifact; uploaded alongside the binaries.
+sboms:
+  - id: syft-sbom
+    artifacts: archive
+    documents:
+      - '${artifact}.sbom.cdx.json'
+    cmd: syft
+    args:
+      - '$artifact'
+      - '--output'
+      - 'cyclonedx-json=$document'
+
 changelog:
   sort: asc
   filters:
