@@ -13,7 +13,7 @@ import (
 // strict subset of the CLI's Service interface (internal/cli/cli.go). The
 // two interfaces deliberately diverge on streaming-vs-result semantics —
 // CLI's Check writes formatted output to a stdout writer, MCP's CheckResult
-// returns a domain.Result for JSON serialisation. Both are satisfied by
+// returns a domain.Result for JSON serialization. Both are satisfied by
 // the same concrete *application.Service.
 //
 // Compile-time parity check (in server_test.go): asserts that

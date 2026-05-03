@@ -112,7 +112,7 @@ var shellMetaPattern = regexp.MustCompile("[`$;|&><\n\r]")
 var runShellMetaPattern = regexp.MustCompile("[`;&\n\r]|\\$\\(")
 
 // rejectionResponse builds the standard handler response for an input
-// validation failure (sanitization or scope check). Centralised here so the
+// validation failure (sanitization or scope check). Centralized here so the
 // shape is consistent across every MCP handler.
 func rejectionResponse(err error) map[string]any {
 	return map[string]any{
