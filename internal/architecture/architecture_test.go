@@ -145,8 +145,8 @@ func TestFileSizeCeilings(t *testing.T) {
 	ceilings := []fileSizeCeiling{
 		{
 			relpath: "internal/cli/cli.go",
-			maxLOC:  2050,
-			reason:  "single switch dispatching 15+ commands. Extract one file per command (engineering review R2).",
+			maxLOC:  1400,
+			reason:  "Dispatch is now a thin switch; each command lives in its own cmd_*.go. Adding back inline command bodies (instead of an extracted runXxx) is the regression to prevent.",
 		},
 		{
 			relpath: "internal/application/service.go",

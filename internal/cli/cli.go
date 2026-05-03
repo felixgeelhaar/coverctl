@@ -23,14 +23,12 @@ import (
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/github"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gitlab"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/gotool"
-	"github.com/felixgeelhaar/coverctl/internal/infrastructure/history"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/parsers"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/report"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/resolver"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/runners"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/watcher"
 	"github.com/felixgeelhaar/coverctl/internal/infrastructure/wizard"
-	"github.com/felixgeelhaar/coverctl/internal/mcp"
 	"github.com/felixgeelhaar/coverctl/internal/pathutil"
 )
 
@@ -180,353 +178,31 @@ func Run(args []string, stdout, stderr io.Writer, svc Service) int {
 	case "run", "r":
 		return runRun(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "watch", "w":
-		fs := flag.NewFlagSet("watch", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("watch", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile output path")
-		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile output path (shorthand)")
-		// Build/test flags
-		tags := fs.String("tags", "", "Build tags (e.g., integration,e2e)")
-		race := fs.Bool("race", false, "Enable race detector")
-		short := fs.Bool("short", false, "Skip long-running tests")
-		verbose := fs.Bool("v", false, "Verbose test output")
-		run := fs.String("run", "", "Run only tests matching pattern")
-		timeout := fs.String("timeout", "", "Test timeout (e.g., 10m, 1h)")
-		var testArgs testArgsList
-		fs.Var(&testArgs, "test-arg", "Additional argument passed to go test (repeatable)")
-		var domains domainList
-		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
-		fs.Var(&domains, "d", "Filter to specific domain (shorthand)")
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-
-		buildFlags := application.BuildFlags{
-			Tags:     *tags,
-			Race:     *race,
-			Short:    *short,
-			Verbose:  *verbose,
-			Run:      *run,
-			Timeout:  *timeout,
-			TestArgs: testArgs,
-		}
-		return runWatch(ctx, stdout, stderr, svc, *configPath, *profile, domains, global, buildFlags)
+		return runWatchCmd(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "detect":
-		fs := flag.NewFlagSet("detect", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("detect", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		dryRun := fs.Bool("dry-run", false, "Preview config without writing")
-		force := fs.Bool("force", false, "Overwrite config if it exists")
-		fs.BoolVar(force, "f", false, "Overwrite config if it exists (shorthand)")
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-		cfg, err := svc.Detect(ctx, application.DetectOptions{})
-		if err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		if *dryRun {
-			if err := writeConfigFile("-", cfg, stdout, false); err != nil {
-				return exitCodeWithCI(err, 2, stderr, global)
-			}
-			return 0
-		}
-		if err := writeConfigFile(*configPath, cfg, stdout, *force); err != nil {
-			return exitCodeWithCI(err, 2, stderr, global)
-		}
-		if !global.IsQuiet() {
-			fmt.Fprintf(stdout, "Config written to %s\n", *configPath)
-		}
-		return 0
+		return runDetect(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "report":
-		fs := flag.NewFlagSet("report", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("report", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		output := outputFlags(fs)
-		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
-		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
-		historyPath := fs.String("history", "", "History file path for delta display")
-		showDelta := fs.Bool("show-delta", false, "Show coverage change from previous run")
-		showUncovered := fs.Bool("uncovered", false, "Show only files with 0% coverage")
-		diffRef := fs.String("diff", "", "Show coverage for files changed since git ref")
-		var mergeProfiles profileList
-		fs.Var(&mergeProfiles, "merge", "Merge additional coverage profile (repeatable)")
-		var domains domainList
-		fs.Var(&domains, "domain", "Filter to specific domain (repeatable)")
-		fs.Var(&domains, "d", "Filter to specific domain (shorthand)")
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-		opts := application.ReportOptions{
-			ConfigPath:    *configPath,
-			Output:        *output,
-			Profile:       *profile,
-			Domains:       domains,
-			ShowUncovered: *showUncovered,
-			DiffRef:       *diffRef,
-			MergeProfiles: mergeProfiles,
-		}
-		if *showDelta {
-			histPath := *historyPath
-			if histPath == "" {
-				histPath = ".cover/history.json"
-			}
-			opts.HistoryStore = &history.FileStore{Path: histPath}
-		}
-		err := svc.Report(ctx, opts)
-		return exitCodeWithCI(err, 3, stderr, global)
+		return runReport(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "ignore":
-		fs := flag.NewFlagSet("ignore", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("ignore", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-		cfg, domains, err := svc.Ignore(ctx, application.IgnoreOptions{ConfigPath: *configPath})
-		if err != nil {
-			return exitCodeWithCI(err, 4, stderr, global)
-		}
-		printIgnoreInfo(cfg, domains, stdout)
-		return 0
+		return runIgnore(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "init", "i":
-		fs := flag.NewFlagSet("init", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("init", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		force := fs.Bool("force", false, "Overwrite existing config file")
-		fs.BoolVar(force, "f", false, "Overwrite existing config file (shorthand)")
-		noInteractive := fs.Bool("no-interactive", false, "Skip the interactive init wizard")
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-		cfg, err := svc.Detect(ctx, application.DetectOptions{})
-		if err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		if !*noInteractive {
-			var confirmed bool
-			cfg, confirmed, err = initWizard(cfg, stdout, os.Stdin)
-			if err != nil {
-				return exitCodeWithCI(err, 5, stderr, global)
-			}
-			if !confirmed {
-				if !global.IsQuiet() {
-					fmt.Fprintln(stdout, "Init canceled; no configuration written.")
-				}
-				return 0
-			}
-		}
-		if err := writeConfigFile(*configPath, cfg, stdout, *force); err != nil {
-			return exitCodeWithCI(err, 2, stderr, global)
-		}
-		return 0
+		return runInit(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "badge":
-		fs := flag.NewFlagSet("badge", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("badge", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
-		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
-		output := fs.String("output", "coverage.svg", "Output file path")
-		fs.StringVar(output, "o", "coverage.svg", "Output file path (shorthand)")
-		label := fs.String("label", "coverage", "Badge label text")
-		style := fs.String("style", "flat", "Badge style: flat|flat-square")
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-		result, err := svc.Badge(ctx, application.BadgeOptions{
-			ConfigPath:  *configPath,
-			ProfilePath: *profile,
-			Output:      *output,
-			Label:       *label,
-			Style:       *style,
-		})
-		if err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		if err := writeBadgeFile(*output, result.Percent, *label, *style); err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		if !global.IsQuiet() {
-			fmt.Fprintf(stdout, "Badge written to %s (%.1f%%)\n", *output, result.Percent)
-		}
-		return 0
+		return runBadge(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "trend":
-		fs := flag.NewFlagSet("trend", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("trend", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
-		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
-		historyPath := fs.String("history", ".cover/history.json", "History file path")
-		output := outputFlags(fs)
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-		store := history.FileStore{Path: *historyPath}
-		result, err := svc.Trend(ctx, application.TrendOptions{
-			ConfigPath:  *configPath,
-			ProfilePath: *profile,
-			HistoryPath: *historyPath,
-			Output:      *output,
-		}, &store)
-		if err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		printTrendResult(result, stdout)
-		return 0
+		return runTrend(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "record":
 		return runRecord(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "suggest":
-		fs := flag.NewFlagSet("suggest", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("suggest", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
-		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
-		strategy := fs.String("strategy", "current", "Suggestion strategy: current|aggressive|conservative")
-		apply := fs.Bool("apply", false, "Update config with suggested thresholds")
-		force := fs.Bool("force", false, "Overwrite config if it exists")
-		fs.BoolVar(force, "f", false, "Overwrite config if it exists (shorthand)")
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-
-		var suggestStrat application.SuggestStrategy
-		switch *strategy {
-		case "aggressive":
-			suggestStrat = application.SuggestAggressive
-		case "conservative":
-			suggestStrat = application.SuggestConservative
-		default:
-			suggestStrat = application.SuggestCurrent
-		}
-
-		result, err := svc.Suggest(ctx, application.SuggestOptions{
-			ConfigPath:  *configPath,
-			ProfilePath: *profile,
-			Strategy:    suggestStrat,
-		})
-		if err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		printSuggestResult(result, stdout)
-		if *apply {
-			if err := writeConfigFile(*configPath, result.Config, stdout, *force); err != nil {
-				return exitCodeWithCI(err, 2, stderr, global)
-			}
-			if !global.IsQuiet() {
-				fmt.Fprintf(stdout, "\nConfig updated: %s\n", *configPath)
-			}
-		}
-		return 0
+		return runSuggest(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "debt":
-		fs := flag.NewFlagSet("debt", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("debt", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		profile := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
-		fs.StringVar(profile, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
-		output := outputFlags(fs)
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-
-		result, err := svc.Debt(ctx, application.DebtOptions{
-			ConfigPath:  *configPath,
-			ProfilePath: *profile,
-			Output:      *output,
-		})
-		if err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		printDebtResult(result, stdout, *output)
-		return 0
+		return runDebt(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "compare":
-		fs := flag.NewFlagSet("compare", flag.ContinueOnError)
-		fs.Usage = func() { commandHelp("compare", stderr) }
-		configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-		fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-		baseProfile := fs.String("base", "", "Base coverage profile (required)")
-		fs.StringVar(baseProfile, "b", "", "Base coverage profile (shorthand)")
-		headProfile := fs.String("head", ".cover/coverage.out", "Head coverage profile to compare against")
-		fs.StringVar(headProfile, "H", ".cover/coverage.out", "Head coverage profile (shorthand)")
-		output := outputFlags(fs)
-		if err := fs.Parse(cmdArgs); err != nil {
-			return 2
-		}
-
-		if *baseProfile == "" {
-			fmt.Fprintln(stderr, "Error: --base flag is required")
-			fs.Usage()
-			return 2
-		}
-
-		result, err := svc.Compare(ctx, application.CompareOptions{
-			ConfigPath:  *configPath,
-			BaseProfile: *baseProfile,
-			HeadProfile: *headProfile,
-			Output:      *output,
-		})
-		if err != nil {
-			return exitCodeWithCI(err, 3, stderr, global)
-		}
-		printCompareResult(result, stdout, *output)
-		return 0
+		return runCompare(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "pr-comment":
 		return runPRComment(ctx, cmdArgs, stdout, stderr, svc, global)
 	case "mcp":
-		if len(cmdArgs) < 1 {
-			fmt.Fprintln(stderr, "Usage: coverctl mcp <subcommand>")
-			fmt.Fprintln(stderr, "Subcommands: serve")
-			return 2
-		}
-		switch cmdArgs[0] {
-		case "serve":
-			fs := flag.NewFlagSet("mcp serve", flag.ContinueOnError)
-			fs.Usage = func() { commandHelp("mcp", stderr) }
-			configPath := fs.String("config", ".coverctl.yaml", "Config file path")
-			fs.StringVar(configPath, "c", ".coverctl.yaml", "Config file path (shorthand)")
-			historyPath := fs.String("history", ".cover/history.json", "History file path")
-			profilePath := fs.String("profile", ".cover/coverage.out", "Coverage profile path")
-			fs.StringVar(profilePath, "p", ".cover/coverage.out", "Coverage profile path (shorthand)")
-			if err := fs.Parse(cmdArgs[1:]); err != nil {
-				return 2
-			}
-
-			// Build MCP server with application service and CLI version
-			mcpSvc := BuildService(os.Stdout)
-			mcpServer := mcp.New(mcpSvc, mcp.Config{
-				ConfigPath:  *configPath,
-				HistoryPath: *historyPath,
-				ProfilePath: *profilePath,
-			}, Version)
-
-			// Handle signals for graceful shutdown
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
-
-			sigCh := make(chan os.Signal, 1)
-			signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-			go func() {
-				<-sigCh
-				cancel()
-			}()
-
-			if err := mcpServer.Run(ctx); err != nil {
-				fmt.Fprintf(stderr, "MCP server error: %v\n", err)
-				return 1
-			}
-			return 0
-		default:
-			fmt.Fprintf(stderr, "Unknown mcp subcommand: %s\n", cmdArgs[0])
-			fmt.Fprintln(stderr, "Available subcommands: serve")
-			return 2
-		}
+		return runMCP(ctx, cmdArgs, stdout, stderr, svc, global)
 	default:
 		usage(stderr)
 		return 2
