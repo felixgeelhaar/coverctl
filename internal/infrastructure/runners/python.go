@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/felixgeelhaar/coverctl/internal/application"
+	"github.com/felixgeelhaar/coverctl/internal/infrastructure/cmdrun"
 )
 
 // PythonRunner implements CoverageRunner for Python projects.
@@ -196,25 +197,18 @@ func (r *PythonRunner) buildCoverageArgs(opts application.RunOptions, profile st
 	return args
 }
 
-// runPythonCommand executes a Python command.
+// runPythonCommand executes a Python command. Delegates to cmdrun.Runner so
+// every invocation produces a structured-log event with resolved binary path
+// (security review T7), args fingerprint, and exit code (T8). Operators can
+// surface these via `coverctl --debug` or `--ci`.
 func runPythonCommand(ctx context.Context, dir string, tool string, args []string) error {
-	var cmd *exec.Cmd
-
 	switch tool {
-	case "pytest-cov":
-		// Run via python -m pytest
-		cmd = exec.CommandContext(ctx, "python", args...)
-	case "coverage":
-		// Run via python -m coverage
-		cmd = exec.CommandContext(ctx, "python", args...)
+	case "pytest-cov", "coverage":
+		// Both run as `python <args>`; the args slice already encodes
+		// `-m pytest` or `-m coverage run` from the buildPytest/buildCoverage
+		// helpers above.
 	default:
 		return fmt.Errorf("unsupported tool: %s", tool)
 	}
-
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmdrun.Runner{Stdout: os.Stdout, Stderr: os.Stderr}.Exec(ctx, dir, "python", args)
 }
