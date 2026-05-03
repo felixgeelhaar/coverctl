@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+# Workflow-level default: every job inherits read-only contents access. Jobs
+# that need additional scopes (e.g. security-events: write) override locally.
+# Without this, the GITHUB_TOKEN inherits its repo-default permissions, which
+# may be broader than necessary — flagged by CodeQL as
+# actions/missing-workflow-permissions.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
