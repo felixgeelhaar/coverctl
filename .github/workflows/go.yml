@@ -56,9 +56,18 @@ jobs:
         with:
           go-version: "1.25.x"
       - name: Install nox
+        # Bumped from v0.7.0: required for reliable baseline suppression in
+        # SARIF output. The v1.15.0 push produced 3320 false-positive
+        # alerts because npm integrity hashes (docs/package-lock.json) and
+        # Go module sums (go.sum) match nox credential-detection rules.
+        # `.nox/baseline.json` is committed to the repo; nox 0.8 suppresses
+        # any finding present in the baseline so SARIF stays signal-only.
         run: |
-          curl -sL https://github.com/nox-hq/nox/releases/download/v0.7.0/nox_0.7.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin nox
+          curl -sL https://github.com/nox-hq/nox/releases/download/v0.8.1/nox_0.8.1_linux_amd64.tar.gz | tar xz -C /usr/local/bin nox
       - name: Run nox security scan
+        # New genuine findings still surface as Code Scanning alerts.
+        # Refresh the baseline locally with `nox baseline write` after
+        # triaging legitimate new findings.
         run: |
           nox -format sarif -output . scan . || true
           if [ ! -f results.sarif ]; then
