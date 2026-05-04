@@ -1,0 +1,122 @@
+---
+title: MCP Server (AI Agents)
+description: Connect coverctl to Claude Code, Cursor, Cline, Aider and other Model Context Protocol clients for inline coverage feedback during agent edit loops.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+coverctl ships an [MCP](https://modelcontextprotocol.io) server so AI coding agents can ask for coverage feedback inline — domain-aware policy results, debt rankings, threshold suggestions, and per-file deltas — without leaving the edit loop.
+
+The MCP server is the canonical surface. The CLI is the substrate behind it; humans can use either.
+
+## Quickstart
+
+<Tabs>
+  <TabItem label="Claude Code">
+
+Add to `~/.config/claude-code/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "coverctl": {
+      "command": "coverctl",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+
+Ask the agent: *"Run coverctl check and tell me which domains regressed."*
+
+  </TabItem>
+  <TabItem label="Claude Desktop">
+
+`~/.config/claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "coverctl": {
+      "command": "coverctl",
+      "args": ["mcp", "serve"],
+      "cwd": "/path/to/your/project"
+    }
+  }
+}
+```
+
+  </TabItem>
+  <TabItem label="Cursor / Cline / others">
+
+Any MCP-capable client works. Point it at `coverctl mcp serve` over stdio. The server runs in the user's project directory and uses standard `.coverctl.yaml` discovery.
+
+  </TabItem>
+</Tabs>
+
+## Tools
+
+| Tool | Purpose |
+| --- | --- |
+| `init` | Auto-detect project structure and create `.coverctl.yaml` with domain policies. |
+| `check` | Run tests with coverage and enforce policy. Returns per-domain pass/fail, files, warnings. |
+| `report` | Analyze an existing coverage profile without running tests. |
+| `record` | Record current coverage to history for trend tracking. |
+| `compare` | Diff two coverage profiles. Returns delta, improved/regressed files, domain changes. |
+| `debt` | Coverage gap per domain — where to spend effort, ranked. |
+| `suggest` | Recommend thresholds (`current` / `aggressive` / `conservative`). |
+| `badge` | Generate SVG coverage badge. |
+| `pr-comment` | Post coverage report to GitHub / GitLab / Bitbucket PR. |
+
+## Resources
+
+Read-only context the agent can pull on demand:
+
+| URI | Content |
+| --- | --- |
+| `coverctl://debt` | Coverage debt as JSON. |
+| `coverctl://trend` | Trend over recorded history. |
+| `coverctl://suggest` | Threshold suggestions. |
+| `coverctl://config` | Detected project config. |
+
+## Security
+
+<Aside type="caution" title="MCP input is untrusted">
+MCP input flows from LLM output, which can be downstream of arbitrary text (PR descriptions, issue bodies, fetched web pages). coverctl treats MCP-supplied arguments as untrusted by default.
+</Aside>
+
+Concrete defenses applied to every MCP tool call:
+
+- **Argument sanitization.** Test-runner flags that load arbitrary code are rejected: `--rootdir`, `--cov-config`, `--require`, `--init-script`, `--node-options`, `--manifest-path`, `--target-dir`, `-D`, `-I`, `-P`, and others. Shell metacharacters in arguments are rejected.
+- **Path scope enforcement.** Every path input (`configPath`, `profile`, `historyPath`, `output`, `baseProfile`, `headProfile`) is validated to stay within the working directory. Absolute paths, parent escapes, and symlinks that resolve outside the scope are rejected.
+- **Rate limit on `pr-comment`.** Five calls per five minutes per pull request. Stops agent loops from burning GitHub abuse quota.
+- **Forensic logging.** With `--debug`, every test-runner invocation emits a structured event with binary path, args fingerprint, exit code, and elapsed duration.
+
+CLI invocations from a human terminal are not sanitized — the human is the trust boundary there.
+
+## Verifying installation
+
+Check that the agent can see the server:
+
+```bash
+coverctl mcp serve --help
+# Should print MCP serve options without error.
+```
+
+Then in the agent: *"What MCP tools do you have available from coverctl?"* The agent should list `init`, `check`, `report`, etc.
+
+## Troubleshooting
+
+**Agent can't find the binary.** Use an absolute path in the `command` field instead of `coverctl`:
+
+```json
+"command": "/opt/homebrew/bin/coverctl"
+```
+
+Find the path with `which coverctl`.
+
+**`Rejected unsafe MCP input` in agent output.** The sanitizer blocked an argument shape associated with code execution. The error names the field and the offending value. Drop the dangerous flag or use the long-form equivalent if it has a safer cousin.
+
+**Path errors.** All path inputs must be relative to the working directory. Absolute paths are rejected. Pass `Profile=".cover/coverage.out"` not `Profile="/abs/path/coverage.out"`.
+
+**Rate-limit error on `pr-comment`.** The PR was already updated five times in the last five minutes. Wait it out, or use `dryRun=true` to generate the comment body without posting.

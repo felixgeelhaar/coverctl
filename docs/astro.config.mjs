@@ -30,7 +30,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'coverctl',
-      description: 'Domain-aware test coverage enforcement for any language',
+      description: 'Coverage feedback for AI coding agents — every language, every change. Domain-aware policy enforcement via MCP server (Claude Code, Cursor, Cline, Aider) and CLI.',
       social: [
         {
           icon: 'github',
@@ -80,6 +80,7 @@ export default defineConfig({
             { label: 'Introduction', slug: '' },
             { label: 'Installation', slug: 'installation' },
             { label: 'Quick Start', slug: 'quick-start' },
+            { label: 'MCP Server (AI Agents)', slug: 'mcp' },
           ],
         },
         {
