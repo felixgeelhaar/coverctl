@@ -17,10 +17,11 @@ import (
 
 // Server wraps the application service with MCP protocol handling.
 type Server struct {
-	svc            Service
-	config         Config
-	server         *mcp.Server
+	svc       Service
+	config    Config
+	server    *mcp.Server
 	prCommentLimit *rateLimiter
+	telemetry Telemetry // nil = NoopTelemetry (opt-in via config)
 }
 
 // New creates a new MCP server wrapping the given service.
@@ -51,9 +52,10 @@ func New(svc Service, cfg Config, version string) *Server {
 	}
 
 	s := &Server{
-		svc:            svc,
-		config:         cfg,
+		svc:       svc,
+		config:    cfg,
 		prCommentLimit: newRateLimiter(),
+		telemetry: NoopTelemetry{},
 	}
 
 	// Create MCP server with capabilities
@@ -152,13 +154,20 @@ func (s *Server) registerResources() {
 
 func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]any, error) {
 	defer traceTool("check")()
+	start := time.Now()
+	defer func() {
+		// telemetry recorded by handleCheckEnd
+	}()
+
 	if err := validateScopedInputs(
 		namedPath{"configPath", input.ConfigPath},
 		namedPath{"profile", input.Profile},
 	); err != nil {
+		s.telemetry.RecordToolCall("check", time.Since(start), err, true)
 		return rejectionResponse(err), nil
 	}
 	if err := SanitizeBuildFlagsInput(input.Tags, input.Run, input.Timeout, input.TestArgs); err != nil {
+		s.telemetry.RecordToolCall("check", time.Since(start), err, true)
 		return rejectionResponse(err), nil
 	}
 
@@ -189,6 +198,7 @@ func (s *Server) handleCheck(ctx context.Context, input CheckInput) (map[string]
 	}
 
 	result, err := s.svc.CheckResult(ctx, opts)
+	s.telemetry.RecordToolCall("check", time.Since(start), err, false)
 
 	output := map[string]any{
 		"passed":   result.Passed,
@@ -578,45 +588,6 @@ func (s *Server) handleDebt(ctx context.Context, input DebtInput) (map[string]an
 			output["summary"] = fmt.Sprintf("Coverage debt: %.1f%% gap across %d items (health score: %.0f/100)", result.TotalDebt, len(result.Items), result.HealthScore)
 		} else {
 			output["summary"] = fmt.Sprintf("No coverage debt - all thresholds met (health score: %.0f/100)", result.HealthScore)
-		}
-	}
-
-	return output, nil
-}
-
-func (s *Server) handleBadge(ctx context.Context, input BadgeInput) (map[string]any, error) {
-	defer traceTool("badge")()
-	if err := validateScopedInputs(
-		namedPath{"configPath", input.ConfigPath},
-		namedPath{"profile", input.Profile},
-		namedPath{"output", input.Output},
-	); err != nil {
-		return rejectionResponse(err), nil
-	}
-
-	opts := application.BadgeOptions{
-		ConfigPath:  s.resolveConfigPath(input.ConfigPath),
-		ProfilePath: coalesce(input.Profile, s.config.ProfilePath),
-		Output:      input.Output,
-		Label:       coalesce(input.Label, "coverage"),
-		Style:       coalesce(input.Style, "flat"),
-	}
-
-	result, err := s.svc.Badge(ctx, opts)
-
-	output := map[string]any{
-		"passed":  err == nil,
-		"percent": result.Percent,
-	}
-
-	if err != nil {
-		output["passed"] = false
-		output["error"] = err.Error()
-		output["summary"] = "Failed to generate badge"
-	} else {
-		output["summary"] = fmt.Sprintf("Coverage: %.1f%%", result.Percent)
-		if input.Output != "" {
-			output["outputPath"] = input.Output
 		}
 	}
 

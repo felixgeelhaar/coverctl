@@ -347,6 +347,36 @@ func TestHandleCheck_BuildFlags(t *testing.T) {
 	}
 }
 
+func TestHandleCheck_RejectsUnsafeTestArgs(t *testing.T) {
+	svc := &mockService{}
+	server := New(svc, DefaultConfig(), "test")
+
+	output, err := server.handleCheck(context.Background(), CheckInput{
+		TestArgs: []string{"--rootdir=/tmp/evil"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	passed, ok := output["passed"].(bool)
+	if !ok {
+		t.Fatalf("expected boolean passed field, got %T", output["passed"])
+	}
+	if passed {
+		t.Fatalf("expected passed=false for unsafe input, got true")
+	}
+
+	summary, ok := output["summary"].(string)
+	if !ok || summary == "" {
+		t.Fatalf("expected non-empty summary for rejected input")
+	}
+
+	errMsg, ok := output["error"].(string)
+	if !ok || errMsg == "" {
+		t.Fatalf("expected non-empty error for rejected input")
+	}
+}
+
 func TestHandleReport(t *testing.T) {
 	svc := &mockService{
 		reportResult: domain.Result{

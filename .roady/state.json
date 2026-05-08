@@ -1,0 +1,167 @@
+{
+  "project_id": "coverctl",
+  "version": 37,
+  "task_states": {
+    "T-1": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:04:57.405707+02:00",
+      "completed_at": "2026-05-08T21:05:56.330814+02:00",
+      "elapsed_minutes": 0
+    },
+    "T-2": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:05:57.425872+02:00",
+      "completed_at": "2026-05-08T21:08:18.188447+02:00",
+      "elapsed_minutes": 2
+    },
+    "T-3": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:08:19.186449+02:00",
+      "completed_at": "2026-05-08T21:11:19.203422+02:00",
+      "elapsed_minutes": 3
+    },
+    "T-4": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:11:20.195027+02:00",
+      "completed_at": "2026-05-08T21:13:28.277342+02:00",
+      "elapsed_minutes": 2
+    },
+    "T-5": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:55:36.312607+02:00",
+      "completed_at": "2026-05-08T21:55:56.104866+02:00",
+      "elapsed_minutes": 0
+    },
+    "T-6": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:55:56.159772+02:00",
+      "completed_at": "2026-05-08T21:56:21.430927+02:00",
+      "elapsed_minutes": 0
+    },
+    "T-7": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:58:25.380586+02:00",
+      "completed_at": "2026-05-08T21:59:55.555201+02:00",
+      "elapsed_minutes": 1
+    },
+    "T-8": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:56:29.565537+02:00",
+      "completed_at": "2026-05-08T21:58:25.346756+02:00",
+      "elapsed_minutes": 1
+    },
+    "T-9": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "started_at": "2026-05-08T21:59:55.647583+02:00",
+      "completed_at": "2026-05-08T21:59:55.736755+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-ai/agent-success-metrics-baseline": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:05.892996+02:00",
+      "completed_at": "2026-05-08T22:08:18.869219+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-architecture-drift-guardrails": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:05.837649+02:00",
+      "completed_at": "2026-05-08T22:08:18.770417+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-ci-product-metrics-dogfooding": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:49.442561+02:00",
+      "completed_at": "2026-05-08T22:08:58.049729+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-core-foundation": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:28.955677+02:00",
+      "completed_at": "2026-05-08T22:08:38.573562+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-coverage-quality-hotspot-uplift": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:49.643952+02:00",
+      "completed_at": "2026-05-08T22:08:58.10654+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-golden-path-ux-for-first-run": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:28.951131+02:00",
+      "completed_at": "2026-05-08T22:08:38.491128+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-gtm-\u0026-enterprise-readiness-package": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:28.95264+02:00",
+      "completed_at": "2026-05-08T22:08:38.50594+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-product-messaging-\u0026-docs-alignment": {
+      "status": "done",
+      "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "superseded by explicit task set T-1..T-9"
+      ],
+      "started_at": "2026-05-08T22:08:05.857717+02:00",
+      "completed_at": "2026-05-08T22:08:18.801137+02:00",
+      "elapsed_minutes": 0
+    }
+  },
+  "updated_at": "2026-05-08T22:08:58.106541+02:00"
+}

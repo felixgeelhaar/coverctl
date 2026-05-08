@@ -10,21 +10,23 @@ This document describes the product requirements for extending coverctl from a G
 
 ## Problem Statement
 
-### Current State
+### Current State (Shipped ✅)
 
-coverctl is tightly coupled to Go:
-- Uses `go test -cover` for coverage generation
-- Parses Go-specific coverage profile format
-- Relies on `go.mod` and `go list` for project/package discovery
-- Domain detection assumes Go package structure
+coverctl has completed the transition from Go-only to language-agnostic:
+- ✅ **15 languages supported**: Go, Python, TypeScript/JavaScript, Java, Rust, C#/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell
+- ✅ **Multi-format parsing**: LCOV, Cobertura XML, JaCoCo XML, Go native profiles
+- ✅ **MCP-native**: Full MCP server with 8 tools and 4 resources for AI agent integration
+- ✅ **Domain-aware policy**: Per-domain coverage thresholds with 12+ domains in own config
+- ✅ **Backward compatible**: All existing Go workflows continue unchanged
 
 ### Market Opportunity
 
-| Metric | Go-Only | Language-Agnostic |
+| Metric | Go-Only | Language-Agnostic (Shipped) |
 |--------|---------|-------------------|
 | Target Developers | ~2M Go developers | ~30M+ developers |
 | Claude Code Plugin Market | ~5% | ~80% |
 | Enterprise Appeal | Single-language teams | Polyglot organizations |
+| Languages Supported | 1 | 15 (Go, Python, TS/JS, Java, Rust, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell) |
 
 ### User Pain Points
 
@@ -37,12 +39,19 @@ coverctl is tightly coupled to Go:
 
 ## Goals & Success Metrics
 
-### Primary Goals
+### Primary Goals (Shipped)
 
-1. **G1:** Support coverage analysis for the top 5 language ecosystems (Go, Python, TypeScript/JavaScript, Java, Rust)
-2. **G2:** Maintain 100% backward compatibility with existing Go workflows
-3. **G3:** Enable one-command setup for any supported language
-4. **G4:** Publish as a Claude Code plugin with universal appeal
+1. **G1:** ✅ Support coverage analysis for 15 language ecosystems (Go, Python, TypeScript/JavaScript, Java, Rust, C#/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell)
+2. **G2:** ✅ Maintain 100% backward compatibility with existing Go workflows
+3. **G3:** ✅ Enable one-command setup for any supported language via `coverctl init`
+4. **G4:** ✅ Published as a Claude Code plugin with MCP-native integration
+
+### Next Bets
+
+1. **N1:** Add scenario tests for weaker coverage surfaces (internal/mcp, internal/cli, runner edge cases)
+2. **N2:** Instrument MCP tool-call success metrics (success rate, rejection rate, time-to-success)
+3. **N3:** Polish golden-path UX for first-run (init → check → suggest → record)
+4. **N4:** Build ICP-focused GTM for polyglot AI-assisted teams with compliance needs
 
 ### Success Metrics
 
@@ -345,8 +354,7 @@ US3.3: As a team lead, I want to share coverctl configuration via plugin
 
 | Tool | Languages | Domain-Aware | AI Integration | Plugin System |
 |------|-----------|--------------|----------------|---------------|
-| coverctl (current) | Go only | Yes | MCP | No |
+| coverctl (shipped) | **15** (Go, Python, TS/JS, Java, Rust, C#/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell) | Yes | MCP-native | Claude Code |
 | Codecov | Many | No | No | No |
 | Coveralls | Many | No | No | No |
 | SonarQube | Many | Partial | No | Yes |
-| **coverctl (proposed)** | **Many** | **Yes** | **MCP + Plugin** | **Claude Code** |

@@ -45,3 +45,7 @@ This security policy covers:
 - Official documentation and examples
 
 Third-party integrations and forks are outside the scope of this policy.
+
+## Security Architecture Notes
+
+- MCP threat model and sanitization boundaries: `docs/security/mcp-threat-model.md`

@@ -98,6 +98,31 @@ coverctl init      # auto-detect language + domains, write .coverctl.yaml
 coverctl check     # enforce policy; exit 1 on violation
 ```
 
+### Golden path (first 10 minutes)
+
+Use this flow for your first successful setup:
+
+1) `coverctl init`
+2) `coverctl check`
+3) `coverctl suggest --strategy current`
+4) `coverctl record`
+
+If a step fails, use the matching fix:
+
+```bash
+# init failed: preview what would be generated
+coverctl detect --dry-run
+
+# check failed: inspect structured output and failing domains
+coverctl check -o json
+
+# suggest failed: verify profile exists before suggesting thresholds
+coverctl check && coverctl suggest --strategy current
+
+# record failed: provide commit/branch explicitly (common in CI)
+coverctl record --commit "$(git rev-parse HEAD)" --branch "$(git rev-parse --abbrev-ref HEAD)"
+```
+
 ## CLI reference
 
 The CLI is the substrate behind the MCP server; humans can use it directly.
@@ -248,3 +273,5 @@ Managed by [Relicta](https://github.com/felixgeelhaar/relicta). Do not push `v*`
 ## Security
 
 See [SECURITY.md](SECURITY.md) for disclosure policy. MCP-input sanitization (`internal/mcp/sanitize.go`) is the primary defense against prompt-injection-driven argument attacks; report bypasses privately.
+
+For threat model and trust boundaries, see `docs/security/mcp-threat-model.md`.

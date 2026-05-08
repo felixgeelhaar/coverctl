@@ -421,7 +421,7 @@ func validateConfig(path string) error {
 }
 
 func usage(w io.Writer) {
-	fmt.Fprintf(w, `coverctl - Domain-driven coverage enforcement for Go
+	fmt.Fprintf(w, `coverctl - Domain-driven coverage enforcement for any language
 
 Usage:
   coverctl [global-flags] <command> [flags]

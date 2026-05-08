@@ -1,0 +1,174 @@
+{
+  "id": "plan-coverctl-1778240593",
+  "spec_id": "coverctl",
+  "tasks": [
+    {
+      "id": "T-1",
+      "title": "Remove Go-only wording from CLI help text",
+      "description": "Update internal/cli/cli.go:424 usage string from 'for Go' to reflect 15-language, MCP-native, domain-aware positioning. Ensure README and help text use consistent terminology.",
+      "priority": "high",
+      "estimate": "1d",
+      "depends_on": [],
+      "feature_id": "product-messaging-\u0026-docs-alignment"
+    },
+    {
+      "id": "T-2",
+      "title": "Reconcile PRD with shipped state",
+      "description": "Update docs/design/language-agnostic-prd.md from 'transition to 5 languages' framing to current shipped state (15 languages, full MCP platform) + next-bets section.",
+      "priority": "high",
+      "estimate": "1d",
+      "depends_on": [],
+      "feature_id": "product-messaging-\u0026-docs-alignment"
+    },
+    {
+      "id": "T-3",
+      "title": "Define MCP tool-call success metrics spec",
+      "description": "Write a short spec in docs defining instrumented metrics: tool-call success rate, rejection rate, time-to-success, pre-commit regression catch rate. Add a telemetry abstraction for opt-in data collection.",
+      "priority": "high",
+      "estimate": "2d",
+      "depends_on": [],
+      "feature_id": "ai/agent-success-metrics-baseline"
+    },
+    {
+      "id": "T-4",
+      "title": "Extract first handler from large file",
+      "description": "Perform first extraction slice from acknowledged large files (priority: internal/mcp/server.go). Move one tool/router handler to dedicated file. Verify ceiling tests still pass.",
+      "priority": "high",
+      "estimate": "2d",
+      "depends_on": [],
+      "feature_id": "architecture-drift-guardrails"
+    },
+    {
+      "id": "T-5",
+      "title": "Polish golden-path UX for first-run",
+      "description": "Tighten docs and CLI flow around init -\u003e check -\u003e suggest -\u003e record. Add actionable 'what to do when it fails' snippets per step. Validate: new user from install to first fix in \u003c10 minutes.",
+      "priority": "medium",
+      "estimate": "3d",
+      "depends_on": [
+        "T-1",
+        "T-2"
+      ],
+      "feature_id": "golden-path-ux-for-first-run"
+    },
+    {
+      "id": "T-6",
+      "title": "Add structured CI artifact collection",
+      "description": "Extend .github/workflows/go.yml to preserve machine-readable check/report outputs (not just pass/fail). Store structured summary for trend analysis between CI runs.",
+      "priority": "medium",
+      "estimate": "2d",
+      "depends_on": [
+        "T-3"
+      ],
+      "feature_id": "ci-product-metrics-dogfooding"
+    },
+    {
+      "id": "T-7",
+      "title": "Build ICP-focused GTM brief",
+      "description": "Create one-page messaging for polyglot AI-assisted teams with compliance governance needs. Include competitive alternatives and 'why now' narrative per April Dunford positioning methodology.",
+      "priority": "low",
+      "estimate": "2d",
+      "depends_on": [
+        "T-5",
+        "T-6"
+      ],
+      "feature_id": "gtm-\u0026-enterprise-readiness-package"
+    },
+    {
+      "id": "T-8",
+      "title": "Publish enterprise security architecture doc",
+      "description": "Write concise security note covering MCP threat model, prompt injection risks, sanitization boundaries in internal/mcp/sanitize.go. Create linkable doc for procurement/security reviews.",
+      "priority": "low",
+      "estimate": "1d",
+      "depends_on": [
+        "T-5"
+      ],
+      "feature_id": "gtm-\u0026-enterprise-readiness-package"
+    },
+    {
+      "id": "T-9",
+      "title": "Add scenario tests for weak coverage surfaces",
+      "description": "Add integration-style scenario tests for internal/mcp, internal/cli, and runner edge cases (failure paths, parser boundary conditions, sanitization rejection cases).",
+      "priority": "low",
+      "estimate": "3d",
+      "depends_on": [
+        "T-4"
+      ],
+      "feature_id": "coverage-quality-hotspot-uplift"
+    },
+    {
+      "id": "task-architecture-drift-guardrails",
+      "title": "Implement Architecture Drift Guardrails",
+      "description": "Implement the feature: Architecture Drift Guardrails. Add explicit extraction plan and enforcement for acknowledged large files (service.go, cli.go, server.go). New capabilities must land in dedicated handler files per the existing ceiling-test contract.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "architecture-drift-guardrails"
+    },
+    {
+      "id": "task-product-messaging-\u0026-docs-alignment",
+      "title": "Implement Product Messaging \u0026 Docs Alignment",
+      "description": "Implement the feature: Product Messaging \u0026 Docs Alignment. Align CLI help text, README, and PRD with current reality (15 languages, MCP-native, domain-aware positioning). Remove all Go-only wording from user-facing copy unless contextually Go-specific.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "product-messaging-\u0026-docs-alignment"
+    },
+    {
+      "id": "task-ai/agent-success-metrics-baseline",
+      "title": "Implement AI/Agent Success Metrics Baseline",
+      "description": "Implement the feature: AI/Agent Success Metrics Baseline. Define and instrument MCP tool-call success metrics: success rate, rejection rate, time-to-success, pre-commit regression catch rate. Enable data-driven decisions on which 3 MCP tools drive retained value.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "ai/agent-success-metrics-baseline"
+    },
+    {
+      "id": "task-golden-path-ux-for-first-run",
+      "title": "Implement Golden Path UX for First-Run",
+      "description": "Implement the feature: Golden Path UX for First-Run. Tighten docs and CLI flow around a single golden path: init -\u003e check -\u003e suggest -\u003e record. Include actionable failure-snippet guidance per step. New user goal: install to first fix in \u003c10 minutes.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "golden-path-ux-for-first-run"
+    },
+    {
+      "id": "task-gtm-\u0026-enterprise-readiness-package",
+      "title": "Implement GTM \u0026 Enterprise Readiness Package",
+      "description": "Implement the feature: GTM \u0026 Enterprise Readiness Package. Build ICP-focused targeting for polyglot AI-assisted teams with compliance governance needs. Publish security architecture doc (MCP threat model + sanitization boundaries).",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "gtm-\u0026-enterprise-readiness-package"
+    },
+    {
+      "id": "task-core-foundation",
+      "title": "Implement Core Foundation",
+      "description": "Implement the feature: Core Foundation. The essential building blocks of the project.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "core-foundation"
+    },
+    {
+      "id": "task-ci-product-metrics-dogfooding",
+      "title": "Implement CI Product Metrics Dogfooding",
+      "description": "Implement the feature: CI Product Metrics Dogfooding. Extend CI workflow (go.yml) to preserve machine-readable check/report outputs for trend analysis. Current dogfooding only asserts pass/fail; add structured artifact collection.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "ci-product-metrics-dogfooding"
+    },
+    {
+      "id": "task-coverage-quality-hotspot-uplift",
+      "title": "Implement Coverage Quality Hotspot Uplift",
+      "description": "Implement the feature: Coverage Quality Hotspot Uplift. Add scenario tests for weaker coverage surfaces: internal/mcp, internal/cli, runner edge cases. Focus on failure-path handling and parser/runner boundary conditions.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "coverage-quality-hotspot-uplift"
+    }
+  ],
+  "approval_status": "approved",
+  "created_at": "2026-05-08T13:43:13.523478+02:00",
+  "updated_at": "2026-05-08T13:44:16.586043+02:00"
+}

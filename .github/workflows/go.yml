@@ -99,3 +99,13 @@ jobs:
         run: go build -o coverctl .
       - name: Run coverage check (dogfooding)
         run: ./coverctl check --config .coverctl.yaml
+      - name: Capture structured coverage outputs
+        if: always()
+        run: mkdir -p .cover/ci-artifacts && ./coverctl check --config .coverctl.yaml --output json > .cover/ci-artifacts/check.json 2>&1 || true && ./coverctl report --config .coverctl.yaml --profile .cover/coverage.out --output json > .cover/ci-artifacts/report.json 2>&1 || true
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-structured-output
+          path: .cover/ci-artifacts/
+          if-no-files-found: warn

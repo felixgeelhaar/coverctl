@@ -98,6 +98,7 @@ func TestRegistryGetRunner(t *testing.T) {
 		{application.LanguageScala, "scala", false},
 		{application.LanguageElixir, "elixir", false},
 		{application.LanguageShell, "shell", false},
+		{application.Language("unknown"), "", true},
 	}
 
 	for _, tt := range tests {

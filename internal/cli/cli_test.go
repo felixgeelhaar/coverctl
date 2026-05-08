@@ -601,7 +601,7 @@ func TestHelpFlag(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("expected exit 0, got %d", code)
 	}
-	if !strings.Contains(out.String(), "coverctl - Domain-driven") {
+	if !strings.Contains(out.String(), "coverctl - Domain-driven coverage enforcement for any language") {
 		t.Fatalf("expected help output, got: %s", out.String())
 	}
 }
