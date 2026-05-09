@@ -66,18 +66,21 @@
       <path d="M 122 220 Q 130 130 245 90"/>
     </g>
 
-    <!-- Centre pill: status / verdict -->
+    <!-- Centre pill: status / verdict
+         Border + verdict text use the FAIL accent (amber) so the visual
+         semantics match the product semantics — coverctl exists to surface
+         these moments, not to brand them go-coloured. -->
     <g class="al-centre">
       <circle cx="360" cy="240" r="92" fill="url(#al-glow)"/>
       <rect x="248" y="206" width="224" height="68" rx="34"
             fill="var(--al-pill-bg, #fff)"
-            stroke="url(#al-accent)" stroke-width="1.8"/>
+            stroke="var(--al-fail, #f97316)" stroke-width="1.8"/>
       <text x="360" y="232" class="al-pill-eyebrow"
             text-anchor="middle" fill="var(--al-pill-eyebrow, #0f766e)">
         coverctl check
       </text>
       <text x="360" y="258" class="al-pill-title"
-            text-anchor="middle" fill="var(--al-pill-title, #042f2e)">
+            text-anchor="middle" fill="var(--al-fail, #c2410c)">
         api 78.2% — fail
       </text>
     </g>
@@ -180,6 +183,7 @@
     --al-node-meta: #64748b;
     --al-ring: #14b8a6;
     --al-dot: #14b8a6;
+    --al-fail: #ea580c;
   }
 
   /* Dark theme */
@@ -195,6 +199,7 @@
     --al-node-meta: #7ea7a0;
     --al-ring: #2dd4bf;
     --al-dot: #2dd4bf;
+    --al-fail: #fb923c;
   }
 
   /* SVG text styling */

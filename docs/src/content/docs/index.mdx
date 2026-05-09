@@ -19,6 +19,12 @@ hero:
 import { Card, CardGrid, LinkCard, Aside, Code, TabItem, Tabs } from '@astrojs/starlight/components';
 import AgentLoop from '../../components/AgentLoop.astro';
 
+<div class="hero-loop-spotlight">
+
+<AgentLoop />
+
+</div>
+
 <div class="hero-supplement">
 
 > *"Our AI agents ship code fast, but they're blind to coverage policy while editing. We only see breakage in CI, after context is gone, and the same agent then guesses its way to a fix."*
@@ -29,12 +35,18 @@ Works best on standard Go/Python/JavaScript/Java/Rust projects with conventional
 
 ---
 
-<span class="eyebrow">The wedge</span>
-## The agent loop
+<span class="eyebrow">What it looks like</span>
+## A real agent session
 
-<AgentLoop />
+After `coverctl mcp serve` is wired into Claude Code. *Rendered for clarity — your client may format tool-calls differently.*
 
-Below: an actual agent session shape after `coverctl mcp serve` is wired into Claude Code. *Rendered for clarity — your client may format tool-calls differently.*
+<div class="agent-transcript">
+<div class="agent-transcript-chrome">
+  <span class="dot dot-r"></span>
+  <span class="dot dot-y"></span>
+  <span class="dot dot-g"></span>
+  <span class="agent-transcript-title">claude code · coverctl</span>
+</div>
 
 ```text
 You:    Add the email-validation feature to the api domain.
@@ -54,6 +66,8 @@ Claude: I'll add EmailValidator + tests in internal/api/email.
   I'll add cases for empty-input and malformed-domain so api meets
   the 80% threshold before we commit.
 ```
+
+</div>
 
 The regression that used to surface in CI 8 minutes later is fixed in the same agent turn.
 

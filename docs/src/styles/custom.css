@@ -764,14 +764,15 @@ button[data-open-modal]:hover {
   margin-bottom: 0.6rem;
 }
 
-/* H2/H3 retreatment for landing — italic serif accents */
+/* H2: roman Geist for engineering tone; italic-serif reserved for the
+   heroic moment (hero h1 + pull-quote + CTA closer) only. */
 .sl-markdown-content h2 {
-  font-family: var(--sl-font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-size: clamp(1.85rem, 3.5vw, 2.5rem);
-  letter-spacing: -0.018em;
-  line-height: 1.15;
+  font-family: var(--sl-font-system);
+  font-style: normal;
+  font-weight: 600;
+  font-size: clamp(1.625rem, 3vw, 2.125rem);
+  letter-spacing: -0.02em;
+  line-height: 1.18;
   margin-top: 4rem;
   margin-bottom: 1.25rem;
 }
@@ -779,11 +780,11 @@ button[data-open-modal]:hover {
 .sl-markdown-content h2::before {
   content: '';
   display: block;
-  width: 28px;
-  height: 1px;
+  width: 36px;
+  height: 2px;
   background: var(--sl-color-accent);
   margin-bottom: 1.1rem;
-  opacity: 0.6;
+  opacity: 0.85;
 }
 
 /* Restore non-italic mono feel for tutorial steps and reference H2 */
@@ -840,13 +841,13 @@ button[data-open-modal]:hover {
   position: absolute;
   top: 1rem;
   right: 1.25rem;
-  font-family: var(--sl-font-display);
-  font-style: italic;
-  font-size: 1.6rem;
-  font-weight: 400;
+  font-family: var(--sl-font-system-mono);
+  font-style: normal;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--sl-color-accent);
-  opacity: 0.7;
-  letter-spacing: -0.04em;
+  opacity: 0.85;
+  letter-spacing: 0.08em;
 }
 
 .editorial-cards .card:hover,
@@ -1006,4 +1007,129 @@ button[data-open-modal]:hover {
 .font-loading body {
   visibility: hidden;
 }
+
+/* ============================================
+   Functional / status colour vocabulary
+   Brand teal = action / pass. Amber = fail / attention.
+   ============================================ */
+:root {
+  --sl-color-fail: #f97316;
+  --sl-color-fail-bg: hsla(24, 95%, 53%, 0.10);
+  --sl-color-pass: var(--sl-color-accent);
+}
+
+/* ============================================
+   Hero loop spotlight — pulls AgentLoop into the
+   first viewport directly under the splash hero.
+   ============================================ */
+.hero-loop-spotlight {
+  margin: -1.5rem auto 3rem;
+  max-width: 780px;
+  padding: 0 1rem;
+  position: relative;
+}
+
+.hero-loop-spotlight .agent-loop {
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .hero-loop-spotlight {
+    margin: 0 auto 2rem;
+    padding: 0;
+  }
+}
+
+/* ============================================
+   Agent-session chrome — used ONCE on the
+   landing transcript to mark it as a rendered
+   agent session, not a generic code sample.
+   ============================================ */
+.agent-transcript {
+  border: 1px solid hsla(172, 65%, 50%, 0.28);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 2rem 0;
+  background: hsla(220, 25%, 7%, 0.55);
+  box-shadow: 0 12px 40px -20px hsla(172, 65%, 50%, 0.25);
+}
+
+:root[data-theme='light'] .agent-transcript {
+  background: hsla(40, 30%, 99%, 0.85);
+  border-color: hsla(172, 60%, 45%, 0.30);
+}
+
+.agent-transcript-chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.95rem;
+  background: hsla(220, 28%, 5%, 0.65);
+  border-bottom: 1px solid hsla(220, 14%, 22%, 0.6);
+}
+
+:root[data-theme='light'] .agent-transcript-chrome {
+  background: hsla(40, 25%, 95%, 1);
+  border-bottom-color: hsla(220, 14%, 85%, 1);
+}
+
+.agent-transcript-chrome .dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-r { background: #fb7185; }
+.dot-y { background: #fbbf24; }
+.dot-g { background: #34d399; }
+
+.agent-transcript-title {
+  margin-left: 0.7rem;
+  font-family: var(--sl-font-system-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--sl-color-gray-3);
+  text-transform: uppercase;
+}
+
+/* Strip default expressive-code chrome inside the transcript
+   so the outer agent-session frame is the only chrome. */
+.agent-transcript :is(.expressive-code, pre, figure) {
+  border: none !important;
+  background: transparent !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.agent-transcript .expressive-code .frame {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.agent-transcript .expressive-code .frame > .header {
+  display: none;
+}
+
+/* ============================================
+   Refined hero gradient — wider, single-direction
+   atmosphere instead of three competing radials.
+   ============================================ */
+.hero::before {
+  background:
+    radial-gradient(ellipse 130% 65% at 50% -25%, hsla(172, 65%, 50%, 0.20), transparent 65%),
+    radial-gradient(ellipse 70% 50% at 12% 8%, hsla(195, 60%, 50%, 0.06), transparent 70%);
+}
+
+/* Hero logo — more presence */
+.hero img {
+  max-width: 132px;
+}
+
+/* Hero h1 still italic serif — singular. */
+
+/* CTA-band closer keeps italic-serif rhetorical bookend. */
 
