@@ -4,6 +4,7 @@ description: Walk through one full agent-loop cycle with coverctl. Install + wir
 ---
 
 import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import AgentLoop from '../../components/AgentLoop.astro';
 
 This is the tutorial that builds the mental model. By the end of it
 you'll have done one full agent-loop cycle on a real repo and seen
@@ -16,57 +17,7 @@ runs `check` → commit*. The diagram below makes it spatial.
 
 ## The loop
 
-```text
-                  ┌──────────────────────────────────┐
-                  │           You                     │
-                  │  "Add the email-validation         │
-                  │   feature to the api domain."      │
-                  └────────────────┬─────────────────┘
-                                   │
-                                   ▼
-                  ┌──────────────────────────────────┐
-                  │       Agent (Claude Code,         │
-                  │        Cursor, Cline, …)          │
-                  │  edits internal/api/email.go      │
-                  │  edits internal/api/email_test.go │
-                  └─────┬───────────┬────────────────┘
-                        │           │
-              tool call │           │ tool call
-                        ▼           │
-              ┌────────────────┐    │
-              │  coverctl      │    │
-              │  check (MCP)   │    │
-              └────────┬───────┘    │
-                       │            │
-                       ▼            │
-              passed: false         │
-              failing: api          │
-              (78.2 % < 80 %)       │
-                       │            │
-                       ▼            │
-              ┌────────────────┐    │
-              │  coverctl      │    │
-              │  suggest api   │    │
-              │  (MCP)         │    │
-              └────────┬───────┘    │
-                       │            │
-                       ▼            │
-              uncovered:            │
-              email.go:42-58        │
-              (error paths)         │
-                       │            │
-                       ▼            │
-                  ┌──────────────────────────────────┐
-                  │      Agent fixes uncovered        │
-                  │      paths, re-runs check,        │
-                  │      gets passed: true,           │
-                  │      proposes the commit.         │
-                  └────────────────┬─────────────────┘
-                                   │
-                                   ▼
-                       Commit lands clean.
-                       CI never sees the regression.
-```
+<AgentLoop />
 
 The whole loop happens inside a single agent turn. The regression that
 used to surface in CI 8 minutes later — after you'd context-switched

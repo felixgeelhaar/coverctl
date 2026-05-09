@@ -17,6 +17,7 @@ hero:
 ---
 
 import { Card, CardGrid, LinkCard, Aside, Code, TabItem, Tabs } from '@astrojs/starlight/components';
+import AgentLoop from '../../components/AgentLoop.astro';
 
 <div class="hero-supplement">
 
@@ -28,18 +29,10 @@ Works best on standard Go/Python/JavaScript/Java/Rust projects with conventional
 
 ---
 
+<span class="eyebrow">The wedge</span>
 ## The agent loop
 
-```text
-You ─► Agent edits ─► coverctl check (MCP) ─► passed:false / failing:api
-                              ▲                          │
-                              │                          ▼
-                              └─ Agent fixes ◄── coverctl suggest api (MCP)
-                                                         │
-                                                         ▼
-                                                  Commit lands clean
-                                              CI never sees the regression
-```
+<AgentLoop />
 
 Below: an actual agent session shape after `coverctl mcp serve` is wired into Claude Code. *Rendered for clarity — your client may format tool-calls differently.*
 
@@ -112,22 +105,25 @@ coverctl check
 
 ---
 
-## Why this is different
+<span class="eyebrow">Why this is different</span>
+## Four moves that make this a category, not a feature
 
+<div class="editorial-cards">
 <CardGrid>
-  <Card title="Catches regressions before commit" icon="approve-check">
+  <Card title="Pre-commit, not post-CI" icon="approve-check">
     Coverage feedback in the agent's edit turn — before the diff lands in CI. The wedge metric is regressions caught pre-commit, not coverage percent.
   </Card>
-  <Card title="Agent-callable via MCP" icon="puzzle">
+  <Card title="Agent-callable through MCP" icon="puzzle">
     Speaks MCP — the multi-vendor agent-tool standard governed by Anthropic, OpenAI, Google, Microsoft, AWS. Works with every MCP-capable client today; works with whatever ships next.
   </Card>
   <Card title="Polyglot governance, one config" icon="laptop">
     One `.coverctl.yaml` enforces per-domain thresholds across Go, Python, TypeScript, Rust, Java, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell.
   </Card>
-  <Card title="Local-first, hardened MCP surface" icon="shield">
+  <Card title="Local-first, hardened boundary" icon="shield">
     No SaaS account, no source upload, no third-party dependency in the agent's reach. Input + output sanitization defends against prompt-injection through test-runner flags and hostile filenames.
   </Card>
 </CardGrid>
+</div>
 
 ---
 

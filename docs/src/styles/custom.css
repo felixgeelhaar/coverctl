@@ -1,10 +1,6 @@
-/* coverctl Documentation - Modern Minimal Theme */
-/* Inspired by Vercel, Linear, Stripe aesthetics */
-
-/* ============================================
-   Font Import - Clean, Modern Sans-Serif
-   ============================================ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* coverctl Documentation — Editorial-Terminal Theme */
+/* Italic serif for the heroic claim. Mono for the craft moments. */
+/* Electric teal on warm-paper / deep-ink. Distinctive, not generic. */
 
 /* ============================================
    Root Variables - Dark Mode First
@@ -25,9 +21,13 @@
   --sl-color-gray-6: hsl(224, 14%, 14%);
   --sl-color-black: hsl(224, 18%, 8%);
 
-  /* Typography */
-  --sl-font-system: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  --sl-font-system-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Consolas, monospace;
+  /* Typography
+     Display: Instrument Serif — editorial, italic-friendly, high-contrast.
+     Body: Geist — refined neogrotesque with terminal heritage.
+     Mono: JetBrains Mono — for transcripts, code, eyebrow labels. */
+  --sl-font-system: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sl-font-system-mono: 'JetBrains Mono', ui-monospace, 'Fira Code', 'SF Mono', Monaco, Consolas, monospace;
+  --sl-font-display: 'Instrument Serif', ui-serif, Georgia, 'Times New Roman', serif;
 
   /* Sizing & Spacing */
   --sl-text-h1: 2.75rem;
@@ -126,41 +126,48 @@ h1, h2, h3, h4, h5, h6 {
   z-index: -1;
 }
 
-/* Hero title */
+/* Hero title — italic editorial serif */
 .hero h1 {
-  font-size: clamp(2.5rem, 6vw, 4rem);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
-  margin-bottom: 1.25rem;
-  background: linear-gradient(to bottom right, var(--sl-color-white), var(--sl-color-gray-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: var(--sl-font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.75rem, 7vw, 5rem);
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+  margin-bottom: 1.4rem;
+  color: var(--sl-color-white);
+}
+
+/* Subtle teal seam under the heroic h1 for visual anchor */
+.hero h1::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 2px;
+  margin: 1.6rem auto 0;
+  background: linear-gradient(to right, transparent, var(--sl-color-accent), transparent);
 }
 
 :root[data-theme='light'] .hero h1 {
-  background: linear-gradient(to bottom right, var(--sl-color-gray-1), var(--sl-color-gray-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: hsl(220, 25%, 12%);
 }
 
-/* Hero tagline */
+/* Hero tagline — refined body */
 .hero .tagline {
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   color: var(--sl-color-gray-2);
-  max-width: 580px;
+  max-width: 640px;
   margin: 0 auto 2.5rem;
   line-height: 1.65;
+  letter-spacing: -0.005em;
 }
 
-/* Hero image/logo */
+/* Hero image/logo — restrained shadow, generous space */
 .hero img {
-  max-width: 120px;
+  max-width: 96px;
   height: auto;
-  margin-bottom: 2rem;
-  filter: drop-shadow(0 0 30px hsla(172, 60%, 50%, 0.3));
+  margin-bottom: 1.75rem;
+  filter: drop-shadow(0 6px 24px hsla(172, 65%, 50%, 0.18));
 }
 
 /* Hero actions */
@@ -702,3 +709,301 @@ button[data-open-modal]:hover {
     gap: 1rem;
   }
 }
+
+/* ============================================
+   Editorial-Terminal Layer — distinctive page primitives
+   ============================================ */
+
+/* Landing-page hero supplement: pull-quote treatment */
+.hero-supplement {
+  max-width: 720px;
+  margin: -1.5rem auto 2.5rem;
+  padding: 1.25rem 1.75rem;
+  border-left: 2px solid var(--sl-color-accent);
+  background:
+    linear-gradient(135deg,
+      hsla(172, 65%, 50%, 0.05) 0%,
+      transparent 60%);
+}
+
+.hero-supplement blockquote,
+.hero-supplement > blockquote {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.hero-supplement em,
+.hero-supplement i,
+.hero-supplement blockquote p {
+  font-family: var(--sl-font-display);
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  color: var(--sl-color-white);
+  font-weight: 400;
+}
+
+:root[data-theme='light'] .hero-supplement em,
+:root[data-theme='light'] .hero-supplement i,
+:root[data-theme='light'] .hero-supplement blockquote p {
+  color: hsl(220, 28%, 18%);
+}
+
+/* Eyebrow label — small uppercase mono, used across headings */
+.eyebrow {
+  display: inline-block;
+  font-family: var(--sl-font-system-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sl-color-accent);
+  margin-bottom: 0.6rem;
+}
+
+/* H2/H3 retreatment for landing — italic serif accents */
+.sl-markdown-content h2 {
+  font-family: var(--sl-font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.85rem, 3.5vw, 2.5rem);
+  letter-spacing: -0.018em;
+  line-height: 1.15;
+  margin-top: 4rem;
+  margin-bottom: 1.25rem;
+}
+
+.sl-markdown-content h2::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--sl-color-accent);
+  margin-bottom: 1.1rem;
+  opacity: 0.6;
+}
+
+/* Restore non-italic mono feel for tutorial steps and reference H2 */
+.sl-markdown-content h3 {
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  margin-top: 2.5rem;
+}
+
+/* Editorial cards — numbered, kickered, distinctive */
+.editorial-cards {
+  --ec-cols: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--ec-cols), 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+  counter-reset: editorial-counter;
+}
+
+@media (max-width: 720px) {
+  .editorial-cards {
+    --ec-cols: 1;
+  }
+}
+
+.editorial-cards .card,
+.editorial-cards .sl-link-card {
+  position: relative;
+  padding: 2rem 1.6rem 1.6rem;
+  background:
+    linear-gradient(180deg,
+      hsla(172, 65%, 50%, 0.04) 0%,
+      transparent 25%),
+    var(--sl-color-gray-6);
+  border: 1px solid hsla(224, 14%, 22%, 0.7);
+  border-radius: 14px;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+:root[data-theme='light'] .editorial-cards .card,
+:root[data-theme='light'] .editorial-cards .sl-link-card {
+  background:
+    linear-gradient(180deg,
+      hsla(172, 60%, 45%, 0.04) 0%,
+      transparent 25%),
+    hsl(40, 20%, 99%);
+  border-color: hsla(220, 14%, 88%, 1);
+}
+
+.editorial-cards .card::before,
+.editorial-cards .sl-link-card::before {
+  counter-increment: editorial-counter;
+  content: counter(editorial-counter, decimal-leading-zero);
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  font-family: var(--sl-font-display);
+  font-style: italic;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--sl-color-accent);
+  opacity: 0.7;
+  letter-spacing: -0.04em;
+}
+
+.editorial-cards .card:hover,
+.editorial-cards .sl-link-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--sl-color-accent);
+}
+
+/* Hero CTA buttons — sharper edges, less SaaS-pill */
+.hero .action {
+  border-radius: 6px;
+  padding: 0.85rem 1.6rem;
+  font-family: var(--sl-font-system-mono);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hero .action.primary {
+  background: var(--sl-color-accent);
+  color: hsl(220, 30%, 8%);
+}
+
+.hero .action.secondary {
+  background: transparent;
+  border: 1px solid var(--sl-color-accent);
+  color: var(--sl-color-accent);
+}
+
+/* Hero gradient backdrop — broader, more atmospheric */
+.hero::before {
+  background:
+    radial-gradient(ellipse 120% 60% at 50% -20%, hsla(172, 60%, 50%, 0.20), transparent 60%),
+    radial-gradient(ellipse 80% 40% at 15% 10%, hsla(195, 60%, 50%, 0.07), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 5%, hsla(160, 60%, 50%, 0.06), transparent 70%);
+}
+
+/* Aside (admonition) styling — cleaner ledger feel */
+.starlight-aside {
+  border-radius: 0;
+  border-left-width: 3px;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  background:
+    linear-gradient(90deg,
+      hsla(172, 60%, 50%, 0.04) 0%,
+      transparent 60%);
+  padding-left: 1.5rem;
+}
+
+.starlight-aside__title {
+  font-family: var(--sl-font-system-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Tables — minimal lines, mono for numeric columns */
+.sl-markdown-content table {
+  font-size: 0.92rem;
+}
+
+.sl-markdown-content table th {
+  font-family: var(--sl-font-system-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-2);
+  border-bottom: 1.5px solid var(--sl-color-gray-5);
+  padding-bottom: 0.7rem;
+}
+
+.sl-markdown-content table td {
+  border-bottom: 1px solid hsla(220, 14%, 30%, 0.18);
+}
+
+:root[data-theme='light'] .sl-markdown-content table td {
+  border-bottom-color: hsla(220, 14%, 80%, 0.5);
+}
+
+.sl-markdown-content table code {
+  font-size: 0.86em;
+}
+
+/* Inline code — softer pill */
+.sl-markdown-content :not(pre) > code {
+  background: hsla(172, 60%, 50%, 0.08);
+  color: var(--sl-color-accent-high);
+  border: 1px solid hsla(172, 60%, 50%, 0.16);
+  padding: 0.08em 0.4em;
+  border-radius: 4px;
+  font-size: 0.88em;
+}
+
+:root[data-theme='light'] .sl-markdown-content :not(pre) > code {
+  background: hsla(172, 60%, 45%, 0.08);
+  color: hsl(172, 70%, 25%);
+  border-color: hsla(172, 60%, 45%, 0.18);
+}
+
+/* CTA section at page end — full-bleed band */
+.cta-section {
+  margin: 5rem -1rem 0;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background:
+    linear-gradient(135deg,
+      hsla(172, 65%, 50%, 0.07) 0%,
+      hsla(172, 65%, 50%, 0.02) 100%);
+  border-top: 1px solid hsla(172, 65%, 50%, 0.18);
+  border-bottom: 1px solid hsla(172, 65%, 50%, 0.18);
+}
+
+.cta-section p {
+  font-family: var(--sl-font-display);
+  font-style: italic;
+  font-size: 1.45rem;
+  margin: 0 0 1.25rem;
+  color: var(--sl-color-white);
+}
+
+:root[data-theme='light'] .cta-section p {
+  color: hsl(220, 25%, 18%);
+}
+
+.cta-section a {
+  font-family: var(--sl-font-system-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Sidebar — sharper, denser */
+.sidebar-pane {
+  padding-top: 1rem;
+}
+
+.sidebar h2 {
+  font-family: var(--sl-font-system-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sl-color-gray-3);
+  border: none;
+}
+
+.sidebar h2::before {
+  display: none;
+}
+
+/* Smooth font fallback while web fonts load */
+.font-loading body {
+  visibility: hidden;
+}
+

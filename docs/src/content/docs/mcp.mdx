@@ -4,6 +4,7 @@ description: Connect coverctl to Claude Code, Cursor, Cline, Aider and other Mod
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import AgentLoop from '../../components/AgentLoop.astro';
 
 coverctl ships an [MCP](https://modelcontextprotocol.io) server so AI coding agents can ask for coverage feedback inline — domain-aware policy results, debt rankings, threshold suggestions, and per-file deltas — without leaving the edit loop.
 
@@ -11,16 +12,7 @@ The MCP server is the canonical surface. The CLI is the substrate behind it; hum
 
 ## The agent loop
 
-```text
-You ─► Agent edits ─► coverctl check (MCP) ─► passed:false / failing:<domain>
-                              ▲                          │
-                              │                          ▼
-                              └─ Agent fixes ◄── coverctl suggest / debt (MCP)
-                                                         │
-                                                         ▼
-                                                  Commit lands clean
-                                              CI never sees the regression
-```
+<AgentLoop />
 
 Full walkthrough: [The agent loop, end to end](/coverctl/agent-loop-tutorial/).
 

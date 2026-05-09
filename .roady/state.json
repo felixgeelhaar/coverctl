@@ -1,6 +1,6 @@
 {
   "project_id": "coverctl",
-  "version": 159,
+  "version": 173,
   "task_states": {
     "T-1": {
       "status": "done",
@@ -612,18 +612,36 @@
       "elapsed_minutes": 0
     },
     "T56": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/for-platform-teams.mdx — Jordan-persona landing zone with what-ships summary, four procurement-ready artifact LinkCards (threat-model, rejection-schema, gtm-metrics-spec, ARCHITECTURE.md), license + monetization framing, platform-evaluation inbound issue-label CTA."
+      ],
+      "started_at": "2026-05-09T13:11:17.68756+02:00",
+      "completed_at": "2026-05-09T13:11:33.312283+02:00",
       "elapsed_minutes": 0
     },
     "T57": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/security/threat-model.mdx — render of mcp-threat-model.md into Astro site with Lethal Trifecta framing, input + output boundary controls, fail-closed behavior, residual risk, code references."
+      ],
+      "started_at": "2026-05-09T13:11:20.443339+02:00",
+      "completed_at": "2026-05-09T13:11:38.19075+02:00",
       "elapsed_minutes": 0
     },
     "T58": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/security/rejection-schema.mdx — split out of mcp.mdx with stable JSON shape, all 13 RejectionCode constants documented in table form, append-only schema-stability guarantee, anti-pattern Aside, code references."
+      ],
+      "started_at": "2026-05-09T13:11:40.704203+02:00",
+      "completed_at": "2026-05-09T13:12:00.945992+02:00",
       "elapsed_minutes": 0
     },
     "T59": {
@@ -648,23 +666,47 @@
       "elapsed_minutes": 0
     },
     "T61": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/pricing.mdx — three-section page: free CLI/MCP forever, hosted layer roadmap, hosted-waitlist GitHub label CTA, sponsorship LinkCard."
+      ],
+      "started_at": "2026-05-09T13:11:22.798348+02:00",
+      "completed_at": "2026-05-09T13:11:43.472215+02:00",
       "elapsed_minutes": 0
     },
     "T62": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/compare/coverctl-vs-codecov.mdx — Dunford alternatives structure with TLDR table, when-to-use-each, use-both pairing, honest framing."
+      ],
+      "started_at": "2026-05-09T13:11:46.839695+02:00",
+      "completed_at": "2026-05-09T13:12:03.875194+02:00",
       "elapsed_minutes": 0
     },
     "T63": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/compare/coverctl-vs-coveralls.mdx — TLDR table, when-to-use-each, per-domain framing as differentiator."
+      ],
+      "started_at": "2026-05-09T13:12:06.889517+02:00",
+      "completed_at": "2026-05-09T13:12:18.807618+02:00",
       "elapsed_minutes": 0
     },
     "T64": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/compare/coverctl-vs-native.mdx — coverctl runs the native commands, what coverctl adds (per-domain policy, polyglot interface, MCP), 'coverctl never hides the underlying tool' framing."
+      ],
+      "started_at": "2026-05-09T13:12:21.782214+02:00",
+      "completed_at": "2026-05-09T13:12:33.974863+02:00",
       "elapsed_minutes": 0
     },
     "T65": {
@@ -982,5 +1024,5 @@
       "elapsed_minutes": 0
     }
   },
-  "updated_at": "2026-05-09T13:09:47.725156+02:00"
+  "updated_at": "2026-05-09T13:12:33.974863+02:00"
 }

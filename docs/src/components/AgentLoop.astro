@@ -1,0 +1,275 @@
+---
+// AgentLoop.astro — canonical visual of the coverctl wedge.
+// Four nodes (You · Agent · coverctl · Tests) arranged on a circle.
+// Curved arrows flow clockwise. Center pill shows the live verdict.
+// CSS-only animation; respects prefers-reduced-motion.
+//
+// Use anywhere we need to anchor the agent-loop concept visually.
+// Sized to the page width with an internal max via CSS.
+---
+
+<figure class="agent-loop" aria-labelledby="agent-loop-caption">
+  <svg
+    viewBox="0 0 720 480"
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    class="agent-loop-svg"
+  >
+    <title id="agent-loop-caption">
+      The agent loop — you ask, the agent edits, coverctl checks, tests confirm, commit ships.
+    </title>
+
+    <defs>
+      <!-- Soft accent gradient used throughout -->
+      <linearGradient id="al-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="var(--al-stop-1, #2dd4bf)"/>
+        <stop offset="100%" stop-color="var(--al-stop-2, #0d9488)"/>
+      </linearGradient>
+
+      <!-- Subtle glow under the centre pill -->
+      <radialGradient id="al-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="var(--al-stop-1, #2dd4bf)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="var(--al-stop-1, #2dd4bf)" stop-opacity="0"/>
+      </radialGradient>
+
+      <!-- Arrowhead marker -->
+      <marker id="al-arrow" viewBox="0 0 10 10" refX="6" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="url(#al-accent)"/>
+      </marker>
+
+      <!-- Dotted ring backdrop -->
+      <pattern id="al-dots" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+        <circle cx="3" cy="3" r="0.7" fill="var(--al-dot, currentColor)" fill-opacity="0.18"/>
+      </pattern>
+    </defs>
+
+    <!-- Decorative dotted backdrop -->
+    <circle cx="360" cy="240" r="200" fill="none"
+            stroke="var(--al-ring, currentColor)" stroke-opacity="0.12"
+            stroke-width="1" stroke-dasharray="2 6"/>
+    <circle cx="360" cy="240" r="160" fill="none"
+            stroke="var(--al-ring, currentColor)" stroke-opacity="0.08"
+            stroke-width="1"/>
+
+    <!-- Curved arrows between nodes (clockwise sweep) -->
+    <g class="al-arrows" fill="none"
+       stroke="url(#al-accent)" stroke-width="2.4"
+       stroke-linecap="round" marker-end="url(#al-arrow)">
+      <!-- you → agent -->
+      <path d="M 478 90 Q 600 130 600 220"/>
+      <!-- agent → coverctl -->
+      <path d="M 600 280 Q 580 380 460 400"/>
+      <!-- coverctl → tests -->
+      <path d="M 270 400 Q 130 380 122 280"/>
+      <!-- tests → you (closing the loop) -->
+      <path d="M 122 220 Q 130 130 245 90"/>
+    </g>
+
+    <!-- Centre pill: status / verdict -->
+    <g class="al-centre">
+      <circle cx="360" cy="240" r="92" fill="url(#al-glow)"/>
+      <rect x="248" y="206" width="224" height="68" rx="34"
+            fill="var(--al-pill-bg, #fff)"
+            stroke="url(#al-accent)" stroke-width="1.8"/>
+      <text x="360" y="232" class="al-pill-eyebrow"
+            text-anchor="middle" fill="var(--al-pill-eyebrow, #0f766e)">
+        coverctl check
+      </text>
+      <text x="360" y="258" class="al-pill-title"
+            text-anchor="middle" fill="var(--al-pill-title, #042f2e)">
+        api 78.2% — fail
+      </text>
+    </g>
+
+    <!-- Node: You (top-left) -->
+    <g class="al-node" transform="translate(360 80)">
+      <circle r="50" fill="var(--al-node-bg, #fff)"
+              stroke="url(#al-accent)" stroke-width="2"/>
+      <text y="-6" class="al-node-eyebrow" text-anchor="middle"
+            fill="var(--al-node-eyebrow, currentColor)">YOU</text>
+      <text y="14" class="al-node-line" text-anchor="middle"
+            fill="var(--al-node-line, currentColor)">"add email</text>
+      <text y="30" class="al-node-line" text-anchor="middle"
+            fill="var(--al-node-line, currentColor)">validation"</text>
+    </g>
+
+    <!-- Node: Agent (right) -->
+    <g class="al-node" transform="translate(602 240)">
+      <circle r="58" fill="var(--al-node-bg, #fff)"
+              stroke="url(#al-accent)" stroke-width="2"/>
+      <text y="-22" class="al-node-eyebrow" text-anchor="middle"
+            fill="var(--al-node-eyebrow, currentColor)">AGENT</text>
+      <text y="-2" class="al-node-line" text-anchor="middle"
+            fill="var(--al-node-line, currentColor)">edits</text>
+      <text y="14" class="al-node-line" text-anchor="middle"
+            fill="var(--al-node-line, currentColor)">email.go</text>
+      <text y="32" class="al-node-meta" text-anchor="middle"
+            fill="var(--al-node-meta, currentColor)">claude code</text>
+    </g>
+
+    <!-- Node: coverctl (bottom) -->
+    <g class="al-node" transform="translate(360 400)">
+      <circle r="52" fill="var(--al-node-bg, #fff)"
+              stroke="url(#al-accent)" stroke-width="2"/>
+      <text y="-8" class="al-node-eyebrow" text-anchor="middle"
+            fill="var(--al-node-eyebrow, currentColor)">COVERCTL</text>
+      <text y="14" class="al-node-line" text-anchor="middle"
+            fill="var(--al-node-line, currentColor)">policy gate</text>
+      <text y="32" class="al-node-meta" text-anchor="middle"
+            fill="var(--al-node-meta, currentColor)">via mcp</text>
+    </g>
+
+    <!-- Node: Tests (left) -->
+    <g class="al-node" transform="translate(118 240)">
+      <circle r="58" fill="var(--al-node-bg, #fff)"
+              stroke="url(#al-accent)" stroke-width="2"/>
+      <text y="-22" class="al-node-eyebrow" text-anchor="middle"
+            fill="var(--al-node-eyebrow, currentColor)">TESTS</text>
+      <text y="-2" class="al-node-line" text-anchor="middle"
+            fill="var(--al-node-line, currentColor)">go test</text>
+      <text y="14" class="al-node-line" text-anchor="middle"
+            fill="var(--al-node-line, currentColor)">pytest --cov</text>
+      <text y="32" class="al-node-meta" text-anchor="middle"
+            fill="var(--al-node-meta, currentColor)">15 langs</text>
+    </g>
+
+    <!-- Travelling dot animation along the loop (paused for reduced-motion) -->
+    <g class="al-traveler">
+      <circle r="5" fill="url(#al-accent)">
+        <animateMotion
+          dur="9s"
+          repeatCount="indefinite"
+          path="M 478 90 Q 600 130 600 220 L 600 280 Q 580 380 460 400 L 270 400 Q 130 380 122 280 L 122 220 Q 130 130 245 90 Z"/>
+      </circle>
+    </g>
+  </svg>
+
+  <figcaption class="agent-loop-caption">
+    <span class="agent-loop-step"><b>1.</b> You ask</span>
+    <span class="agent-loop-step"><b>2.</b> Agent edits</span>
+    <span class="agent-loop-step"><b>3.</b> coverctl checks via MCP</span>
+    <span class="agent-loop-step"><b>4.</b> Tests run, verdict returns</span>
+  </figcaption>
+</figure>
+
+<style>
+  .agent-loop {
+    margin: 2.5rem auto;
+    max-width: 780px;
+    padding: 0;
+  }
+
+  .agent-loop-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--sl-color-gray-2);
+  }
+
+  /* Theme variables — light */
+  :root {
+    --al-stop-1: #14b8a6;
+    --al-stop-2: #0d9488;
+    --al-pill-bg: #ffffff;
+    --al-pill-eyebrow: #0f766e;
+    --al-pill-title: #042f2e;
+    --al-node-bg: #ffffff;
+    --al-node-eyebrow: #0f766e;
+    --al-node-line: #1f2937;
+    --al-node-meta: #64748b;
+    --al-ring: #14b8a6;
+    --al-dot: #14b8a6;
+  }
+
+  /* Dark theme */
+  :root[data-theme='dark'] {
+    --al-stop-1: #2dd4bf;
+    --al-stop-2: #14b8a6;
+    --al-pill-bg: #0b1413;
+    --al-pill-eyebrow: #5eead4;
+    --al-pill-title: #ccfbf1;
+    --al-node-bg: #0a1413;
+    --al-node-eyebrow: #5eead4;
+    --al-node-line: #e6f6f3;
+    --al-node-meta: #7ea7a0;
+    --al-ring: #2dd4bf;
+    --al-dot: #2dd4bf;
+  }
+
+  /* SVG text styling */
+  .al-pill-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .al-pill-title {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  .al-node-eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+  }
+
+  .al-node-line {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .al-node-meta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+  }
+
+  /* Caption row beneath the diagram */
+  .agent-loop-caption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.5rem;
+    justify-content: center;
+    margin-top: 1.25rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--sl-color-gray-2);
+  }
+
+  .agent-loop-step b {
+    color: var(--sl-color-accent);
+    font-weight: 600;
+    margin-right: 0.35em;
+  }
+
+  /* Pause the traveling dot when the user prefers reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .al-traveler animateMotion {
+      animation: none;
+    }
+    .al-traveler circle {
+      opacity: 0;
+    }
+  }
+
+  /* Mobile: shrink padding so the SVG can take full width */
+  @media (max-width: 640px) {
+    .agent-loop {
+      margin: 1.5rem -0.5rem;
+    }
+    .agent-loop-caption {
+      gap: 0.25rem 0.9rem;
+      font-size: 0.7rem;
+    }
+  }
+</style>
