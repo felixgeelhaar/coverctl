@@ -1,55 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="coverctl">
-  <title>coverctl — the agent loop</title>
+  <title>coverctl</title>
+
+  <!-- Square mark — confident, geometric, scales clean from 16px to hero.
+       Concept: a thick rounded-square frame (the policy gate) with a
+       glyph inside that reads as both a 'c' and a checkmark, plus a
+       small accent dot suggesting "the moment the agent is anchored." -->
+
   <defs>
-    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="markGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#2dd4bf"/>
-      <stop offset="55%" stop-color="#14b8a6"/>
       <stop offset="100%" stop-color="#0d9488"/>
     </linearGradient>
-    <radialGradient id="centerGrad" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#5eead4"/>
-      <stop offset="60%" stop-color="#14b8a6"/>
-      <stop offset="100%" stop-color="#0f766e"/>
-    </radialGradient>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="0.6"/>
-    </filter>
   </defs>
 
-  <!-- Decorative tick at the loop's seam, marks the entry point -->
-  <line x1="60" y1="6" x2="60" y2="14" stroke="url(#ringGrad)" stroke-width="3" stroke-linecap="round"/>
-
-  <!-- Outer loop arc (240° sweep) — the agent loop -->
-  <path d="M 60 14
-           A 46 46 0 1 1 14.6 75.5"
+  <!-- Outer frame: rounded square, generous corner radius, thick stroke.
+       This is the gate / boundary — the policy lives inside it. -->
+  <rect x="10" y="10" width="100" height="100" rx="22"
         fill="none"
-        stroke="url(#ringGrad)"
-        stroke-width="9"
-        stroke-linecap="round"
-        opacity="0.95"/>
+        stroke="url(#markGrad)"
+        stroke-width="9"/>
 
-  <!-- Inner ring tick marks for craft detail -->
-  <g stroke="url(#ringGrad)" stroke-width="2" stroke-linecap="round" opacity="0.45">
-    <line x1="60" y1="22" x2="60" y2="26"/>
-    <line x1="98" y1="60" x2="94" y2="60"/>
-    <line x1="60" y1="98" x2="60" y2="94"/>
-  </g>
-
-  <!-- Arrow head sealing the loop, signals direction -->
-  <path d="M 14.6 75.5 L 24 70 L 21 81 Z"
-        fill="url(#ringGrad)"/>
-
-  <!-- Center disc — "the gate" -->
-  <circle cx="60" cy="60" r="14" fill="url(#centerGrad)"/>
-
-  <!-- Inner highlight dot -->
-  <circle cx="56" cy="55" r="3.2" fill="#ccfbf1" opacity="0.85" filter="url(#soft)"/>
-
-  <!-- Single coverage tick across the gate — recognizable check beat -->
-  <path d="M 53 60.5 L 58.5 66 L 68 55"
+  <!-- Inner glyph: stylized 'c' that doubles as a checkmark.
+       Two strokes joined at a sharp angle, opening to the right —
+       reads as the letter 'c' from a distance and as a check beat
+       up close. -->
+  <path d="M 80 38
+           L 50 38
+           L 50 82
+           L 80 82"
         fill="none"
-        stroke="#042f2e"
-        stroke-width="3.2"
+        stroke="url(#markGrad)"
+        stroke-width="11"
         stroke-linecap="round"
         stroke-linejoin="round"/>
+
+  <!-- Anchor dot — the still point at the centre of the loop.
+       Small, off-axis, distinctive. Sits where the 'c' opens. -->
+  <circle cx="84" cy="60" r="5"
+          fill="url(#markGrad)"/>
 </svg>

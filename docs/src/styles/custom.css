@@ -1045,18 +1045,21 @@ button[data-open-modal]:hover {
    landing transcript to mark it as a rendered
    agent session, not a generic code sample.
    ============================================ */
+/* Transcript stays dark in BOTH themes — it's a terminal artifact,
+   not a code listing. Light-mode users still see the agent in its
+   native dark chrome, which preserves syntax-highlight contrast and
+   avoids white-on-white code rendering. */
 .agent-transcript {
-  border: 1px solid hsla(172, 65%, 50%, 0.28);
+  border: 1px solid hsla(172, 65%, 50%, 0.32);
   border-radius: 14px;
   overflow: hidden;
   margin: 2rem 0;
-  background: hsla(220, 25%, 7%, 0.55);
-  box-shadow: 0 12px 40px -20px hsla(172, 65%, 50%, 0.25);
+  background: hsl(220, 28%, 8%);
+  box-shadow: 0 14px 40px -20px hsla(172, 65%, 50%, 0.28);
 }
 
 :root[data-theme='light'] .agent-transcript {
-  background: hsla(40, 30%, 99%, 0.85);
-  border-color: hsla(172, 60%, 45%, 0.30);
+  box-shadow: 0 14px 40px -20px hsla(220, 30%, 30%, 0.25);
 }
 
 .agent-transcript-chrome {
@@ -1064,13 +1067,8 @@ button[data-open-modal]:hover {
   align-items: center;
   gap: 0.4rem;
   padding: 0.65rem 0.95rem;
-  background: hsla(220, 28%, 5%, 0.65);
+  background: hsl(220, 30%, 5%);
   border-bottom: 1px solid hsla(220, 14%, 22%, 0.6);
-}
-
-:root[data-theme='light'] .agent-transcript-chrome {
-  background: hsla(40, 25%, 95%, 1);
-  border-bottom-color: hsla(220, 14%, 85%, 1);
 }
 
 .agent-transcript-chrome .dot {
@@ -1112,6 +1110,19 @@ button[data-open-modal]:hover {
 
 .agent-transcript .expressive-code .frame > .header {
   display: none;
+}
+
+/* Force terminal text to render light-on-dark in BOTH themes.
+   The transcript fence is `text` lang (no syntax tokens), so a single
+   colour override is sufficient. */
+.agent-transcript :is(pre, code, .expressive-code, span) {
+  color: hsl(180, 20%, 88%) !important;
+}
+
+.agent-transcript pre {
+  padding: 1rem 1.25rem 1.25rem !important;
+  font-size: 0.83rem !important;
+  line-height: 1.55 !important;
 }
 
 /* ============================================
