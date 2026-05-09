@@ -1,6 +1,6 @@
 {
   "project_id": "coverctl",
-  "version": 103,
+  "version": 104,
   "task_states": {
     "T-1": {
       "status": "done",
@@ -327,6 +327,56 @@
       "completed_at": "2026-05-09T08:21:22.30622+02:00",
       "elapsed_minutes": 2
     },
+    "T30": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T31": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T32": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T33": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T34": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T35": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T36": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T37": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T38": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T39": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
     "T4": {
       "status": "done",
       "path": "",
@@ -337,6 +387,41 @@
       "started_at": "2026-05-09T08:19:15.869941+02:00",
       "completed_at": "2026-05-09T08:21:23.996235+02:00",
       "elapsed_minutes": 2
+    },
+    "T40": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T41": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T42": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T43": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T44": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T45": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T46": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
     },
     "T5": {
       "status": "done",
@@ -426,6 +511,11 @@
       "completed_at": "2026-05-08T22:08:58.049729+02:00",
       "elapsed_minutes": 0
     },
+    "task-community-and-platform-teams-surface-area": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
     "task-core-foundation": {
       "status": "done",
       "path": "",
@@ -503,6 +593,16 @@
       "completed_at": "2026-05-08T22:08:18.801137+02:00",
       "elapsed_minutes": 0
     },
+    "task-public-surface-wedge-reframe": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "task-readme-and-landing-information-architecture": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
     "task-rust-quick-start-tab": {
       "status": "done",
       "path": "",
@@ -512,6 +612,16 @@
       ],
       "started_at": "2026-05-09T11:48:29.564142+02:00",
       "completed_at": "2026-05-09T11:48:44.962165+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-security-and-privacy-public-posture": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "task-transparency-moment-artifact": {
+      "status": "pending",
+      "path": "",
       "elapsed_minutes": 0
     }
   },

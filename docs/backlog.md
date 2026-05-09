@@ -130,3 +130,33 @@ Add a Rust example to the quick-start tabs in both terminal and agent-mode quick
 Add a coverctl mcp doctor subcommand that runs the same initialize handshake an MCP client issues, then prints a structured success/failure report to stderr. Closes the opacity pattern surfaced in issues #8 (server EOF on initialize) and #19 (cwd context confusion) where setup failures had no in-product diagnostic path and forced GitHub-issue-driven debugging. Doctor checks: binary on PATH, working directory has expected markers, .coverctl.yaml resolvable, MCP initialize roundtrip OK, sample tool dispatch (check --validate) OK, mode auto-detect signal. Outputs each step as PASS/FAIL with remediation. Output: internal/cli/cmd_mcp.go new subcommand, command help text, mcp.mdx doctor section, regression test.
 
 ---
+
+## Public Surface Wedge Reframe
+
+Re-anchor README and Astro landing page body to the agent-loop wedge. Hero already aligned but body content (Problem/Solution/Cards/Designed for Teams) still argues domain-coverage features inside the Codecov category frame. Scope: rewrite The Problem + The Solution sections around agent-loop struggling moment (not 'one number for whole codebase' Codecov critique); replace generic Cards with agent-loop-anchored value props; cut 'Designed for Teams' section; add named category phrase 'agent-loop coverage governance' to hero + first paragraph and repeat through copy; remove copy leaks ('first-class', 'domain-driven design principles', uncontextualized 'local-first'); compress over-feature-densified sub-line; trim landing hero CTAs from 3 to 2 (drop GitHub from hero, available in nav); drop Languages badge (claim already in tagline). Output: rewritten docs/src/content/docs/index.mdx body + README copy edits.
+
+---
+
+## Transparency-Moment Artifact
+
+Add the missing proof artifact that shows what coverctl looks like inside an agent session. Three components: (1) 6-line agent-session transcript using ai-expert's concrete copy (user prompt → agent edits → coverctl check tool call → structured rejection → coverctl suggest chained call → agent's natural-language plan with explicit failing domain + uncovered lines); (2) anti-pattern card with three concrete hallucination markers (lowering thresholds as 'fix', claiming coverage rose without a new check call, ignoring error_code on retry); (3) compressed agent-calibration block ('does well' / 'watch for' / 'contract is in docs') promoted above the install line so trust is calibrated before install (Mollick informed-use vs misinformed-use). Land in both README (after hero) and landing (between hero and feature cards). Validate: run prompt through real Claude Code session before publishing to ensure transcript matches actual client rendering.
+
+---
+
+## Security and Privacy Public Posture
+
+Surface coverctl's full AI-infrastructure maturity on public copy. Today README documents only the input boundary (sanitization rejecting dangerous flags); the output-boundary canonicalization that ships in internal/mcp/sanitize_output.go is invisible. Procurement-grade buyers (Jordan) read security copy line-by-line and downgrade trust on incomplete threat models. Scope: (1) replace 'Security note' with two-bullet Security Boundaries section covering input + output + Lethal Trifecta framing; (2) reframe 'MCP-native, first-class MCP server' to 'agent-loop native via MCP' with explicit multi-vendor acknowledgment (Anthropic/OpenAI/Google/MS/AWS, Linux Foundation co-governance) — addresses procurement vendor-lock-in question; (3) add three-sentence privacy-first + eval-gated framing (local-first default, opt-in telemetry, 50+ adversarial eval scenarios); (4) compatibility surface single source (test against Claude Code, Claude Desktop, Cursor, Cline, Aider, Continue, OpenCode) — eliminates README/landing inconsistency. Mirror to landing where appropriate.
+
+---
+
+## Community and Platform-Teams Surface Area
+
+ICP brief names community-led as PRIMARY motion and content-led as secondary. Today neither README nor landing exposes any community surface area: no Claude Code marketplace link, no MCP Registry link, no Discussions CTA, no GitHub Sponsors button, no contributor recognition. Strategy without distribution. Scope: (1) add Community section to README between Quickstart and CLI reference (marketplace + MCP registry + Discussions + Sponsor + maintainer credit); (2) add For Platform & DevEx Teams section linking threat-model + rejection-schema + GTM-metrics-spec artifacts plus low-friction inbound path via 'platform-evaluation' GitHub issue label — opens Stage 4 monetization trigger detection; (3) one-line PMF survey nudge ('Used coverctl for a few weeks? Run coverctl survey to share PMF feedback') under Community — zero-cost activation of existing instrumentation; (4) pull-quote the ICP brief's customer struggling-moment line above install commands (Gerhardt audience-first); (5) pre-emptive monetization framing in 'Why this exists' (free CLI/MCP forever, hosted history additive not paywall) — defuses bait-and-switch perception when Stage 2 launches.
+
+---
+
+## README and Landing Information Architecture
+
+UX-layer fixes to scan/hierarchy/IA on both surfaces. Today README hides primary action (install) below 22 lines of prose; landing CardGrid equalizes agent and terminal paths the strategy says are not equal; trust-calibration content lives only in quick-start.mdx (post-install, too late). Scope: (1) Reorder README first viewport — install line + MCP JSON config + agent-prompt example as first scannable block (hero → install → transcript → why → tool reference → CLI reference → configuration → community → security → contributing); (2) add scannable nav strip near top of README ([Get started] · [MCP tools] · [CLI reference] · [Configuration] · [Why this exists]); (3) collapse 'Quickstart for humans' and 'Golden path' into CLI reference (they're how-to fragments, not first-touch); (4) move detailed Architecture section to dedicated ARCHITECTURE.md (or below Contributing); (5) replace symmetric Quick Start CardGrid on landing with asymmetric primary agent card + inline secondary terminal link (Von Restorff + Hick's); (6) add trust-calibration one-liner immediately after wedge claim on both surfaces ('Works best on standard Go/Python/JS/Java/Rust... Mock-heavy code or exotic monorepos may need explicit domains: block').
+
+---
