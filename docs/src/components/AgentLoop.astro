@@ -8,16 +8,24 @@
 // Sized to the page width with an internal max via CSS.
 ---
 
-<figure class="agent-loop" aria-labelledby="agent-loop-caption">
+<figure class="agent-loop" aria-label="The agent loop, illustrated">
   <svg
     viewBox="0 0 720 480"
     role="img"
+    aria-labelledby="agent-loop-title"
+    aria-describedby="agent-loop-description"
     xmlns="http://www.w3.org/2000/svg"
     class="agent-loop-svg"
   >
-    <title id="agent-loop-caption">
-      The agent loop — you ask, the agent edits, coverctl checks, tests confirm, commit ships.
-    </title>
+    <title id="agent-loop-title">The agent loop</title>
+    <desc>
+      Four nodes arranged on a circle, connected by clockwise arrows.
+      You ask the agent to make a change. The agent edits source files
+      such as email.go. The agent calls coverctl check via MCP. The
+      verdict in the centre reads: api 78.2 percent, fail. Tests run
+      across 15 languages. The agent then calls suggest, fixes the
+      gap, and re-runs check until the verdict passes.
+    </desc>
 
     <defs>
       <!-- Soft accent gradient used throughout -->
@@ -47,10 +55,12 @@
     <!-- Decorative dotted backdrop -->
     <circle cx="360" cy="240" r="200" fill="none"
             stroke="var(--al-ring, currentColor)" stroke-opacity="0.12"
-            stroke-width="1" stroke-dasharray="2 6"/>
+            stroke-width="1" stroke-dasharray="2 6"
+            aria-hidden="true"/>
     <circle cx="360" cy="240" r="160" fill="none"
             stroke="var(--al-ring, currentColor)" stroke-opacity="0.08"
-            stroke-width="1"/>
+            stroke-width="1"
+            aria-hidden="true"/>
 
     <!-- Curved arrows between nodes (clockwise sweep) -->
     <g class="al-arrows" fill="none"
@@ -138,7 +148,7 @@
     </g>
 
     <!-- Travelling dot animation along the loop (paused for reduced-motion) -->
-    <g class="al-traveler">
+    <g class="al-traveler" aria-hidden="true">
       <circle r="5" fill="url(#al-accent)">
         <animateMotion
           dur="9s"
@@ -148,11 +158,11 @@
     </g>
   </svg>
 
-  <figcaption class="agent-loop-caption">
-    <span class="agent-loop-step"><b>1.</b> You ask</span>
-    <span class="agent-loop-step"><b>2.</b> Agent edits</span>
-    <span class="agent-loop-step"><b>3.</b> coverctl checks via MCP</span>
-    <span class="agent-loop-step"><b>4.</b> Tests run, verdict returns</span>
+  <figcaption class="agent-loop-caption" id="agent-loop-description">
+    <span class="agent-loop-step"><b>1.</b> You ask the agent for a change.</span>
+    <span class="agent-loop-step"><b>2.</b> The agent edits source files.</span>
+    <span class="agent-loop-step"><b>3.</b> coverctl <code>check</code> runs via MCP and returns a verdict — in the example: <em>api 78.2 % — fail</em>.</span>
+    <span class="agent-loop-step"><b>4.</b> The agent calls <code>suggest</code>, fixes the gap, re-runs check until it passes, then commits.</span>
   </figcaption>
 </figure>
 

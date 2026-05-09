@@ -752,15 +752,17 @@ button[data-open-modal]:hover {
   color: hsl(220, 28%, 18%);
 }
 
-/* Eyebrow label — small uppercase mono, used across headings */
+/* Eyebrow label — small uppercase mono, used across headings.
+   Uses accent-high so light-theme contrast clears WCAG AA at 11px;
+   accent-high inverts across themes so dark-theme stays vivid. */
 .eyebrow {
   display: inline-block;
   font-family: var(--sl-font-system-mono);
   font-size: 0.72rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--sl-color-accent);
+  color: var(--sl-color-accent-high);
   margin-bottom: 0.6rem;
 }
 
@@ -856,10 +858,12 @@ button[data-open-modal]:hover {
   border-color: var(--sl-color-accent);
 }
 
-/* Hero CTA buttons — sharper edges, less SaaS-pill */
+/* Hero CTA buttons — sharper edges, less SaaS-pill, 48px tall for
+   WCAG 2.2 SC 2.5.8 best-practice on primary actions. */
 .hero .action {
   border-radius: 6px;
-  padding: 0.85rem 1.6rem;
+  padding: 1rem 1.6rem;
+  min-height: 48px;
   font-family: var(--sl-font-system-mono);
   font-size: 0.82rem;
   font-weight: 500;
@@ -1143,4 +1147,48 @@ button[data-open-modal]:hover {
 /* Hero h1 still italic serif — singular. */
 
 /* CTA-band closer keeps italic-serif rhetorical bookend. */
+
+/* ============================================
+   Accessibility — touch targets, reduced motion
+   ============================================ */
+
+/* Invisible-padding extension: keeps icon-button visual size unchanged
+   while expanding hit area to satisfy WCAG 2.2 SC 2.5.8 on small icon
+   triggers (header search, code-block copy, heading anchors). */
+.sl-markdown-content :where(a.sl-anchor-link),
+header button[type='submit'],
+.expressive-code .copy button {
+  position: relative;
+}
+
+.sl-markdown-content :where(a.sl-anchor-link)::after,
+header button[type='submit']::after,
+.expressive-code .copy button::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+/* Honour the OS-level reduced-motion preference everywhere — kills
+   hover translates, transition animations, and any in-flight CSS
+   animation. The AgentLoop SVG handles its own animateMotion gate
+   inside its scoped style block. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .editorial-cards .card:hover,
+  .editorial-cards .sl-link-card:hover,
+  .hero .action:hover,
+  .sl-link-card:hover,
+  .card:hover {
+    transform: none;
+  }
+}
 

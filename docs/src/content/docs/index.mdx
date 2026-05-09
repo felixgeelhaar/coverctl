@@ -40,8 +40,8 @@ Works best on standard Go/Python/JavaScript/Java/Rust projects with conventional
 
 After `coverctl mcp serve` is wired into Claude Code. *Rendered for clarity — your client may format tool-calls differently.*
 
-<div class="agent-transcript">
-<div class="agent-transcript-chrome">
+<figure class="agent-transcript" aria-label="Sample agent session in Claude Code with coverctl">
+<div class="agent-transcript-chrome" aria-hidden="true">
   <span class="dot dot-r"></span>
   <span class="dot dot-y"></span>
   <span class="dot dot-g"></span>
@@ -67,7 +67,7 @@ Claude: I'll add EmailValidator + tests in internal/api/email.
   the 80% threshold before we commit.
 ```
 
-</div>
+</figure>
 
 The regression that used to surface in CI 8 minutes later is fixed in the same agent turn.
 
