@@ -42,8 +42,10 @@ func TestCanonicalizePath_BlocksInjectionMarkers(t *testing.T) {
 		{"filename with space", "test evil.go", []string{" "}},
 		// NUL byte.
 		{"filename with NUL", "test\x00evil.go", []string{"\x00"}},
-		// Unicode injection (BIDI, RTL override).
-		{"filename with RTL override", "test‮txt.go", []string{"‮"}},
+		// Unicode injection (BIDI, RTL override). Source uses the
+		// \u202e escape so staticcheck (ST1018) does not flag the raw
+		// confusable character; the runtime bytes are identical.
+		{"filename with RTL override", "test\u202etxt.go", []string{"\u202e"}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

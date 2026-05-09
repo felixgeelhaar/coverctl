@@ -64,7 +64,7 @@ func TestRepoFingerprint_StableAcrossCalls(t *testing.T) {
 			t.Errorf("fingerprint length should be 12 hex chars when present, got %d (%q)", len(a), a)
 		}
 		for _, r := range a {
-			if !((r >= '0' && r <= '9') || (r >= 'a' && r <= 'f')) {
+			if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
 				t.Errorf("fingerprint should be lowercase hex: %q", a)
 				break
 			}
