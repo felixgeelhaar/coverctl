@@ -1,6 +1,6 @@
 {
   "project_id": "coverctl",
-  "version": 86,
+  "version": 87,
   "task_states": {
     "T-1": {
       "status": "done",
@@ -261,6 +261,31 @@
       "completed_at": "2026-05-09T11:31:41.526773+02:00",
       "elapsed_minutes": 2
     },
+    "T25": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T26": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T27": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T28": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
+    "T29": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
     "T3": {
       "status": "done",
       "path": "",
@@ -393,6 +418,11 @@
       "completed_at": "2026-05-08T22:08:58.10654+02:00",
       "elapsed_minutes": 0
     },
+    "task-coverctl-mcp-doctor-first-run-validation": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
     "task-golden-path-ux-for-first-run": {
       "status": "done",
       "path": "",
@@ -415,6 +445,11 @@
       "completed_at": "2026-05-08T22:08:38.50594+02:00",
       "elapsed_minutes": 0
     },
+    "task-module-root-failure-remediation": {
+      "status": "pending",
+      "path": "",
+      "elapsed_minutes": 0
+    },
     "task-product-messaging-\u0026-docs-alignment": {
       "status": "done",
       "path": "",
@@ -424,6 +459,11 @@
       ],
       "started_at": "2026-05-08T22:08:05.857717+02:00",
       "completed_at": "2026-05-08T22:08:18.801137+02:00",
+      "elapsed_minutes": 0
+    },
+    "task-rust-quick-start-tab": {
+      "status": "pending",
+      "path": "",
       "elapsed_minutes": 0
     }
   },

@@ -82,5 +82,17 @@ features:
       title: 5-User Polyglot Usability Test
       description: 'Krug-style observed usability test: recruit 5 polyglot devs actively using Claude Code or Cursor, watch them install coverctl from scratch and reach first fix. Two using Python+TS, two using Go+Rust, one using Java or Shell. Measure: did they discover MCP/agent integration unprompted, did first failed check produce a clear next action, time-to-first-fix, abandonment points. Single-day spend. Validates onboarding fixes from features F2/F3/F4 before broader rollout.'
       requirements: []
+    - id: module-root-failure-remediation
+      title: Module-Root Failure Remediation
+      description: 'Surface a clearer error when coverctl check cannot resolve the Go module root. Close the runtime boundary gap evidenced in issue #20 (''module root not found'' even with valid go.mod), where the user explicitly asked for an actionable hint. Add a new operational rejection code (e.g., OP_MODULE_ROOT_MISSING) plus matching remediation copy: list searched paths, suggest passing --language explicitly, suggest running from repo root, suggest checking for nested submodules. Apply at the application service boundary so both CLI and MCP handlers emit the same structured response. Output: extended sanitize.go op-codes, service.go diagnostic, mcp handler integration, regression test.'
+      requirements: []
+    - id: rust-quick-start-tab
+      title: Rust Quick-Start Tab
+      description: 'Add a Rust example to the quick-start tabs in both terminal and agent-mode quick-starts. Closes the residual discoverability gap after PR #48 fixed Rust LCOV parsing: a Rust user landing today still sees only Go/Python/TS samples and may assume Rust is unsupported. Show the canonical Rust .coverctl.yaml block, the cargo-llvm-cov invocation, and the LCOV path coverctl reads by default. Output: docs/src/content/docs/quick-start.mdx Tabs item; equivalent agent-mode example in quick-start-agent.mdx; cross-link from troubleshooting if relevant.'
+      requirements: []
+    - id: coverctl-mcp-doctor-first-run-validation
+      title: coverctl mcp doctor First-Run Validation
+      description: 'Add a coverctl mcp doctor subcommand that runs the same initialize handshake an MCP client issues, then prints a structured success/failure report to stderr. Closes the opacity pattern surfaced in issues #8 (server EOF on initialize) and #19 (cwd context confusion) where setup failures had no in-product diagnostic path and forced GitHub-issue-driven debugging. Doctor checks: binary on PATH, working directory has expected markers, .coverctl.yaml resolvable, MCP initialize roundtrip OK, sample tool dispatch (check --validate) OK, mode auto-detect signal. Outputs each step as PASS/FAIL with remediation. Output: internal/cli/cmd_mcp.go new subcommand, command help text, mcp.mdx doctor section, regression test.'
+      requirements: []
 constraints: []
 version: 0.1.0

@@ -5,7 +5,7 @@
     {
       "id": "T1",
       "title": "Category Point-of-View doc (Lochhead)",
-      "description": "Write 2-page docs/strategy/category-pov.md: world today (red-CI agent loops, polyglot tool sprawl, governance gap), world we are describing (in-loop coverage governance, MCP-callable, polyglot-uniform), why now (3 bullets), category name, who benefits most (pruned ECP). Drives README hero, content calendar, conference pitches.",
+      "description": "Write 2-page docs/strategy/category-pov.md.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [],
@@ -14,7 +14,7 @@
     {
       "id": "T2",
       "title": "Monetization decision doc",
-      "description": "Write 2-page docs/strategy/monetization-decision.md evaluating: open-core (hosted history/team dashboards/cloud MCP relay), paid SLA support, enterprise security gate (audit log, SSO, compliance export), pure OSS+sponsorship. Decide before scaling community GTM. Decision artifact only.",
+      "description": "Write 2-page docs/strategy/monetization-decision.md.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [],
@@ -23,7 +23,7 @@
     {
       "id": "T3",
       "title": "Reframe PRD overview + Initiative Hypothesis",
-      "description": "Rewrite docs/design/language-agnostic-prd.md page 1: collapse Vision/Goals/Success Metrics into single Initiative Hypothesis (we believe X → outcome Y → for Z → known true when ... → riskiest assumption ...). Replace vanity metrics (5+ langs shipped, 1000 installs, GH stars) with NSM (Weekly Protected Agent Loops) + 4 input metrics (TTFP, MCP tool-call success, pre-commit hook adoption, regressions caught/session). Prune 4 personas to Taylor primary user + Jordan secondary buyer; demote Alex/Sam to compat-and-breadth notes.",
+      "description": "Rewrite PRD page 1 to Initiative Hypothesis + NSM + 4 input metrics; prune personas to Taylor + Jordan.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [
@@ -34,7 +34,7 @@
     {
       "id": "T4",
       "title": "Reframe ICP brief alternatives + motion stack",
-      "description": "Rewrite docs/gtm/icp-brief.md: replace competitive alternatives section with red-CI agent loop as primary status quo (not Codecov). Split ECP (first 20 lighthouses, no compliance gate, last-90-day AI tool adoption trigger, visible CI pain signal) from ICP (compliance becomes accelerator, not gate). Cut motion stack to 2: community-led primary + content-led secondary; defer enterprise. Update positioning statement to claim agent-loop coverage category, not coverage-tools category.",
+      "description": "Lead alternatives with red-CI agent loop; ECP/ICP split; cut motion stack to community + content.",
       "priority": "high",
       "estimate": "1d",
       "depends_on": [
@@ -45,7 +45,7 @@
     {
       "id": "T5",
       "title": "MCP eval harness skeleton + seed scenarios",
-      "description": "Build internal/eval/: harness.go (scripted headless MCP agent replay), report.go (tool-selection accuracy/recall/catch-rate metrics), 10 synthetic regression scenarios per top-5 languages (Go/Python/TS/Java/Rust) under internal/eval/scenarios/. Each scenario: seeded edit + known coverage drop + expected agent action. Establishes denominator for NSM regression catch rate.",
+      "description": "internal/eval/ harness + 9 seed scenarios.",
       "priority": "high",
       "estimate": "5d",
       "depends_on": [],
@@ -54,7 +54,7 @@
     {
       "id": "T6",
       "title": "LLM-as-judge + adversarial prompt set",
-      "description": "Add internal/eval/judge.go: LLM-as-judge over agent-reply vs canonical coverctl output for output-interpretation accuracy. Add 50+ adversarial prompt-injection scenarios covering shell-metacharacter, dangerous-flag, path-traversal, output-channel injection. Validates sanitize.go denylist holds and output canonicalization works.",
+      "description": "internal/eval/judge.go RuleJudge + HTTPLLMJudge with COVERCTL_EVAL_LLM_JUDGE opt-in gate.",
       "priority": "high",
       "estimate": "3d",
       "depends_on": [
@@ -65,7 +65,7 @@
     {
       "id": "T7",
       "title": "Wire eval harness into CI gate",
-      "description": "Add .github/workflows/eval.yml running internal/eval/ on PR. Gate merges on tool-selection recall and adversarial pass rate thresholds. Reuse SARIF/JSON artifact uplift pattern from CI metrics dogfooding.",
+      "description": ".github/workflows/eval.yml.",
       "priority": "medium",
       "estimate": "1d",
       "depends_on": [
@@ -77,7 +77,7 @@
     {
       "id": "T8",
       "title": "Mode-aware MCP serve flag + tool routing",
-      "description": "Add coverctl mcp serve --mode=agent|ci. Agent mode advertises 3 tools (check, suggest, debt). CI mode advertises full 8. Implement in internal/mcp/server.go with mode-aware tool registration. Update README + docs/src/content/docs/mcp.mdx with mode flag.",
+      "description": "--mode=agent|ci; agent advertises check/suggest/debt only.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [
@@ -88,7 +88,7 @@
     {
       "id": "T9",
       "title": "Auto-detect MCP client for default mode",
-      "description": "In internal/mcp/server.go inspect MCP initialize-handshake clientInfo to default --mode (Claude Code/Cursor/Cline → agent; gh-actions/CI → ci). Explicit flag wins. Document detection list.",
+      "description": "Detect via CI env vars; default --mode=auto.",
       "priority": "medium",
       "estimate": "1d",
       "depends_on": [
@@ -99,7 +99,7 @@
     {
       "id": "T10",
       "title": "Output boundary canonicalization",
-      "description": "In internal/mcp/server.go canonicalize/escape user-controlled strings in tool outputs: file paths (allow [a-zA-Z0-9._/-]), test names, profile-derived strings, PR descriptions in pr-comment. Truncate long strings; fence in code blocks where rendered. Closes Lethal Trifecta output-channel injection.",
+      "description": "Canonicalize file paths and free-form strings in MCP responses.",
       "priority": "high",
       "estimate": "3d",
       "depends_on": [
@@ -110,7 +110,7 @@
     {
       "id": "T11",
       "title": "Adversarial output-injection test suite",
-      "description": "Add 50+ tests under internal/mcp/ covering output-side prompt injection: malicious test names, weaponized filenames in coverage profiles, attacker-supplied PR descriptions. Wire into internal/eval/ adversarial set from T6.",
+      "description": "Table-driven attack-pattern tests + integration test.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [
@@ -121,7 +121,7 @@
     {
       "id": "T12",
       "title": "Threat-model doc output-boundary update",
-      "description": "Extend docs/security/mcp-threat-model.md with output-boundary controls section: Lethal Trifecta framing, canonicalization rules, escape policy, residual risks. Add output-boundary tests to code references.",
+      "description": "docs/security/mcp-threat-model.md output-boundary section.",
       "priority": "medium",
       "estimate": "1d",
       "depends_on": [
@@ -132,7 +132,7 @@
     {
       "id": "T13",
       "title": "Structured rejection schema + remediation field",
-      "description": "Define stable JSON schema for all MCP rejection responses: passed=false, error_code, summary, remediation (agent-actionable next step). Refactor internal/mcp/sanitize.go consumers in server.go to emit conformant rejections. Add schema doc to docs/src/content/docs/mcp.mdx.",
+      "description": "passed/error_code/error/summary/remediation across all MCP rejections.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [],
@@ -141,7 +141,7 @@
     {
       "id": "T14",
       "title": "Per-tool output budgets + verbosity + pagination",
-      "description": "Add output token budget per tool (default 2K), brief|normal|verbose verbosity flag, nextCursor pagination on overflow. Auto-truncate verbose outputs (e.g., report) to top-N failing domains with summary. Implement in internal/mcp/ tool handlers.",
+      "description": "brief|normal|verbose; nextCursor when truncating.",
       "priority": "medium",
       "estimate": "3d",
       "depends_on": [
@@ -152,7 +152,7 @@
     {
       "id": "T15",
       "title": "CLI check output redesign + next-action footer",
-      "description": "Redesign internal/cli/check.go print path: realistic mixed PASS/FAIL rows with shortfall delta column, summary count line, inline next-action footer (→ coverctl suggest DOMAIN / coverctl debt). Subtle Peak-End success line on first all-PASS run with next-step nudge (→ coverctl record).",
+      "description": "Realistic mixed PASS/FAIL + shortfall delta + Peak-End footer.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [],
@@ -161,7 +161,7 @@
     {
       "id": "T16",
       "title": "Update quick-start sample output to mirror CLI",
-      "description": "Replace optimistic all-PASS sample in docs/src/content/docs/quick-start.mdx with realistic mixed PASS/FAIL output matching new CLI design. Avoids first-run-surprise abandonment.",
+      "description": "Replace optimistic all-PASS sample.",
       "priority": "medium",
       "estimate": "1d",
       "depends_on": [
@@ -172,7 +172,7 @@
     {
       "id": "T17",
       "title": "Failure-mode caution blocks per step",
-      "description": "Add :::caution[If this fails] blocks to docs/src/content/docs/quick-start.mdx for init/check/suggest/record covering: no language markers, missing toolchain (pytest-cov/nyc/cargo-tarpaulin), profile path mismatch, threshold-too-high first FAIL, no tests detected. Each block names failure + exact recovery command.",
+      "description": ":::caution[If this fails] blocks for init/check.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [],
@@ -181,7 +181,7 @@
     {
       "id": "T18",
       "title": "Trust calibration callout",
-      "description": "Add brief 'Where coverctl works best / where you may need adjustments' callout near top of quick-start.mdx. Names jagged-frontier limits: mock-heavy code, exotic monorepos, weaker support langs (Shell/Dart/Scala). Calibrates new-user trust expectations (Mollick).",
+      "description": "Where coverctl works best vs may need adjustments.",
       "priority": "medium",
       "estimate": "1d",
       "depends_on": [
@@ -192,7 +192,7 @@
     {
       "id": "T19",
       "title": "Agent-mode quick-start page",
-      "description": "Add docs/src/content/docs/quick-start-agent.mdx (or split current quick-start.mdx with parallel path selector at top): install → MCP server enable in Claude Code/Cursor/Cline → first agent-initiated check → screenshot or transcript of agent UI showing tool call, approval gate, structured rejection example, override capability. Closes wedge-invisible gap for primary ICP.",
+      "description": "Parallel quick-start-agent.mdx + path selector.",
       "priority": "high",
       "estimate": "3d",
       "depends_on": [
@@ -203,7 +203,7 @@
     {
       "id": "T20",
       "title": "Cross-link + landing-page A/B copy",
-      "description": "Cross-link agent-mode from terminal quick-start. Update docs/src/content/docs/index.mdx hero with parallel path selector (Terminal vs AI Agent). A/B test landing-page hero copy: Codecov-frame vs agent-loop-frame for 2 weeks; measure activation by source.",
+      "description": "Hero parallel path selector; landing reframe.",
       "priority": "medium",
       "estimate": "1d",
       "depends_on": [
@@ -214,7 +214,7 @@
     {
       "id": "T21",
       "title": "GTM activation funnel metrics + trace pipeline",
-      "description": "Define activation rate (init users reaching first passing check), 30-day usage retention, advocate-mention count, plugin install velocity, enterprise inbound (procurement document requests). Implement opt-in trace donation pipeline (anonymous JSONL) for real-world eval corpus growth. Distinct from tool-execution telemetry.",
+      "description": "docs/design/gtm-metrics-spec.md + RecordActivationStep + repoFingerprint.",
       "priority": "medium",
       "estimate": "3d",
       "depends_on": [
@@ -226,7 +226,7 @@
     {
       "id": "T22",
       "title": "Sean Ellis 40% PMF survey",
-      "description": "Wire one-question Sean Ellis survey ('how would you feel if you could no longer use coverctl?') into CLI on Nth use (opt-in) or via docs site. Threshold: \u003e40% very-disappointed = PMF signal.",
+      "description": "coverctl survey subcommand; local JSONL append.",
       "priority": "low",
       "estimate": "1d",
       "depends_on": [
@@ -237,7 +237,7 @@
     {
       "id": "T23",
       "title": "Recruit 5 polyglot Claude Code users",
-      "description": "Recruit 5 devs actively using Claude Code or Cursor: 2 Python+TS, 2 Go+Rust, 1 Java/Shell. Schedule sessions. Prep observation script: install from scratch, reach first fix, capture moment of MCP discovery (or non-discovery).",
+      "description": "Protocol + findings template prep delivered; recruitment is user work.",
       "priority": "low",
       "estimate": "1d",
       "depends_on": [
@@ -250,7 +250,7 @@
     {
       "id": "T24",
       "title": "Run + report 5-user usability test",
-      "description": "Run sessions, observe friction, capture: did they discover MCP/agent integration unprompted, did first failed check produce clear next action, time-to-first-fix, abandonment points. Write findings report; feed into next iteration.",
+      "description": "Proxy report via closed-issue mining + synthetic personas; live cohort still required.",
       "priority": "low",
       "estimate": "2d",
       "depends_on": [
@@ -259,9 +259,18 @@
       "feature_id": "5-user-polyglot-usability-test"
     },
     {
+      "id": "T-1",
+      "title": "Remove Go-only wording from CLI help text",
+      "description": "cli.go usage string + README + help text consistency.",
+      "priority": "high",
+      "estimate": "1d",
+      "depends_on": [],
+      "feature_id": "product-messaging-\u0026-docs-alignment"
+    },
+    {
       "id": "T-2",
       "title": "Reconcile PRD with shipped state",
-      "description": "Update docs/design/language-agnostic-prd.md from 'transition to 5 languages' framing to current shipped state (15 languages, full MCP platform) + next-bets section.",
+      "description": "Update PRD to current shipped state.",
       "priority": "high",
       "estimate": "1d",
       "depends_on": [],
@@ -270,16 +279,25 @@
     {
       "id": "T-3",
       "title": "Define MCP tool-call success metrics spec",
-      "description": "Write a short spec in docs defining instrumented metrics: tool-call success rate, rejection rate, time-to-success, pre-commit regression catch rate. Add a telemetry abstraction for opt-in data collection.",
+      "description": "docs/design/mcp-metrics-spec.md.",
       "priority": "high",
       "estimate": "2d",
       "depends_on": [],
       "feature_id": "ai/agent-success-metrics-baseline"
     },
     {
+      "id": "T-4",
+      "title": "Extract first handler from large file",
+      "description": "server.go extraction slice.",
+      "priority": "high",
+      "estimate": "2d",
+      "depends_on": [],
+      "feature_id": "architecture-drift-guardrails"
+    },
+    {
       "id": "T-5",
       "title": "Polish golden-path UX for first-run",
-      "description": "Tighten docs and CLI flow around init -\u003e check -\u003e suggest -\u003e record. Add actionable 'what to do when it fails' snippets per step. Validate: new user from install to first fix in \u003c10 minutes.",
+      "description": "init -\u003e check -\u003e suggest -\u003e record polish.",
       "priority": "medium",
       "estimate": "3d",
       "depends_on": [
@@ -289,9 +307,20 @@
       "feature_id": "golden-path-ux-for-first-run"
     },
     {
+      "id": "T-6",
+      "title": "Add structured CI artifact collection",
+      "description": "go.yml machine-readable artifacts.",
+      "priority": "medium",
+      "estimate": "2d",
+      "depends_on": [
+        "T-3"
+      ],
+      "feature_id": "ci-product-metrics-dogfooding"
+    },
+    {
       "id": "T-7",
       "title": "Build ICP-focused GTM brief",
-      "description": "Create one-page messaging for polyglot AI-assisted teams with compliance governance needs. Include competitive alternatives and 'why now' narrative per April Dunford positioning methodology.",
+      "description": "docs/gtm/icp-brief.md initial.",
       "priority": "low",
       "estimate": "2d",
       "depends_on": [
@@ -303,7 +332,7 @@
     {
       "id": "T-8",
       "title": "Publish enterprise security architecture doc",
-      "description": "Write concise security note covering MCP threat model, prompt injection risks, sanitization boundaries in internal/mcp/sanitize.go. Create linkable doc for procurement/security reviews.",
+      "description": "docs/security/mcp-threat-model.md.",
       "priority": "low",
       "estimate": "1d",
       "depends_on": [
@@ -312,54 +341,9 @@
       "feature_id": "gtm-\u0026-enterprise-readiness-package"
     },
     {
-      "id": "task-golden-path-ux-for-first-run",
-      "title": "Implement Golden Path UX for First-Run",
-      "description": "Implement the feature: Golden Path UX for First-Run. Tighten docs and CLI flow around a single golden path: init -\u003e check -\u003e suggest -\u003e record. Include actionable failure-snippet guidance per step. New user goal: install to first fix in \u003c10 minutes.",
-      "priority": "medium",
-      "estimate": "",
-      "depends_on": [],
-      "feature_id": "golden-path-ux-for-first-run"
-    },
-    {
-      "id": "T-4",
-      "title": "Extract first handler from large file",
-      "description": "Perform first extraction slice from acknowledged large files (priority: internal/mcp/server.go). Move one tool/router handler to dedicated file. Verify ceiling tests still pass.",
-      "priority": "high",
-      "estimate": "2d",
-      "depends_on": [],
-      "feature_id": "architecture-drift-guardrails"
-    },
-    {
-      "id": "task-product-messaging-\u0026-docs-alignment",
-      "title": "Implement Product Messaging \u0026 Docs Alignment",
-      "description": "Implement the feature: Product Messaging \u0026 Docs Alignment. Align CLI help text, README, and PRD with current reality (15 languages, MCP-native, domain-aware positioning). Remove all Go-only wording from user-facing copy unless contextually Go-specific.",
-      "priority": "medium",
-      "estimate": "",
-      "depends_on": [],
-      "feature_id": "product-messaging-\u0026-docs-alignment"
-    },
-    {
-      "id": "task-core-foundation",
-      "title": "Implement Core Foundation",
-      "description": "Implement the feature: Core Foundation. The essential building blocks of the project.",
-      "priority": "medium",
-      "estimate": "",
-      "depends_on": [],
-      "feature_id": "core-foundation"
-    },
-    {
-      "id": "task-coverage-quality-hotspot-uplift",
-      "title": "Implement Coverage Quality Hotspot Uplift",
-      "description": "Implement the feature: Coverage Quality Hotspot Uplift. Add scenario tests for weaker coverage surfaces: internal/mcp, internal/cli, runner edge cases. Focus on failure-path handling and parser/runner boundary conditions.",
-      "priority": "medium",
-      "estimate": "",
-      "depends_on": [],
-      "feature_id": "coverage-quality-hotspot-uplift"
-    },
-    {
       "id": "T-9",
       "title": "Add scenario tests for weak coverage surfaces",
-      "description": "Add integration-style scenario tests for internal/mcp, internal/cli, and runner edge cases (failure paths, parser boundary conditions, sanitization rejection cases).",
+      "description": "internal/mcp + cli + runner edge-case tests.",
       "priority": "low",
       "estimate": "3d",
       "depends_on": [
@@ -370,61 +354,153 @@
     {
       "id": "task-architecture-drift-guardrails",
       "title": "Implement Architecture Drift Guardrails",
-      "description": "Implement the feature: Architecture Drift Guardrails. Add explicit extraction plan and enforcement for acknowledged large files (service.go, cli.go, server.go). New capabilities must land in dedicated handler files per the existing ceiling-test contract.",
+      "description": "Parent.",
       "priority": "medium",
       "estimate": "",
       "depends_on": [],
       "feature_id": "architecture-drift-guardrails"
     },
     {
-      "id": "task-ci-product-metrics-dogfooding",
-      "title": "Implement CI Product Metrics Dogfooding",
-      "description": "Implement the feature: CI Product Metrics Dogfooding. Extend CI workflow (go.yml) to preserve machine-readable check/report outputs for trend analysis. Current dogfooding only asserts pass/fail; add structured artifact collection.",
+      "id": "task-product-messaging-\u0026-docs-alignment",
+      "title": "Implement Product Messaging \u0026 Docs Alignment",
+      "description": "Parent.",
       "priority": "medium",
       "estimate": "",
-      "depends_on": [],
-      "feature_id": "ci-product-metrics-dogfooding"
-    },
-    {
-      "id": "T-1",
-      "title": "Remove Go-only wording from CLI help text",
-      "description": "Update internal/cli/cli.go:424 usage string from 'for Go' to reflect 15-language, MCP-native, domain-aware positioning. Ensure README and help text use consistent terminology.",
-      "priority": "high",
-      "estimate": "1d",
       "depends_on": [],
       "feature_id": "product-messaging-\u0026-docs-alignment"
     },
     {
-      "id": "T-6",
-      "title": "Add structured CI artifact collection",
-      "description": "Extend .github/workflows/go.yml to preserve machine-readable check/report outputs (not just pass/fail). Store structured summary for trend analysis between CI runs.",
-      "priority": "medium",
-      "estimate": "2d",
-      "depends_on": [
-        "T-3"
-      ],
-      "feature_id": "ci-product-metrics-dogfooding"
-    },
-    {
       "id": "task-ai/agent-success-metrics-baseline",
       "title": "Implement AI/Agent Success Metrics Baseline",
-      "description": "Implement the feature: AI/Agent Success Metrics Baseline. Define and instrument MCP tool-call success metrics: success rate, rejection rate, time-to-success, pre-commit regression catch rate. Enable data-driven decisions on which 3 MCP tools drive retained value.",
+      "description": "Parent.",
       "priority": "medium",
       "estimate": "",
       "depends_on": [],
       "feature_id": "ai/agent-success-metrics-baseline"
     },
     {
+      "id": "task-golden-path-ux-for-first-run",
+      "title": "Implement Golden Path UX for First-Run",
+      "description": "Parent.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "golden-path-ux-for-first-run"
+    },
+    {
       "id": "task-gtm-\u0026-enterprise-readiness-package",
       "title": "Implement GTM \u0026 Enterprise Readiness Package",
-      "description": "Implement the feature: GTM \u0026 Enterprise Readiness Package. Build ICP-focused targeting for polyglot AI-assisted teams with compliance governance needs. Publish security architecture doc (MCP threat model + sanitization boundaries).",
+      "description": "Parent.",
       "priority": "medium",
       "estimate": "",
       "depends_on": [],
       "feature_id": "gtm-\u0026-enterprise-readiness-package"
+    },
+    {
+      "id": "task-core-foundation",
+      "title": "Implement Core Foundation",
+      "description": "Parent.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "core-foundation"
+    },
+    {
+      "id": "task-ci-product-metrics-dogfooding",
+      "title": "Implement CI Product Metrics Dogfooding",
+      "description": "Parent.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "ci-product-metrics-dogfooding"
+    },
+    {
+      "id": "task-coverage-quality-hotspot-uplift",
+      "title": "Implement Coverage Quality Hotspot Uplift",
+      "description": "Parent.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "coverage-quality-hotspot-uplift"
+    },
+    {
+      "id": "T25",
+      "title": "Module-root diagnostic + OP_MODULE_ROOT_MISSING code",
+      "description": "Add operational rejection code OpCodeModuleRootMissing in internal/mcp/sanitize.go with remediation copy. In internal/application/service.go (or matching module-root resolver), when the module root cannot be resolved, build a structured diagnostic listing searched paths and suggesting --language override / running from repo root / checking for nested submodules. Surface diagnostic at the application boundary so both CLI and MCP handlers consume the same shape.",
+      "priority": "high",
+      "estimate": "2d",
+      "depends_on": [],
+      "feature_id": "module-root-failure-remediation"
+    },
+    {
+      "id": "T26",
+      "title": "Wire module-root remediation into MCP handlers + CLI",
+      "description": "In internal/mcp/server.go handleCheck/handleReport/handleDebt/handleCompare, recognize the module-root diagnostic and emit errorResponse with OpCodeModuleRootMissing + remediation field per the structured rejection schema (T13). In internal/cli/check.go, surface equivalent stderr remediation lines so terminal users get the same hint. Add regression test mirroring issue #20 conditions.",
+      "priority": "high",
+      "estimate": "1d",
+      "depends_on": [
+        "T25"
+      ],
+      "feature_id": "module-root-failure-remediation"
+    },
+    {
+      "id": "T27",
+      "title": "Rust tab in quick-start examples",
+      "description": "Add a Rust example to docs/src/content/docs/quick-start.mdx Tabs: canonical .coverctl.yaml with Rust domain matchers, the cargo-llvm-cov --lcov invocation, and the LCOV path coverctl reads by default. Mirror in docs/src/content/docs/quick-start-agent.mdx so Rust users on the agent-mode path see the same example. Optionally cross-link from a troubleshooting/FAQ section.",
+      "priority": "medium",
+      "estimate": "1d",
+      "depends_on": [],
+      "feature_id": "rust-quick-start-tab"
+    },
+    {
+      "id": "T28",
+      "title": "coverctl mcp doctor subcommand",
+      "description": "Implement coverctl mcp doctor in internal/cli/cmd_mcp.go: run the same initialize handshake an MCP client issues, then print structured PASS/FAIL output to stderr for each check. Steps: binary on PATH, working directory has expected markers, .coverctl.yaml resolvable, MCP initialize roundtrip OK, sample tool dispatch (check --validate) OK, mode auto-detect signal. Output one line per step with remediation text on FAIL. Returns 0 when every check passes, non-zero otherwise.",
+      "priority": "high",
+      "estimate": "3d",
+      "depends_on": [],
+      "feature_id": "coverctl-mcp-doctor-first-run-validation"
+    },
+    {
+      "id": "T29",
+      "title": "doctor command help + docs section + regression test",
+      "description": "Add commandHelpText['mcp doctor'] entry; update bash/zsh completion; add a doctor section to docs/src/content/docs/mcp.mdx with sample output and remediation table. Regression test in internal/cli covering all PASS path, single-FAIL path (missing config), and aggregated multi-FAIL path.",
+      "priority": "medium",
+      "estimate": "1d",
+      "depends_on": [
+        "T28"
+      ],
+      "feature_id": "coverctl-mcp-doctor-first-run-validation"
+    },
+    {
+      "id": "task-module-root-failure-remediation",
+      "title": "Implement Module-Root Failure Remediation",
+      "description": "Parent.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "module-root-failure-remediation"
+    },
+    {
+      "id": "task-rust-quick-start-tab",
+      "title": "Implement Rust Quick-Start Tab",
+      "description": "Parent.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "rust-quick-start-tab"
+    },
+    {
+      "id": "task-coverctl-mcp-doctor-first-run-validation",
+      "title": "Implement coverctl mcp doctor First-Run Validation",
+      "description": "Parent.",
+      "priority": "medium",
+      "estimate": "",
+      "depends_on": [],
+      "feature_id": "coverctl-mcp-doctor-first-run-validation"
     }
   ],
   "approval_status": "approved",
   "created_at": "2026-05-08T13:43:13.523478+02:00",
-  "updated_at": "2026-05-09T08:12:22.114724+02:00"
+  "updated_at": "2026-05-09T11:34:40.106912+02:00"
 }
