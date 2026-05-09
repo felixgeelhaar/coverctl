@@ -1,93 +1,93 @@
 ---
 title: coverctl
-description: Agent-loop coverage governance for polyglot codebases. Catch regressions before commit while your AI coding agent still has context.
+description: Agent-loop coverage governance. Coverage your AI coding agent calls before commit — not a dashboard you read after CI.
 template: splash
 hero:
-  tagline: Coverage feedback in the agent edit loop, before commit. Agent-callable through MCP, domain-aware policy across 15 languages. Stop seeing regressions in CI minutes after the agent has moved on.
+  tagline: Agent-loop coverage governance — coverage your AI coding agent calls before commit, not a dashboard you read after CI. Domain-aware policy across 15 languages, MCP-native, local-first.
   image:
     file: ../../assets/logo.svg
   actions:
-    - text: Set up with AI agent
+    - text: Set up with Claude Code, Cursor, Cline →
       link: /coverctl/quick-start-agent/
       icon: right-arrow
     - text: Set up in terminal
       link: /coverctl/quick-start/
       icon: right-arrow
       variant: secondary
-    - text: GitHub
-      link: https://github.com/felixgeelhaar/coverctl
-      icon: external
-      variant: minimal
 ---
 
-import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Card, CardGrid, LinkCard, Aside, Code, TabItem, Tabs } from '@astrojs/starlight/components';
 
 <div class="hero-supplement">
 
-Your core business logic deserves 90% coverage. Your HTTP handlers? Maybe 70%.
-**coverctl** lets you define and enforce these policies per domain.
+> *"Our AI agents ship code fast, but they're blind to coverage policy while editing. We only see breakage in CI, after context is gone, and the same agent then guesses its way to a fix."*
 
 </div>
 
----
-
-## The Problem
-
-Traditional coverage tools give you one number for your entire codebase. But real applications have layers:
-
-- **Core domain logic** needs strict coverage - bugs here cost money
-- **API handlers** need solid coverage - they're your contract with users
-- **Infrastructure code** can have lower thresholds - it's often integration-heavy
-
-A single percentage hides these distinctions. You either over-test utilities or under-test critical paths.
+Works best on standard Go/Python/JavaScript/Java/Rust projects with conventional layouts. Mock-heavy code or exotic monorepos may need an explicit `domains:` block — see [trust calibration](/coverctl/quick-start/#where-coverctl-works-best-and-where-it-may-need-adjustments).
 
 ---
 
-## The Solution
+## What it looks like in the agent loop
 
-Define coverage policies that match your architecture:
+Below: an actual agent session shape after `coverctl mcp serve` is wired into Claude Code. *Rendered for clarity — your client may format tool-calls differently.*
 
-```yaml title=".coverctl.yaml"
-version: 1
-policy:
-  default:
-    min: 70
-  domains:
-    - name: core
-      match: ["./internal/core/..."]
-      min: 90
-    - name: api
-      match: ["./internal/api/..."]
-      min: 80
-    - name: infra
-      match: ["./internal/infra/..."]
-      min: 60
-exclude:
-  - internal/generated/*
+```text
+You:    Add the email-validation feature to the api domain.
+
+Claude: I'll add EmailValidator + tests in internal/api/email.
+
+  [edits: internal/api/email.go, internal/api/email_test.go]
+
+  Tool call → coverctl check
+  Result   → passed: false; failing: api (78.2%, required 80%)
+             uncovered: internal/api/email.go:42-58 (error paths)
+
+  Tool call → coverctl suggest api
+  Result   → uncovered files: email.go (16 lines), retry.go (4 lines)
+
+  Two error branches in EmailValidator.Validate are uncovered.
+  I'll add cases for empty-input and malformed-domain so api meets
+  the 80% threshold before we commit.
 ```
+
+The regression that used to surface in CI 8 minutes later is fixed in the same agent turn.
+
+<Aside type="caution" title="Watch for these agent failure modes">
+
+- **Threshold lowering as a "fix"** — agents proposing edits to `.coverctl.yaml` to drop a domain's `min:`. That's not a fix.
+- **Hallucinated coverage numbers** — claiming coverage rose without re-running `coverctl check`.
+- **Ignoring rejection codes** — retrying the same input after a structured rejection. The `remediation` field tells the agent what to change.
+
+coverctl returns deterministic structured signals; the agent's *fix* still needs a human reading.
+
+</Aside>
+
+---
+
+## Why not your current setup?
+
+| Today | Why it fails for agent-edited code |
+|---|---|
+| **Red-CI agent loop** (status quo) | Agent edits → tests fail in CI 8 minutes later → context lost. coverctl: feedback in seconds, in the same turn. |
+| **Codecov / Coveralls dashboards** | Post-merge visibility for humans. coverctl: pre-commit signal for agents. |
+| **Native `go test -cover` / `pytest --cov`** | Per-language only, no domain policy, no agent-callable interface. coverctl: uniform across 15 languages, MCP-native. |
 
 ---
 
 ## Quick Start
 
-Pick the path that matches how you write code.
+<LinkCard
+  title="Wire coverctl into Claude Code, Cursor, or Cline →"
+  description="Connect through MCP. Agent calls check, suggest, debt directly inside the edit loop, before commit. Most users start here."
+  href="/coverctl/quick-start-agent/"
+/>
 
-<CardGrid>
-  <LinkCard
-    title="With Claude Code, Cursor, or Cline"
-    description="Connect coverctl through MCP. The agent calls check, suggest, and debt directly inside the edit loop, before commit."
-    href="/coverctl/quick-start-agent/"
-  />
-  <LinkCard
-    title="From your terminal"
-    description="Run coverctl init then coverctl check. Same policy file works for both paths."
-    href="/coverctl/quick-start/"
-  />
-</CardGrid>
+Working from a terminal instead? [Terminal quickstart →](/coverctl/quick-start/)
 
 ```bash
 # Install
-brew install coverctl   # or: go install github.com/felixgeelhaar/coverctl@latest
+brew install felixgeelhaar/tap/coverctl   # or: go install github.com/felixgeelhaar/coverctl@latest
 
 # One-time project setup
 coverctl init
@@ -95,70 +95,60 @@ coverctl init
 # Then either run from terminal:
 coverctl check
 
-# ...or wire into Claude Code / Cursor / Cline (agent default mode)
+# ...or wire into Claude Code / Cursor / Cline (default agent mode)
 # and let the agent invoke coverctl during editing.
 ```
 
 ---
 
+## Why this is different
+
 <CardGrid>
-  <Card title="Domain-Aware Policies" icon="puzzle">
-    Set different coverage thresholds for each domain. Core logic at 90%, utilities at 60%.
+  <Card title="Catches regressions before commit" icon="approve-check">
+    Coverage feedback in the agent's edit turn — before the diff lands in CI. The wedge metric is regressions caught pre-commit, not coverage percent.
   </Card>
-  <Card title="Multi-Language Support" icon="laptop">
-    Supports 15 languages including Go, Python, TypeScript, Rust, Java, C#, C/C++, PHP, Ruby, Swift, and more.
+  <Card title="Agent-callable via MCP" icon="puzzle">
+    Speaks MCP — the multi-vendor agent-tool standard governed by Anthropic, OpenAI, Google, Microsoft, AWS. Works with every MCP-capable client today; works with whatever ships next.
   </Card>
-  <Card title="CI-Ready" icon="github">
-    JSON output, GitHub Actions annotations, and exit codes for any CI system.
+  <Card title="Polyglot governance, one config" icon="laptop">
+    One `.coverctl.yaml` enforces per-domain thresholds across Go, Python, TypeScript, Rust, Java, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell.
   </Card>
-  <Card title="Auto-Discovery" icon="magnifier">
-    Automatically detects your project structure. Interactive wizard or `--no-interactive` for scripts.
+  <Card title="Local-first, hardened MCP surface" icon="shield">
+    No SaaS account, no source upload, no third-party dependency in the agent's reach. Input + output sanitization defends against prompt-injection through test-runner flags and hostile filenames.
   </Card>
 </CardGrid>
 
 ---
 
-## Beyond Basic Coverage
+## Beyond the wedge
 
 <CardGrid>
   <LinkCard
-    title="Build Flags"
-    description="Pass --tags, --race, --timeout to customize test runs."
-    href="/coverctl/guides/build-flags/"
+    title="MCP threat model"
+    description="Input + output boundary controls, prompt-injection defense, residual risks."
+    href="/coverctl/mcp/#security"
   />
   <LinkCard
-    title="Watch Mode"
-    description="Continuous coverage feedback during development."
-    href="/coverctl/cli/watch/"
+    title="Rejection schema reference"
+    description="Stable error_code + remediation contract for agent recovery."
+    href="/coverctl/mcp/#rejection-response-schema"
   />
   <LinkCard
-    title="Ratcheting"
-    description="Prevent coverage regression with --ratchet in CI."
+    title="CI integration"
+    description="Use --mode=ci for the full nine-tool surface in automation runners."
     href="/coverctl/guides/ci-integration/"
   />
   <LinkCard
-    title="Debt Reports"
-    description="Identify files that need more test coverage."
-    href="/coverctl/cli/report/"
+    title="Watch mode"
+    description="Continuous coverage feedback during development."
+    href="/coverctl/cli/watch/"
   />
 </CardGrid>
-
----
-
-## Designed for Teams
-
-coverctl is built with domain-driven design principles. It understands that different parts of your codebase have different criticality levels.
-
-- **Explicit policies** - No guessing what coverage is expected
-- **CI enforcement** - Catch regressions before they merge
-- **Clear feedback** - Know exactly which domain failed and why
 
 ---
 
 <div class="cta-section">
 
-Ready to enforce coverage where it matters?
-
-[Get Started](/coverctl/installation/) | [View on GitHub](https://github.com/felixgeelhaar/coverctl)
+[Set up with Claude Code →](/coverctl/quick-start-agent/) | [View on GitHub](https://github.com/felixgeelhaar/coverctl)
 
 </div>

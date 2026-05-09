@@ -1,32 +1,22 @@
 # coverctl
 
-**Coverage feedback for AI coding agents — every language, every change.**
+**Agent-loop coverage governance — coverage your AI coding agent calls before commit, not a dashboard you read after CI.**
 
-coverctl gives Claude Code, Cursor, Cline, Aider and any MCP-capable AI coding agent inline coverage signal during the edit loop: which domains regressed, which functions are uncovered, what to test next. Domain-aware policy, fifteen languages, no SaaS account, no source upload.
+[Get started ↓](#get-started) · [What it looks like ↓](#what-it-looks-like-in-the-agent-loop) · [MCP tools ↓](#mcp-tools) · [CLI reference ↓](#cli-reference) · [Why this exists ↓](#why-this-exists) · [Community ↓](#community)
 
-![MCP](https://img.shields.io/badge/MCP-server-blueviolet) ![Languages](https://img.shields.io/badge/languages-15-blue) ![Releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=release)
+![MCP](https://img.shields.io/badge/MCP-server-blueviolet) ![Releases](https://img.shields.io/github/v/release/felixgeelhaar/coverctl?label=release)
 
-## Why this exists
+> *"Our AI agents ship code fast, but they're blind to coverage policy while editing. We only see breakage in CI, after context is gone, and the same agent then guesses its way to a fix."*
 
-AI coding agents write code blind to coverage. They edit, you commit, the regression surfaces in CI minutes or hours later — too late to course-correct in the same session. Existing coverage tools (Codecov, Coveralls, native `go test -cover`) target humans reading dashboards or PR comments, not agents reasoning inline.
+Works best on standard Go/Python/JavaScript/Java/Rust projects with conventional layouts. Mock-heavy code or exotic monorepos may need an explicit `domains:` block in `.coverctl.yaml`.
 
-coverctl is built for the agent loop:
-
-- **MCP-native.** First-class Model Context Protocol server. Every coverage capability — check, report, debt, suggest, compare — is an agent-callable tool.
-- **Domain-aware.** Enforce stricter coverage on critical paths (`auth/`, `payment/`) than on utility code, declared once in `.coverctl.yaml`. Agent gets per-domain pass/fail, not just an overall percentage that hides gaps.
-- **Multi-language by design.** Agents touch any language; coverage tooling must too. 15 languages: Go, Python, TS/JS, Java, Rust, C#, C/C++, PHP, Ruby, Swift, Dart, Scala, Elixir, Shell.
-- **Local-first.** No SaaS account, no source-coverage upload, no third-party dependency in the agent's reach.
-- **Hardened MCP surface.** Untrusted-input sanitization on every agent-supplied test argument blocks the prompt-injection → arbitrary-code-execution pivot through pytest/gradle/mvn/npm test runners.
-
-## Quickstart for AI agents
-
-### Claude Code
+## Get started
 
 ```bash
 brew install felixgeelhaar/tap/coverctl
 ```
 
-Add to `~/.config/claude-code/mcp.json`:
+Wire into Claude Code (`~/.config/claude-code/mcp.json`):
 
 ```json
 {
@@ -41,39 +31,74 @@ Add to `~/.config/claude-code/mcp.json`:
 
 Ask the agent: *"Run coverctl check and tell me which domains regressed."*
 
-### Claude Desktop
+For Cursor / Cline / Claude Desktop / Aider / Continue / OpenCode and other MCP clients, see [docs/src/content/docs/mcp.mdx](docs/src/content/docs/mcp.mdx). All MCP-capable clients work; `coverctl mcp serve` runs in agent mode by default (3 tools: `check`, `suggest`, `debt`). Use `--mode=ci` for the full nine-tool surface.
 
-`~/.config/claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+Validate the install end-to-end:
 
-```json
-{
-  "mcpServers": {
-    "coverctl": {
-      "command": "coverctl",
-      "args": ["mcp", "serve"],
-      "cwd": "/path/to/your/project"
-    }
-  }
-}
+```bash
+coverctl mcp doctor   # PASS/FAIL per step with remediation
 ```
 
-### Cursor / Cline / other MCP clients
+## What it looks like in the agent loop
 
-Any MCP-capable client works. Point it at `coverctl mcp serve` over stdio.
+*Rendered for clarity — your client may format tool-calls differently.*
 
-## MCP tool reference
+```text
+You:    Add the email-validation feature to the api domain.
 
-| Tool | Purpose |
-| --- | --- |
-| `init` | Auto-detect project structure and create `.coverctl.yaml` with domain policies. |
-| `check` | Run tests with coverage and enforce policy. Returns per-domain pass/fail, files, warnings. |
-| `report` | Analyze an existing coverage profile without running tests. |
-| `record` | Record current coverage to history for trend tracking. |
-| `compare` | Compare two coverage profiles. Returns delta, improved/regressed files, domain changes. |
-| `debt` | Coverage gap per domain — where to spend effort, ranked. |
-| `suggest` | Recommend thresholds (`current` / `aggressive` / `conservative`). |
-| `badge` | Generate SVG coverage badge. |
-| `pr-comment` | Post coverage report to GitHub / GitLab / Bitbucket PR. |
+Claude: I'll add EmailValidator + tests in internal/api/email.
+
+  [edits: internal/api/email.go, internal/api/email_test.go]
+
+  Tool call → coverctl check
+  Result   → passed: false; failing: api (78.2%, required 80%)
+             uncovered: internal/api/email.go:42-58 (error paths)
+
+  Tool call → coverctl suggest api
+  Result   → uncovered files: email.go (16 lines), retry.go (4 lines)
+
+  Two error branches in EmailValidator.Validate are uncovered.
+  I'll add cases for empty-input and malformed-domain so api meets
+  the 80% threshold before we commit.
+```
+
+The regression that used to surface in CI 8 minutes later is fixed in the same agent turn.
+
+**The agent does well:** reads `check` output verbatim, calls `suggest` to find uncovered files, calls `debt` to rank smallest fixes, re-runs `check` to confirm.
+
+**Watch for:** agents lowering thresholds in `.coverctl.yaml` to "fix" a failure (it's not a fix). Agents claiming coverage rose without a new `check` call (hallucination). Agents ignoring rejection `error_code` and retrying with the same input.
+
+coverctl returns deterministic structured signals; the agent's *fix* still needs a human reading. The full contract is in [docs/src/content/docs/mcp.mdx](docs/src/content/docs/mcp.mdx).
+
+## Why this exists
+
+AI coding agents write code blind to coverage. They edit, you commit, the regression surfaces in CI minutes or hours later — too late to course-correct in the same session. Existing coverage tools (Codecov, Coveralls, native `go test -cover`) target humans reading dashboards or PR comments, not agents reasoning inline.
+
+coverctl is built for the agent loop:
+
+- **Catches regressions before commit.** Coverage feedback in the agent's edit turn — not minutes after CI fails. The wedge metric is regressions caught pre-commit.
+- **Agent-callable via MCP.** Speaks MCP — the multi-vendor agent-tool standard now governed by Anthropic, OpenAI, Google, Microsoft, AWS. Works with every MCP-capable client today; works with whatever ships next without modification.
+- **Polyglot governance, one config.** One `.coverctl.yaml` enforces per-domain thresholds across 15 languages. Agents touch any language; coverage tooling must too.
+- **Local-first.** Your source never leaves the machine. Agent calls coverctl over stdio, not over a SaaS API. No account, no upload, no third-party dependency in the agent's reach.
+- **Hardened MCP surface.** Input + output sanitization defends against prompt-injection through test-runner flags and hostile filenames in coverage profiles (Lethal Trifecta).
+
+The CLI and MCP server are Apache-2.0 licensed and stay free. A hosted layer for cross-repo coverage history is on the roadmap (see [docs/strategy/monetization-decision.md](docs/strategy/monetization-decision.md)) — additive, not a paywall.
+
+## MCP tools
+
+Agent mode advertises three tools (`check`, `suggest`, `debt`) for reliable agent tool selection. CI mode (`--mode=ci`) adds the rest.
+
+| Tool | Mode | Purpose |
+| --- | --- | --- |
+| `check` | agent + ci | Run tests with coverage and enforce policy. Returns per-domain pass/fail, files, warnings. |
+| `suggest` | agent + ci | Recommend thresholds (`current` / `aggressive` / `conservative`). |
+| `debt` | agent + ci | Coverage gap per domain — where to spend effort, ranked. |
+| `init` | ci | Auto-detect project structure and create `.coverctl.yaml` with domain policies. |
+| `report` | ci | Analyze an existing coverage profile without running tests. |
+| `record` | ci | Record current coverage to history for trend tracking. |
+| `compare` | ci | Diff two coverage profiles. Returns delta, improved/regressed files, domain changes. |
+| `badge` | ci | Generate SVG coverage badge. |
+| `pr-comment` | ci | Post coverage report to GitHub / GitLab / Bitbucket PR. |
 
 ### MCP resources (read-only context)
 
@@ -84,44 +109,16 @@ Any MCP-capable client works. Point it at `coverctl mcp serve` over stdio.
 | `coverctl://suggest` | Threshold suggestions. |
 | `coverctl://config` | Detected project config. |
 
-### Security note for MCP users
+## Security boundaries
 
-MCP input is downstream of LLM output, which can be downstream of untrusted text (PR descriptions, fetched pages). coverctl rejects test-runner flags that allow arbitrary code loading (`--rootdir`, `--cov-config`, `-D`, `-I`, `--require`, `--init-script`, `--node-options`, etc.) when they come from MCP. CLI invocations from a human terminal are not sanitized — the human is the trust boundary there.
+coverctl treats MCP traffic as untrusted in both directions, per the Lethal Trifecta threat model.
 
-## Quickstart for humans
+- **Input boundary.** Test-runner flags that allow arbitrary code loading (`--rootdir`, `--cov-config`, `-D`, `-I`, `--require`, `--init-script`, `--node-options`, ...) are rejected when they come from MCP. Rejection responses use a stable schema with `error_code` and agent-actionable `remediation`. CLI invocations from a human terminal are not sanitized; the human is the trust boundary there.
+- **Output boundary.** User-controlled strings flowing *back* to the agent (filenames in coverage profiles, test names, profile-derived paths, PR description content in `pr-comment`) are canonicalized before return. Prevents return-trip prompt injection through a hostile PR or attacker-named test file.
 
-```bash
-brew install felixgeelhaar/tap/coverctl
+coverctl is local-first. The default install transmits nothing — no telemetry, no analytics, no source data. An opt-in `--mcp-telemetry` flag emits structured tool-call events to stderr for users who want to instrument their own pipelines (format documented in [docs/design/mcp-metrics-spec.md](docs/design/mcp-metrics-spec.md)). Adversarial evals (50+ scenarios under [internal/eval/](internal/eval/)) gate every release on rejection-schema integrity and prompt-injection resistance.
 
-cd your-project
-coverctl init      # auto-detect language + domains, write .coverctl.yaml
-coverctl check     # enforce policy; exit 1 on violation
-```
-
-### Golden path (first 10 minutes)
-
-Use this flow for your first successful setup:
-
-1) `coverctl init`
-2) `coverctl check`
-3) `coverctl suggest --strategy current`
-4) `coverctl record`
-
-If a step fails, use the matching fix:
-
-```bash
-# init failed: preview what would be generated
-coverctl detect --dry-run
-
-# check failed: inspect structured output and failing domains
-coverctl check -o json
-
-# suggest failed: verify profile exists before suggesting thresholds
-coverctl check && coverctl suggest --strategy current
-
-# record failed: provide commit/branch explicitly (common in CI)
-coverctl record --commit "$(git rev-parse HEAD)" --branch "$(git rev-parse --abbrev-ref HEAD)"
-```
+Full threat model + residual risk: [docs/security/mcp-threat-model.md](docs/security/mcp-threat-model.md).
 
 ## CLI reference
 
@@ -143,7 +140,9 @@ The CLI is the substrate behind the MCP server; humans can use it directly.
 | `suggest` | Threshold suggestions. `--write-config` to apply. |
 | `pr-comment` | Post coverage to GitHub/GitLab/Bitbucket PR. |
 | `ignore` | Show configured excludes and tracked domains. |
-| `mcp serve` | Start MCP server (stdio). |
+| `mcp serve` | Start MCP server (stdio). `--mode=agent\|ci\|auto`. |
+| `mcp doctor` | First-run validation: PASS/FAIL per step with remediation. |
+| `survey` | Sean Ellis 40% PMF prompt; appends to `~/.coverctl/survey.jsonl`. |
 
 Global flags: `-q/--quiet`, `--no-color`, `--ci` (combines quiet + GitHub Actions annotations).
 
@@ -161,6 +160,19 @@ Global flags: `-q/--quiet`, `--no-color`, `--ci` (combines quiet + GitHub Action
 | `--timeout` | `--timeout 30m` |
 | `--test-arg` | Repeatable: `--test-arg=-count=1 --test-arg=-parallel=4` |
 | `--language` / `-l` | Override autodetection: `go`, `python`, `nodejs`, `rust`, `java`, ... |
+
+### Terminal flow (without an agent)
+
+If you prefer running coverctl directly:
+
+```bash
+coverctl init      # auto-detect language + domains, write .coverctl.yaml
+coverctl check     # enforce policy; exit 1 on violation
+coverctl suggest --strategy current
+coverctl record
+```
+
+If a step fails: `coverctl detect --dry-run` previews `init` output; `coverctl check -o json` surfaces structured failure detail; `coverctl record --commit "$(git rev-parse HEAD)" --branch "$(git rev-parse --abbrev-ref HEAD)"` provides metadata explicitly in CI.
 
 ## Configuration
 
@@ -185,7 +197,7 @@ exclude:
   - internal/generated/*
 ```
 
-Domain-aware enforcement is the point: overall coverage hides regressions in critical paths. coverctl evaluates each domain against its own minimum and fails the build if any domain falls below.
+Per-domain enforcement is the point: overall coverage hides regressions in critical paths. coverctl evaluates each domain against its own minimum and fails the build if any domain falls below.
 
 ### Advanced
 
@@ -207,9 +219,7 @@ annotations:
   enabled: true                      # // coverctl:ignore, // coverctl:domain=NAME
 ```
 
-Multi-package monorepo? Use `extends:` for inherited policies.
-
-Starting point: copy `templates/coverctl.yaml`.
+Multi-package monorepo? Use `extends:` for inherited policies. Starting point: copy `templates/coverctl.yaml`.
 
 ## Supported languages
 
@@ -248,23 +258,36 @@ jobs:
           output: text
 ```
 
-## Architecture
+## For platform & devex teams
 
-- `internal/domain` — coverage stats, policy evaluation, value objects.
-- `internal/application` — orchestration: check, run, report, detect, record, compare, debt, suggest.
-- `internal/infrastructure` — runners (15 languages), parsers (Go/LCOV/Cobertura/JaCoCo), config, history, PR clients (GitHub/GitLab/Bitbucket).
-- `internal/cli` — CLI parsing, output formatters.
-- `internal/mcp` — MCP server, input sanitization, tool/resource handlers.
+Standardizing coverage policy across many polyglot repos? coverctl ships with the artifacts your security and procurement reviews will ask for:
 
-Strict DDD: dependencies point inward. Domain knows nothing of CLI, MCP, or infrastructure.
+- [MCP threat model](docs/security/mcp-threat-model.md) — input + output boundary controls, prompt-injection defense, residual risks.
+- [Rejection schema reference](docs/src/content/docs/mcp.mdx) — stable `error_code` + `remediation` contract for agent recovery.
+- [GTM funnel metrics spec](docs/design/gtm-metrics-spec.md) — what's instrumented and how telemetry stays opt-in.
+
+Considering coverctl org-wide? Open a GitHub issue with label `platform-evaluation` — happy to walk through architecture and trust boundaries.
+
+## Community
+
+- **Claude Code Plugin Marketplace** — install `coverctl` directly via `/plugin install`.
+- **MCP Registry** — listed at [registry.modelcontextprotocol.io](https://registry.modelcontextprotocol.io).
+- **GitHub Discussions** — [github.com/felixgeelhaar/coverctl/discussions](https://github.com/felixgeelhaar/coverctl/discussions).
+- **Sponsor coverctl development** — [github.com/sponsors/felixgeelhaar](https://github.com/sponsors/felixgeelhaar).
+
+Used coverctl for a few weeks? Run `coverctl survey` to share PMF feedback (local-only by default; nothing transmitted unless you opt in).
+
+Built by Felix Geelhaar with contributions from the polyglot AI-coding community.
 
 ## Contributing
 
 - TDD: tests before behavior changes.
 - Coverage ≥80% (`go test ./... -cover`).
 - Conventional Commits (`feat:`, `fix:`, `chore:`, ...) for Relicta version-bump logic.
-- `main` is protected; merge via PR after CI green (`.github/workflows/go.yml`).
+- `main` is protected; merge via PR after CI green (`.github/workflows/go.yml` + `.github/workflows/eval.yml`).
 - Run `gofmt -w` and `golangci-lint v2` before pushing.
+
+Architecture details for contributors: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Releases
 
@@ -272,6 +295,4 @@ Managed by [Relicta](https://github.com/felixgeelhaar/relicta). Do not push `v*`
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for disclosure policy. MCP-input sanitization (`internal/mcp/sanitize.go`) is the primary defense against prompt-injection-driven argument attacks; report bypasses privately.
-
-For threat model and trust boundaries, see `docs/security/mcp-threat-model.md`.
+See [SECURITY.md](SECURITY.md) for disclosure policy. MCP-input sanitization (`internal/mcp/sanitize.go`) and output canonicalization (`internal/mcp/sanitize_output.go`) are the primary defenses against prompt-injection-driven argument and content attacks; report bypasses privately.

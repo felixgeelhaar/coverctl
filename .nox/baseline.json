@@ -2,34 +2,6 @@
   "schema_version": "1.0.0",
   "entries": [
     {
-      "fingerprint": "bfd626d9fec1b7346ac9a7e78cdd15b9953504def10e48c03df451b2ae03b342",
-      "rule_id": "AI-006",
-      "file_path": "internal/cli/cli.go",
-      "severity": "medium",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "09710311ab189aec7b9dc94d58872150b0e64c0094eceb8b363f2972e58924ae",
-      "rule_id": "AI-006",
-      "file_path": "internal/cli/cli.go",
-      "severity": "medium",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "b3a92b2230df05f1a90d064b40c87d6fa356783f9c5bab19db2b222e13899e1e",
-      "rule_id": "AI-006",
-      "file_path": "internal/cli/cli.go",
-      "severity": "medium",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "13111f65a1e8736a76cf42b42b60dc155c618c8c126a989a89949bd422d50cc5",
-      "rule_id": "AI-006",
-      "file_path": "internal/cli/cli.go",
-      "severity": "medium",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
       "fingerprint": "f2df22d20cc94e679648b7a4870032ee3a45468e4dd8fc4e83fe6f02ddf6a2b7",
       "rule_id": "IAC-193",
       "file_path": ".github/actions/coverctl/action.yml",
@@ -159,13 +131,6 @@
       "fingerprint": "5b9dcd19523366e8b476e3c0f8ba29efa73be27a99b3aed9b4d8ed1e01754381",
       "rule_id": "SEC-163",
       "file_path": "scripts/update-homebrew-tap.sh",
-      "severity": "medium",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "75ceb41e04752ba910099fb5ea86ae46418d7bfeeb7bcef12178c1dd98783ef2",
-      "rule_id": "SEC-163",
-      "file_path": "tap/Formula/verdict.rb",
       "severity": "medium",
       "created_at": "2026-05-03T21:06:16.449473Z"
     },
@@ -13967,804 +13932,6 @@
       "created_at": "2026-05-03T21:06:16.449473Z"
     },
     {
-      "fingerprint": "5a5ed65f41b30cbcbf6c3c6c0502f8e34cd337fc6acb075b481816a9d51e39ba",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "53b4ecc720f634bacd615b6a9464143080643958ecdf970a6c79f2d1b83f10d3",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "928d351fb2d8d29f5cade806c66d459e2d61cdc13940eed87f5802ad93b63f4c",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "166fc2e6b26c3b2595c975aa470582346050b0fe29c382081debc49fe789a5d9",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "fecda15e9f37a7df80d1f1970ec53fad593e3d5fd38afeedaff22eaf64fb3704",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "9e83f20fde7a421e9abe543c029d9525d693b888e71cdb1f776d5785090121b7",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "9f6aa981ff91ccb7cd22339553fec5c69ea907149c3bf3d26f2bf47405ae9c6f",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "95519a0ff2897ae510589c2d24038860f306c39547ac810126a12230bee95a77",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/acai.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "b4e2128de2f1418ba245c732d9c10ecb662616bdf991a2d75e03e813d01731dd",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "2ad4a0a68b3cc7c0ba44c747f9023371d60b80f7fc3f2e6a86673709d3412006",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "757ff48ee953ce3091309905111b952a8f1402bdbd1bf3a30917a799239e5d8f",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "a39df5b04fc9e9e78de56c81384d193dd1d1e3c2870044af014eee97a2c1758c",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "1072a4bb261d71e0298662cc4a052fd59908900c57c7584f53c89afb70723fa5",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "52e20d6d6e4cf15c8237076e95daadfec90d1f29757b98346475be27be264353",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "07eeafd6165db53885d1650d06b326213e381852a1ac73b4a4c4818383b32410",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "eb7a4429d2181707c68fed2a64e32339def3471bd4a3f45ad6c97914896488ab",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/chronos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "8d2412bb8651c095bb822735b511d294c19539c5a9a9266784d1793772ee9fa2",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "0fb3e796b720bc1794296ab92aca35dd5181ec77ad7d155ed08d71411b5fa682",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "d8afc4032215c776e900c596fbf2ccd6dea46eba9ec124c1db324e90ebc4cbfa",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "0ed5a0077f6f4899012e45e57a470e52bbb840655d99a9b2d7b1714557d5020b",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "2db12c8c3bc4b4059fdeebebb7e840cd28d1392f0a22e136f3b9074af04e9a2b",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "61bf758213d7167fd65454403fd1d29f011dadc72c9aa6adf85029cd20d1b4b1",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "22138b2a540952e5c66619f441e2cb7a5ed3ddad3875beaa2d813ee7ef83a783",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "6ad239cb1f05f01f55862075d9171b911e8757c5112ed9f6c59557ead1ee0f95",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/mnemos.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "b18f45f43bdc6c2c6d79fc730255a5350a7903a19808927c98a7313cb8e2f83b",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "005687e5149684465b8d978a143e1d8e3be9ad1f5272f251fbcd631cd0884434",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "f2b40d3b502d2472441e0386c2006a44ba2c4c9ac56c1216bf9fe48b9144274a",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "6b54638c0df95641d98db09b2f0663a0da57ee2f50ae3b572790b7bea8851fb4",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "e0ca32d07c1ae08d6af7fe1e053f144910477e2d8d05830fab6b35de015fd55a",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "90471a763c6313419855ec2ec48f3dcf2b4b3a28032d05cff7ff9eb2e14003a8",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "8da361374237e81518597d6deadb83f8c1442848ad88c124b75cf23b9ea0949e",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "33fcd7ebbcec0fe2538366df873892a0aaff0861279310b02fea812a93d02a20",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nous.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "f35e3e29b664ae36ce24468af2f01041db931a1e3d6866e878c4beb2610562d6",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "ef3c1511bbd7d5779e9807ee065455e8934773c60600e2e85bc3ceccd9277601",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "194eb1c51cf31b7adcb448f3bf6afea19b6fb8d75000df5a2a65dea3214df54e",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "052761faf5a052b11d46be69fa524838ce1e5a62f0dfe19672bf5c216977d4d9",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "9d9a3dae159140ed5b342374191a1c9861ddc1407fd315847f2f04cd757b6a2b",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "88fa6b7a04de7e65f0875d6ee072e301ee0afd181ed2200bb1c3b2c77245083a",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "10c2c621bc6e03f16e3bab4d26c9f462ec77641aafcb147d1d2d3f22bac1d977",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "8e1db5452abe421b07321e50cc2163d1651d9a2bfb6255db54e07a12fd2f6b2d",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "3684262533e1c7c918044492974c529d4445e507dafd8e81270a14fcc2eb14bc",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "29bacb7b6088d93d41d803be5880f9750146d86ee33724f323595ccdbe1bc9a4",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "036a2a424d71673dda8657c07fedf567eb860c127044850590fa352090d96e12",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "1d3a256dc0d73c0c061cdbf2cb3957d5a78456e2fbb25b0bf8ea577b2a1cf339",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "d750c09143a53a9cf417c552991da42d55b9e78a5d0088ed2e71ac7d58d82051",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "c074d8563ba8f65946e1f6e7f3b1d0b407f2a88422bf9e5049276c2b2883fa8c",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "eaf3217c3553d3acb382ece514c2491b25570324d23183531f6ff5a52677cc47",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "42cb24d5cc30f3f2df62e96e0397442aeea5f6ff63666f1cf857f3a8cee595c2",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/praxis.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "7347be6cb7e7a39923efc696a89b66189a6f92bce072c072fa9f05b1fee42651",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "a5f2a5853ce437f8559c495952e94f7e0d15535cffb93499f02b6bcdbabddb41",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "261aae19dd58ec6668208d3e1f1d5d361416de9f6f49614ea18f8f36c126efc4",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "1f2a8ae724166042e53a8955fdfe1d0d19140791f0e48b8445eb99d0a5a6f53f",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "cfb81d1fbe8d6290178fd6ffaaace788aac13dd7a681cf227cda7e5c9067263c",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "bda3e1fc6dc083e125f1da6099a4072fd43df7098d7aab2db4562de6418fb0e2",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "f371bc1dc5bf34969f5185ff23de621cae761443a241202f105df4b818ebfe18",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "6b3da0d1d8032596dd95479a8cf926db9f657b4105e28855f3f41e9426014a70",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/roady.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "d7e215c9d62dbe7a78c357799211bb672d08e303ef386316e1bd44243cf08c97",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "603cf472bf2051d68865ffcc5f8d15c17d01ad8c40f15e0a8ca8c8ed524e2ae6",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "bfeef7d3cb9e2b2ea137e499dc176ddb22fd2c2bbe19fb78dfbda0fe3ce78379",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "c1e72ee45d109ac02c93df1d0e62ba06e569790028e2103c09aafd2e0047787a",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "e73d14a5bc4608632e121f28df7e5158de4de6558e648927311216dacab63987",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "78dc3079a4ed9c4db03deaaf522b51b946d13720d83653321fe09fcd9c260f61",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "a90ad3230848fabb0dfc93f4ce6493b04e2e4d268ed4db81d90f24957ee849fb",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "b4ddf6e053ab8ca4474952176b0d94b08e6d6cea615f14260ba25656d0f8cf9e",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/scout.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "5095b82c4a3c5f1e02cb455b2727d535e75a3f808c5b0a4429c79a653ca0e7ed",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "b090355ec6716444a26b7280b9ab123f065e4f44dfee44a6525b72892c135dc6",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "ce7e12f2abc41a29a63f34006fa622fbdf6ca284789c76dbeab07e35e0b0a6f5",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "92bd50efaf70c75e9a0a5a2b007db1632469c148dceb16373f4ab898c6432fc9",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "bba3f825029c1baf233df1c5f57ecbfea75d0dace5682f5bdd6281024cf307ff",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "e8b0fb91fbffe8dc6fc82ec8b81a72ceeea20fa692e7cada6be40cbec22837ae",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "9b42c1a8648353d5a7c96026954dd0b57fecb8c77a6c75bdb722a8e1d35faf23",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "80e2afcea49b7136c038e080df24c0b71ffe423436849bf38196c81e7e9809f9",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/simon.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "78de000ef3fcb7d781fae826e4ce7aba32b5d5d6c1c773e015f4aece7b381568",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "fd4992c994e670936c070874e0c9237e47819c6e197e92a46193983dabce4794",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "4c74c730e106db245ba4500a445c9359bd4d20bcd3852966327fee4c5a97365e",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "110549d0a7c3097d819bda2cb7a0a6de361c589c8b05391181b70b21b75d016b",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "f5e5f285ad709d3e4a045b45d1699722bba2d993b3b546de448b3253820ee29d",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "441eae263afbe05d4e568d84daeac56f7f7bb1c525a92754c29f7d2a084e0e12",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "93fa3495c83c6021f3aa147f0d64dccdcfab4dd5290b74f9722e22a469712d8c",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "30453be7b4f17de17a4d83861892778337ad3b123415dbe4ef3aa101b7859c19",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/specular.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "1457ac57bc61dd81bbaf544dca204f5a67a2ed3a15c46ab16d70645b57065eec",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "e9715c8ca0e8169bf33fab25de67b493898d57489f0d2cc1bf88d76e63153a68",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "5267c489186234625fa7a3192bdd70d9c5cb8db2084e890fe59c25f0c0a41a77",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "bed50f37ea08487f3593a4c5b2aeeb5b6a7c170134f640ef731c7bff60cced06",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "1964de0434755e1fd7e2d7171dcb17d963c2c63fe0698ece1f298c367c27c4f9",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "0e9c98791b7a93bcdb80b58c38f2706eeb8610479d7cdf3131f214ca86e253b8",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "0e0bd3966172730d73a0cfa51855c61d4d4e578e64449c681fdebe356e7446b9",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "81e8e0eb72966849b930a9b2410d86209c499cac0944367615cf4ce6c41ff152",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/temper.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "19abe2e4e0ca890cbd06bdf8b5bf010a602056ea788dd06c7e79819598a7cf06",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "950c13e8fd01791a788a6667a6083d1657de3eb54aaf7cf68449daa150243a38",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "9f278902d7c2ecb3b4d944c5fe451c2fba93ddb961778ee6e04a7a784bb4b4a1",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "d85ae3807a81e8c3a3960160f68dc64e0e7ec2e9487b5ea61af919d07ead5041",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "3d3ecfbb969c7a4a47790b02c234b473c8611585494cc85df4bc8b955e38f014",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "8290ec8dcd5fce397576130bebba5a474449b689bab89ad2468bb2d74dce38d6",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "dbfbcdba248616cdd8c069ffdce93f8896d291b934eb2089c7717a0ef69f40ca",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "f49a85b5b457e4e26ebaf026d83d5fec6b09febbbd384b818b06ed0983d892e5",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdict.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "1cb31b7c750f542c21b49eea43d5ebb9d81cf1752d2a7ebbcb100e894ea8aa34",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdictsec.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "096e46876386ee14773ab2713041e11fe3bf54664e11f7cee695bdb7cf1a98c6",
-      "rule_id": "SEC-697",
-      "file_path": "tap/Formula/verdictsec.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "20e14eecd029afa11a9b1c251c257fd53f616e9d2087f0503f37a079877ee7fb",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "a65470987d447902bb3996b1625f8cc63b098aef34ea54fc4b9912fed0d6777a",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "87cb65709de77475e79e426a797703910ea394b719b1e93e1647f7c1b480bb5f",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "272d178b34ca23e74b4f784a705f78bb90e756d67dcc44d9dff1c6b88c4c396d",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "e7061347f2757e3f0f7a4dbe003bd8e887f6b3b221799883d083eb3224a4da4f",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "026d6cc4e949f91a70d5700a8caaa69d01fbd3eda9c42d89a2b93a7f9e0db6da",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "e484c6fa29c8472d716ee7f0d6f456b0b8d7108aac49a86cb7d03c4916200123",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "7ba530a7da6cd16fcafda73b3b984f75f0d6a82f596cf8af24f63db10e4940a2",
-      "rule_id": "SEC-697",
-      "file_path": "tap/heartbeat.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "f3c26890bb802648ef2b24008e5dc02a8caf2cd3bcc39dd7b29070d011a2719d",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "05d31463390ae68d237a77d1936bda3647fd54a1d1eada1f77a23b1262e2f1bb",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "c68336831849c8ad996d0cd556dedd79a028b8439ee1ef6b0011d6b1439682de",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "9193caa1b1b88eb04c7ce50a9575fa94fae6db5c27dc386f0c0aaee58f44109f",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "6e3259f6806629b04a018e05590d6d3524da7e8772ececaf57d6a28f7e8f6a53",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "d9d5051a45cfe44414f857918e5a752f605c534867064ab25d80badcdb2eed56",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "78a384d2cb18e46c9c0d4fe75444298a775bf93546b3f4a31d3fcf68f9409734",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
-      "fingerprint": "4256b302443efc5c6ca24d6f55a48427a1c69081795aba6b1d0064a699523f28",
-      "rule_id": "SEC-697",
-      "file_path": "tap/nox.rb",
-      "severity": "high",
-      "created_at": "2026-05-03T21:06:16.449473Z"
-    },
-    {
       "fingerprint": "e4c9878810f681e2da4f360b86d20e354ac1b99e81dee6d1167c8aa55026d5f0",
       "rule_id": "VULN-001",
       "file_path": "go.sum",
@@ -14917,6 +14084,2231 @@
       "file_path": "docs/package-lock.json",
       "severity": "critical",
       "created_at": "2026-05-03T21:06:16.449473Z"
+    },
+    {
+      "fingerprint": "b3e88e4c15395029d2976521ceebb42bbc86fa3604a01b73bd35bfa7b4f414ce",
+      "rule_id": "SEC-446",
+      "file_path": "docs/strategy/monetization-decision.md",
+      "severity": "high",
+      "reason": "False positive: Cloudflare-API-Key regex matched English-prose substring 'Pure-OSS-without-sponsorship-strategy' in monetization decision doc.",
+      "created_at": "2026-05-09T10:26:48.80016Z"
+    },
+    {
+      "fingerprint": "fc19f46986f8b04dcc94b7f8a816bfb0af1df2015f67da930d1edc46b5dc96e1",
+      "rule_id": "SEC-652",
+      "file_path": "ARCHITECTURE.md",
+      "severity": "high",
+      "reason": "False positive: Jenkins-API-Token regex matched Go camelCase identifier in ARCHITECTURE.md (OpCodeModuleRootMissing / ModuleRootRemediation / remediationHintForError).",
+      "created_at": "2026-05-09T10:26:51.826454Z"
+    },
+    {
+      "fingerprint": "7b1dea3e4769104b690f2ea20a62939eee4cba10b4617e333b745bd979c69970",
+      "rule_id": "SEC-652",
+      "file_path": "ARCHITECTURE.md",
+      "severity": "high",
+      "reason": "False positive: Jenkins-API-Token regex matched Go camelCase identifier in ARCHITECTURE.md.",
+      "created_at": "2026-05-09T10:26:52.770788Z"
+    },
+    {
+      "fingerprint": "97ccab01e75d4a9504eda5054a51ae41a470ec67f678344daeb74b7430ad295e",
+      "rule_id": "SEC-652",
+      "file_path": "ARCHITECTURE.md",
+      "severity": "high",
+      "reason": "False positive: Jenkins-API-Token regex matched Go camelCase identifier in ARCHITECTURE.md.",
+      "created_at": "2026-05-09T10:26:54.055509Z"
+    },
+    {
+      "fingerprint": "4ad3e8201a02bf9b25a5bd0e2199fc923df0e16e0699880dfd927e3c3e080b9c",
+      "rule_id": "SEC-652",
+      "file_path": "docs/src/content/docs/mcp.mdx",
+      "severity": "high",
+      "reason": "False positive: Jenkins-API-Token regex matched URL substring 'modelcontextprotocol' in docs/src/content/docs/mcp.mdx.",
+      "created_at": "2026-05-09T10:26:55.585223Z"
+    },
+    {
+      "fingerprint": "739bc8e546cefe69047633d56764555422dc06cbde8ceb128834c65da31ec89c",
+      "rule_id": "SEC-659",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "high",
+      "reason": "False positive: Split-API-Key regex matched legitimate pinned-action commit SHA in .github/workflows/eval.yml.",
+      "created_at": "2026-05-09T10:26:58.994111Z"
+    },
+    {
+      "fingerprint": "682f332ebfad2e83fc794683d0680a7a8a865dcbd01d5fcfff8725d6d3e4f17b",
+      "rule_id": "SEC-659",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "high",
+      "reason": "False positive: Split-API-Key regex matched legitimate pinned-action commit SHA in .github/workflows/eval.yml.",
+      "created_at": "2026-05-09T10:27:02.165069Z"
+    },
+    {
+      "fingerprint": "9e69a72be8fa3b659fec9a748669a02dac01ac98a632c46cc5c4898c6b2b1c5e",
+      "rule_id": "SEC-659",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "high",
+      "reason": "False positive: Split-API-Key regex matched legitimate pinned-action commit SHA in .github/workflows/eval.yml.",
+      "created_at": "2026-05-09T10:27:05.268799Z"
+    },
+    {
+      "fingerprint": "de414da779a736dd2356db7c92d293df6b5507544fdf371518de47eb2c6a6753",
+      "rule_id": "SEC-659",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "high",
+      "reason": "False positive: Split-API-Key regex matched legitimate pinned-action commit SHA in .github/workflows/eval.yml.",
+      "created_at": "2026-05-09T10:27:07.747197Z"
+    },
+    {
+      "fingerprint": "48c12757c4a54adedef6a2c7174a8f69fe6107c56f97aa927f15a3ceb9b90085",
+      "rule_id": "AI-006",
+      "file_path": "internal/cli/cli.go",
+      "severity": "medium",
+      "reason": "False positive: AI-006 regex matched fmt.Fprintln in completion subcommand stdout writes (bash/zsh/fish completion strings, not LLM logs).",
+      "created_at": "2026-05-09T10:27:11.807195Z"
+    },
+    {
+      "fingerprint": "27ca627b9b1be90f3179e8152f1807fbe7c8dd42fd9915479507a95428a367e7",
+      "rule_id": "AI-006",
+      "file_path": "internal/cli/cli.go",
+      "severity": "medium",
+      "reason": "False positive: AI-006 matched stdout write in shell-completion command, not LLM logging.",
+      "created_at": "2026-05-09T10:27:15.287337Z"
+    },
+    {
+      "fingerprint": "8de461f121a6c0abe304a9d6817bb64b88b2619f01e581651df9374f24a8494c",
+      "rule_id": "AI-006",
+      "file_path": "internal/cli/cli.go",
+      "severity": "medium",
+      "reason": "False positive: AI-006 matched stdout write in shell-completion command, not LLM logging.",
+      "created_at": "2026-05-09T10:27:17.522446Z"
+    },
+    {
+      "fingerprint": "3e042a7f5c91669f86def470e8cca48280d5690e85f6443c0ee409fb6480fc1e",
+      "rule_id": "AI-006",
+      "file_path": "internal/cli/cli.go",
+      "severity": "medium",
+      "reason": "False positive: AI-006 matched stdout write in shell-completion command, not LLM logging.",
+      "created_at": "2026-05-09T10:27:20.328981Z"
+    },
+    {
+      "fingerprint": "f9ae31fbb51af2b71e916af478d7f4c8b9dfe0eb7e8689c190e97d8d27efd22c",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "de81e4be8648546f2d5f949406fc7df590e87e7e3e9223497989d9679b226c3c",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5b683840c568c2774f8923416a2720d4e6a3f5ea8d559436a036b542d4923323",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b9b9f057bb255ab59a229ccde7ccc4faa4972594907e1c70ffcc7c9e3fcf15d2",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d55f1af541c61915aeee1fae8d7e013b9b29b7efbb9b7732e902d0b5ee9b6e5a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "925ea25fa6192f0e18ceb93613f142f870bbbe88024535163f3d771c1e5c2369",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "58081489778e7e579352ba19e16f60f8816c6457ac59de54c011a9e9bb676fd2",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "55de2dd363061bf53b55571a71623870275109be58471cc23d080dd7458bf1f1",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3f60939793a13809acf7f052d47b97a33d5a9555d460c5c010315658e7e19b5f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "93b85d821e7b167e6926a1e843844ee93472a16594885f85f1a0bf62f8191816",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9cab7ba6eaade4a86c48353326205b3e83436f09cfcb14dd5a1e1c265e5cf1eb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "dddc5bdb2d1c1b6452c50fd981b6f70c352fb4236d57220c14776b114b7c2838",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "739132529c2fe9423568f9355816aa0d18d222ae87e8376cadcb7cdcac13c607",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d159057a6a3753d13c5a45f9cdf25d02f4db6b71711ff8eee7481d7604811a13",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "1ccf6717456eb51fe733213b492a602b4e2f8210ae6cd1793120a5311983754c",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ca5dff4ed81f1ce0715a33002aab520f7a85f7dc4b036a6cea736f654d6c29e9",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "14929aef44d096f3ca914cbe665286f69183eff2f7419d18529ebda728135e7f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7eabe6b199835dd50910dea97a3b357be6bfcda5aa4c8bc7bf53faa835fa46f2",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9ef866ad3264ea524639a87259203c956a1c90a8467bdd70fa3d9d95822b8cbe",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a140c49bb4d2a73b9e9d3864186556886222a12d7dbb0b7632799fa206bd2f29",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "48c177b9544d768205221f6d1991bb514054eb3067ae29b16911fb10c8cfd279",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3ceae4f6e61386457f01fd954664da0d96a45acced123b5bc577626817d3b07d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "01b0bb58ca45d1af9c3550a8fc6c7442cd4f5002bdc9fc72e58424f0451f4c88",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "735685e6c8818f8f35effe1895cc02f7b69e000d038279f333b9a8536f0cb4c5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "2572cd6257bf3e9670128f0fda12454569020d3e2023c1c560ed89f6996b4b04",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f42ad6bff3ad1a7b38a4cc6bb9e1d6606df05423e0e55a5f20603f3916f64fba",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7a5526ef772811c7e12a671648d7e1e5edf76e0c6887bef5f27ef0cbaa787603",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9762e495e05c40d0816728098c53cd3e06da841fa46514c89c95b4d9cf55aff7",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "1ad11d18bd380d3988cb425b4b9e37e91c7126715c2f81ead0a039c55f7ebe47",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "831a322e0007a5f332774cadc807a2410afd8b7f0b62313753b1b0c937d1a298",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8311fafedfbc0975463462ec7536ba7234ed645e7198ff5eb01de5aa6ebbbae2",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "898314b1739bd1a704179a93823b6a03ee4a66bab6b7d881f873e0dec1767e62",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5407b50a32ed74a937e1c37e32ed91205e3f36292afb35b7d095aaac4f5d92f6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "42db705cd7b5a1dbb333e874995d65eee2449184277e7d5d64add29ead5f7834",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "86910e37bfe02d13ec80fe4ad793980348b4af051db1de8f03fe50436e414bd5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "91aea29bb19273cf2fe655ba788654d315708ae2e0db246f2134bc6238ab70cb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "af0fe80d0d4c6ad89fbd8f321d497dce507b2b58439a7387e8f77a5f246271b7",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f8080f25ebffd3c22f9a46972de9eb26a164ac62aecdcb72a082e60c3cb86702",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "1c657f7e80fc1d68b042d6a7739cba0b82cbff79b643d7ce6368602438be0696",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "41b25473ce36acb2c384bcd47dc84fa1fb4ffeafa613320717a243cf0da72376",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "02ab5d5135157d13a2a39f46f453fefd9a7c250980e3781ca5bb72f630d5df01",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fe7e8c618256d345df7013896bbdac02f8dccebac5f032bb72813ea6eb5a2cb8",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "15ab4e453ffc9e5dee336c6cfbf2b4e3e5b576a289c10aab95b48ad963ad0ca5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "61b76c3a82acec770644efff186fb1487352710c18a5214947acd4241b2839d7",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9289e307aafe8719407e25fa6bb7809ad92c89195792280cf8f410aa558fb29d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b13e4813c97871d2791f5be40efcd2036b556b5abbe55ae4528172283227081b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "cd3679672f0e2e7d2840358d545884e913512131ba30143ac5a823479eb7d17d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "01a9b0ce72a7f81823fe6bd83412045a27987e8e6c6485e39941db68dbf75afb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "bcb83f4c70e6ce12aa625791c3c75e526facb003e36251aa8a237a7ca5879454",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "52ac56896aaa9d69fa34ea950a0b7d1f84391dd786ef1d41778986944f862552",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "663c32cd256080ba995b628d6cadf7cc5fdba0746f32c0b0bd7aa565e18ca7f5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ed3be8f9e629b1fead89f7593934a28af78155f3bd713396fddb22cf74b039ae",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d21bd93d5962c4207ffa0d7529aa0649123f4ba3ca7a889ce88e91878d91b7ed",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "76ced7c9e4341d75b1c8f749cf5653383f437f6461db5016d425baa150b10fe5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "300c6ece3c479cb4d42c96f1a357c5271284fd82889ced52dd5a71aa8253388b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "78ddef32c3bfad26d79b2032c7f52e07b0f918d7a9341ff17833000e86696257",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "def04f84f053734f072edbb36cbc0fb85fb242bb8a4964b28b61a968bd92f7bf",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c291e7c7bda6cdc508bff5ee32c2e23382b012122cca037d4bf9ef676e7bcc2a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e887232b39b292f82b6c1d28fd0a8d7deb1fd3e71df14c961f64da28f5b1f233",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3dd0ac8ae5d3aa3ebf34446769e2f1a086ba8ac2fa5139cde61b0950fa339b3a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "10f3698eafc5e7ee021ee9130ead1e1f4bf5da4c450c7fe21848456e66bf9ab8",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "cc5edf1cc673cc4a528f4b26fd39444e71be0f889264589fb55aabe4318bf2cd",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "adc16bed3aac2a6c549bd9e8e5afebd706612c24689107efaa64263b685e1bb4",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "14c9c12619e2acc87903b42a15979c9ad868defa292d5cb639b391a33895d7eb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "76aeabd5368d39ead8e236f4517dbc25d52b99b82fb0f197b164038c37a835a8",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fbe452929de0e46bd31666e784729aaae083f5c6ba4f0d928a75e2dddef9b27b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "217268a544e5e52f562b806a2d1d009085d8ecf621438eadbdb4bf8ea3706730",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ea009fa26abc05065b137c17050a90f5c65e8f2fad6bb24ad513238bd4f0c002",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "561f517ea5ddadf9a1e8c0c39426fc0c010282ae0174e7304d6d58f97ee9a658",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e957ad06b55e4e5266ca8733f18f42d7bf371784341ce887d6876b8dd7e975b5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fb5ef0a5499dc4934e54f410023bf51d966b7b2f514b12bb88b691a71f39afdc",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "eecab6888cdd2ad47d39a1ae3b40bc807888b8d3ece58834f70809b2cd265fee",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f83ecae68ecd6704d1da87db07f63fc285b55fc8134805089caa03e3472a0e24",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "53429ad9b09e3d591c7d2f290802edcb23da431b25fe0920839340e9e2d2757f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "76410ed26d179c65ca76b457e3fb946b2d4cb40886de4ca949fb37389941d993",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ce28b59a4313947ac969b1aa119c61a27211b976c9e76cea272f56359a3a2a3c",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "dc50e65b5893eeffeb282a06e594cbcac82e08e6bcb61cc80461ea8ac3e74b40",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "1a42a8b0446743ff6c6606a016023543718f2bcfa659e1aedc851e8cb4597231",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d897fcc6e30e738975c51c983242214e2da0f4e3d71a699166937985a5253f32",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b0e23feccdb994aeb1c9d97a554e5c5b1e9f97af7ff9cbefab58d3d233ad9b56",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "4c3ac6383ab998444dc59a2a8891544f4c00b112cdd678469b40d30873e0a2fc",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a20ba087ad0a1ab72d82a2682452aa11c6fb2463966a8ccb9d6c11df3a675972",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "caaf8b8f71fce0a941291f8d2e752856b11335394ce73164e6f9d9eaf3abc481",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "bd70d7e14cf2525fda00479c0464377033413a23c1c863a45f0a261e0c378ebd",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "64173e7fcf8ad2f7c67c811a3cbdc549b74a5ecbd4daa0d6aa8832d598b74e78",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "cb3d935038c9e6faaf5a540e860da9d5b176314b90d309b30c3e96a90a2fea7d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f2a42d997ac33fc652c28bd7a2dede688c0fa005618f76abfef13a41304727d5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fa05a06fefa729f4d9d3051d162bbc22d6312c24c73724cd1965f43b1e93ece6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f9912d64c64c5781871bd99d820cbee0292dc920bec905858e2a99e1dc26aa36",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c5cfe9043d9f32bd7ab152f71a785a59975b49b99a8e026e638be865847bb7d0",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d87a34ef2a02885f0fa150982e1bc9d8c66b1a5345d74b8edfe2a2fc2fe96eaa",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7f5a9f2303feeee288fd0ebbcc55623833e4dcd517e3d6eab62d6175dd7731ae",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "90976ee44580ed753bb4feea6a10fb7f40831eae1c7601e29fe2f05d55f5db2c",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a49dc16af7d921b47ede4b76f0a53b2f3d903c08ef39b618e04be7ec4990e1ee",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b9d108ed6ece60ab0c167fe5e3018ed405d4a6cc497b5a3e330ba36efffdb074",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b1c83f84870bdd37b4fc823842b2e25c465c3a7bd63334c302fd254ce0da8e59",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6a7f3813109fc5c8de37e0c5694450b1e47980c962dadd29a4b5b315c9e1b1d9",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "711ebf3b6f0dac3515701a72a85e3bbc91cbdd3fc0a12b8befc37b17aaadbcb4",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3d2a13718931c0e0b051f8d4b4ca6d4b75118625924e3454489f9ec4f158cd8f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "eb4a621a0aa3becea695a1421be31ae3e32f48e0ebbc1f7580fd8fc5847ca9be",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "4f575b57577318f3481f80b3e4731d9b9a003cc6eb4119a3f97f70781f6cfcc3",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c687e430631fa588b657fcaa85544d3dd54b82fb9d73c103265696b4335952bc",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b4057204d88a489cc401f1ae7380f25d4d38cfa92e4197d1ddbcaedfca3070dd",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c90d56ebb801042f5c47f3beb638cdfe6bb11d30f24e0e29e11417528c5ec3bd",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8147ff70096752745093873170e88dcc73506164f4a75cbec2e3eaccf6554815",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "efc6d3c25c48f3d59e8158bfc54e80aa626b9cddf5ce5ca0c1dce6b713529bf2",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f2caf3cd86d72e4549f3ebcf8bb5ea36101abdaedf8cc28d11630b6af96b8b02",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6d9359e9e1712243c6e619fbe139f5e8728345a84abc1ecec0400a3d12450e01",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e6a2f0b8b22983adc30e3b4e47e3adb2c4a191038df8f71718b5370ed499095b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3624c5d3fb60583d9eb01f8566e887912a8423b80bc6e9d3b9787d8baf5197fd",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "aa709e8223fe65207e687073507e85c156a1fb1d63eda0e59eca6fec2708ca0f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fca912e07a9e6e2012a555f380a6d2a821e7b512ca48d3583641a5a1b3de3ad9",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d3ace99e3cd6c8df8c62fbf434743c713d9c4aafba81953998460a8c6926896d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a2703bac7f47b1bab1ac6fc8102d709ea2801138bea71230b0171d97a9277f16",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b0bac374487113fda25856a8b7fcf03bc853278eed37b3a03cfe48d89a9a4c7d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "aed46cd70b2b39cb59f9fe6c08b8ac9116da99da39cc1b0a85717886bb10507d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5d45ab859a14388f186b60cd9d3762d9b0020d6ed77d1f89a524515db6b1db9d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6078f22b14398af6dcedad504f4affc01e42b0ea428c07bae11ec2b18f39bc2e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6515b1d15581b0f1721d23b452e9cfc1380cc4b5c4c84d8e0a21dd555f824aac",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "1f3018c80cd4b464f50f28b451a6756c18117e57fd00f769f8ac4d1f26599d65",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "829022c82979855a22ee5603988f90c7de9401e57163450bdfcee3da5b4c8890",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "27c400de0f867e0da0ff7c8943deb813d04b89f34039d61b94866a053130c5e9",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "80efc06947930bd0bad5830250f511b9dd62fa953f296316a5792b83b6bb2437",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "415a7901977d3e57114c0e71169798d7179eed78d59f9b66a5bb3e3f853ae4a4",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9d6f222c2974329b5a6243dab2e8d426ff26f74561ea3a14c43e1186d754f2ac",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "114004409d26c294b7bf3442feec83a153ef4b926f8d435592bead279e862961",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fd69c14dc89a9a2aeaf0fd8e5ffe8a1c6d39d2ebdbba7bab9db200351fb2c41b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3462edf1ed32f7c064e716211e80e6f88a724ccddd5ae38accfdccf248d7f289",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b24c924d9e15b78233ece492e4a611671ad4240424ed7f73346e4eb8de0c2888",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fa1027372b70a05a4757b6abc8d8cbfbcc32b6fc4f69dfb4634bee9f94a2115f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "2d181b77bbab5e7978956ae14af31d369d8f622a652db3df49465bd089673421",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "aa49563fd6a4aa9fde5ea54c389a1235bfc11633f3cc0f1fe9212555486340e6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6e4dd4932d1e1ef09f7eed6c0f6a9d49ca8af3d11b96b97131360fd393062bd6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d414e85f28c8df1e1e37319ab737a05c7674a2d87ed7fbd67edbd90c74172973",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ece44e49d0ba1fd8c5fe6d0630807667335bd2d477a912a3e1087bfcb5bdcc31",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9f2f6ede20fe89c916e7a82f9107db414f4a5e6b9c691432489606f4bfba6bf6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a1b5d881ac451e70b23495408ff0db5c2bc932443ae37639138afe34cd4a64d1",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3860650954e14d3cbb1c6b6bc67d42df10a7f3a0f7f3b7f164ff66d614d3082f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7d35e78a24b26a42bd9f3fd365453c778bfb7e785a740297746587e8a26e14ae",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "18ecac3c1a0324ba9c483cf6ea892c76071aed19324ffb9546659dc83343168e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "751c3ff07880fbe7a6e3932fd6935b5b53822e5ea66f69155f2a42541c7831b6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e86d174d468baa92ddc99ba79725ad8a2e5898534c47e56cd816980fdd703f52",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "88082250635782c653c72109a20fd5d0d47daf947a0600b45a84e9141bc11672",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d9bb1d6bbd64ecbbc47a5a5fdef29a05f30192d18304f53b7637aa3e0163773d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "1fe876013027bd668fba2cb0254465a6173e75fca5db4f43330f6c7c914c95cb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f302690b5ce561352ddf5f0705f9c196aea5e017c684055535c76873a64c729b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "365c8713d4b80b06a55cf236d1316a55663c5509115bbb12d9b669ef93e9bef5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8451368739a0d391188645dac119c5b580051b91c00e8f2057cf14adc91f14ea",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6fa5676baa592f7b2f1df1cb9413b5dd61b6378f1f6379ccf11705312d838ab9",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "cbf51b4219ece0d976fdf0b1f6b0125e7337c69142dc2718e484dfdeb1f7deee",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a56d31e92080809d6d170983f24c25e4e7f0c220ce34ad4cc4e44735dae12038",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "4a6e74128c1ef8847873680eae5be931e2aa8d10011d4b0e91d5efa02a40329b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "89523c4819c0fc6314ea76e803b4999e4c82fc6bf44fbc16bcefb83689ec260a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9b778db7527d74c0f7bad84a68100f9cd18d1385434f00db2e4a3507a44aabea",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c6e2992dca89d48e1f32a1ec7d6452c3165689feffd3d81583534f92e45f0744",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a6b971799878d477bb34b5f9c56a4980d334fb703f2260adbc23dbc5af07bc0e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a20667627d376a9e798130eba78c52ec6fcd929d137ffd0c3fed128dce2a4355",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c3977eb56d3535317cd75bdead63543ec2b0d70d81391e03316ccc8f6b2e6082",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b090fca0309fade3f26534ca2dd29e4691797a4339e2c283c1cc45e8ce4df908",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "71e4712f770039d9017c25036dce8a093b2ea3c736f3f82e7e2eead0324c1029",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "26d959dc93e2aab9563bff15bfb21814ed15d4d0a7c17e00207ff51ddcca1604",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "11987a913fc5a7a6ddeb162f5bafd3ab30a54c40678d61b4d30331fa87300f1a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8841ce12083383abb725585097e322b52fb65a1009661cb21faf8a1743e45580",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "543ec1ef593a885897a7b4cc7ff02794af6ac82d98ea926a71063340aa8d4e5b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "af90c58256bc3e8e3f8731fb3f72b4dcaf7a93f353a9154cd677af384df6f4ba",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f9a9154de13e9432e6cee504cb3834f618fcff136cde0e9e373efcc29892f665",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ccaad497f601aed2c75e2233717ec8753e7eee66a1c9e7344a987791d3bf937c",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7dd83cb83751796b5c7406705c1306470b0fb5feadac0d610871a84b6ad6ecf5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "465bf74122a8a98b6847a8e9517f075b2fec2b883aff7c7512306fcfa6686ecc",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "2f7404a369fed38d14e62776dcc2ffb63f6f4bc5cd9ca708a33eb70a768c29b6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "bb3dc92dba526a13b4ffdd69c6ced351e5132843211e0eb5689a0d800a8a524b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c54031b80e0b209f15ab89abbb424489c1ccfe518c872a770ed909ea71d92908",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d992b77b1b6ea210d8524dc75ae5bf09ea7b4fc9b8354448f0e2515e0e3809c3",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f9c538424278463c5328c33a6d43894025f5b8263b0689d518672071222db5df",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8901a0832e551a87d97cacd5887aa6699c190517316c32475eebffc1d23f4e9b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "daf9dd07f03bdcea47212ff60a872590e7f484b4ebd60cdfad0552d62054229a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8a2d0db552962e97e2f6b59f73fdf603c6ef6a46b0563b35a357c0f32f3bfd22",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f91a213bee801adffe41b88ca23b03770eaebbdf3d6f50d5e96efff2ff7802cd",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e345990c756bf45758a9120d728b2ad2edbef0e9cdbbb070aa1a94360540e3d1",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "be4f7b484586ed2464533a32c4b3bc4f252a65dea9007eb524cab14c04e074b0",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f1d6627ab3af8706985b1820e8513f6724862c8481573d76f497099095f49bd4",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "2283f7dd0ab9e997a37599d76a2ddf7e5f2ab7869d19e13e814c9837bc43c69b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8abaacd944012540dd6a7b1abe3b8a54273e87c867ffc321305585077d76b758",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "27bd3c688def4eda89cb8473b9fa4bab3655ba4bd32931dc69a965a22730d08e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c1f66d81043bdd86609f7dc586e45caafad208b618db7481a38d5ef0170d0b56",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "bc5cc76e37c01d3ab021077b5db9723a83a6516f6a15bb6e26448a99ebad9675",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "cd1014b997d555d40be770192c37d26faab3829a8f18579db4dedc6b699e96e4",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d6138ebc64b751ef03e8b383f15918ea660ac062ac51ee6a3a45f96a42a31c70",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "59666c567d4cc1095d81d5300656c360a625bf0d66c0de917492a8b37ec0ddb7",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "46944d3e51bda24a05fe19ce71240bb7de54f6fa0ac8ea98439883d47752062a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "439599866404074a03f8b05ce60f4115674a9ff5d18f0c218d737ba5d85a0148",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "56570ac1329657979a8bdb20ababadd6acfe99904aeb843b5bfca47b6c7f4353",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "18d6eea431bb9398c3bf29231e42658bf48e1e1166f3dc2aecadaa24fcc8b0fb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9239cd5c2a5b493bce34e2731fc0167bdf9a66ee3e50e6679d748a6b5bb7fa51",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c6285c24bb7b7c73dc4a4b743a8dff2208ffc7e67f072875929b68da7b9121bc",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "05e897e6d89114c10334a4b9e5e9d1702d29daa0e4ceb85571661330ee088b86",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b070bd5ff21a8bcc963229ec2ec4a840989349f673aefb855831611fd05b2a64",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a09421e45d3a1a48d1dbd3068c268bdc858c7b26444d108d8af6b22cc46c9d88",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "2436e0e03e17f8bf46aa5b550825f72700e87bb76a55293774d7a22305ed423a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "56d40c17fe32dc40e3900f25f7b22b1be642c9da8d2e67acea09e9390ca7d484",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7dbf2cbfeade19f96c59c85d12d0cec54cc0e3fd9af74f877b52d2cfbb7e8acd",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9a376c26fa71523ca2eda505647cfad8857be8142c92ed5fd674813232b995f2",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "1b9ae1ae64424453bbe01282f16f4f87dcee3783a491424b92fe49595f8cba1b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "0b9ea1ae92a70a8edb317d675a5e7ba78896a5487072841d7289e7c864caf6cc",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e4cf4fa889d12d70b01547cd6b82ae7464bad568d05a034168eb39e4addc6eff",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e4b94e3824eabb80d7546cfe77c23e9dff0afb3b220377e06b907a4d624339ba",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b2b9ebaec1341de0d2c33c68c18cf626a778d159e38c380cd25d477a2ed39998",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "edbee2ed6563e84cafa760b665f793e32b7066c60e5b6bf53166a3621e3562c5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b4ec5946014f1b8bcc6fb5ab6bddd8dbcafa3c04283570fbb431abb4e4e21107",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5bb62b670e040f465f811de6a819d2ff4de419c165b0dbc2bb2a925646a503df",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "77fb52ee364ef07b10ff30a70304ccce5bde2c165914a119f0d6f564d78f91ac",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "36c76cd0f5a0895f13a055ec15fc688fc45f1a9a0d3b80cb140ddb6dfc06eaa5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3edc93ddadd86c740392b56bd1f595f646d23942ee6df49586d0cdcf20f1299f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f996c71c1358a3ac44e1465cd4fa6499101acbd71764d2ce6e69abc1279f7b29",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7ed50bf6fb48ab1adeb27eb7b458b4fdf396b59fcc5b6b9de485d7454e5a8f0e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "46faa2b89e8daa078df9ea39d6f565ef98ff396a887fb4cacd7073f786bece64",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "582eb321827600e4a924ff0a31bd29b1585aeea04526101a0cbdf8c801f24de0",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "076b8f32437558e38bf0b822e56da8224a61351ed19f666d4e4fba1f1644c6e1",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7a7d6d22b3b3ffadbb1e2ad901d9cbc0bc1394e50fd324ec1414ac9f27f1b95b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6fce6cdc62a3b8e8c14b3f44871c276a15bd16389267b5e0fc6d1f6559bd38d7",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "cee869bd4cf5a28bb6362672dc6b2b0fb0894c712cf323d00165dc636068d655",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "d61f15424c04db46dfef46fc492b0e7a3d4adcd16c58f074862d326161dcfb20",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8c2bb2965ef5ef6a0b0e1e040ffdbfe9d972a7b24c3ce4dff1f858841a09ad76",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "035fc604e1d1b8f520a673dada37a80b1d58e1530c8c5bfcb1f9ad56a09ed7e5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a8b9f458e030b7e9c8ccd74cee582f81cfa2cebc09e694a0b06fde559e99794f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "0473e1542e02371c6ec0dd0a9f1537eff93eff51ffff0915f3d1de70017b8890",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "95aea63380c0c545e0bc03416c42cd08752f82f5e53acd2915808b2cc804108d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ece11774ca01973ffc849158398f5557fb207d48c75c7e55cc65a102608e555a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b80e35d754d300ba9ea88166aef0e9c5acd897e9fd0ff9032104243be5630331",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b528845680602977e99212960355379bcdad45e4f0bd1a617fd2bfb388038853",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "0551e84c10b1ba070f7fcbc90f0013f71b0db774051ed7116b540fda81fc3e85",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3725080c31c016871c98b09b7ca71cd57f46bf15ac266748ed1d9d2e084429f3",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "742434ad97b52a997ca5486d61152d6fa3164008a324e256b259ffe032bb1c6b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5ce4f48df842f020ccf0d021141eff06bd251c4091d0ce7dbc54d16fdec8e79d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a161eef4ef2af5520e9c795d612499cbe114fed02303ac6c3a388ec1b2613f6b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6a27e0329316a71af6cfec6620e72a1d497a881a97f23f91eddb6fb8ff05bbe3",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "03008a198cf679fb48bd8f0509ce3ca2a5eada97220d1159fb8b482ac94ec79e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8e1a7fcfeb3bb60b63cc950437ca821d1642737d177aef93d799c649f3becc26",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "26b89ea9ee48c5e2a2171dea2ed9ed894384919d5557366f0e0ef337feb60d84",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ff0e8d82a2436c00a9294e5e8e55c79ab98a2bb64acf942ae022acf8c10f7cd0",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e770c2880dfb33979a431342e24103dfe2cc836b64c2d01e8754501145be027e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b826c59e938e505ce5981defa885708dea8e338a1a51f72102b013f5d2057ad4",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "4863e005cd818e94464849f942c04e786da58032f189b0f20ded8a0f0a1025cf",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f43dde52e2a6436b104c95a95587f33497de96cbbd32e31ba3ebda42e2b7ba33",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "2a525bb9ff18a051ebc97b29996c533b506969fc9bf6682e8b0a6e7b33137160",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f779982c57708e48aea5f40347817fcace36812114710ded0a448d205d93d212",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8da9684c78e0420f7f34a01df4c32e616a63f615ce94427ef815ca0a5ddcd376",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9ac088ce9c98f80e8517b96faa88876a2d987f7105c87537d540dee04bf52466",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "16f192a5a061648495175dd965c14f2a2ca6382faef195ff4067679e28ac0fc4",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "0ef0c50c575291a3c06650427817bbc50e640740e22fb5382c947d42047ebaf9",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c6e6fd785fa53272becafeeab9a0a8205f2d47ac7de01f8375ba6897e7634778",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b345930c8bf1edaeb9996cd81eab034d640bd305b7212c6bda4c42f1cc966a96",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c440701801c129168334eec0c7b9818c5cf0cc6251ae3bdc506f64beed99113e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a45e8ee6cc48a1c5cc7333c5ae22d728924710387c9383ed13c5417d57bcec53",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6de9201ea0fccd81bfcabb3612f58f9774be9547942ed0fef3d7698b50c76440",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c0eba62123f618d9ad8b2b1a788b38b4ca3882d71d6f6ca18e1839ca6538edfb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "234a86a64f8c2f89ff5f10a383bd33823fb45df21a5d99b0a85f8e8ffcc19ea2",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e46c689075a0791f0fd024ed4afe25cb2032c3b5c363dd51273ffeceb99d1db6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "9d401f152eb61b776fc7c2383811b1a6e8d0c61583ad7b53b3c77531d5f411a5",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "b66f0a22f3f1f625ad3ad6e722575f03a9a946a8c64743d7fd2d6e1600561baa",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "bda3b416ee0f4af5f02592d31b0ff1f5342463545a1bab1067551d0df431bb12",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "209449ba5f26d078ba49fffe9fb4a2fb8aa05343211bdfd71b99be5d98a23c6d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "a8c577aeff2918d6b3e28255e90546f7a0b924d7a77692a38d48a87f35a7c7ce",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c2b5b5ac9ba82a37e7223e78076bef04514f27cfac97ba4168299c43b23aa81a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "81d24efdba1390a8bc1c35edcd0ad21d65393d1cc71176c3026bece39ec147e8",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "ca76aff34915f4ad02c8389c48332846bdaaf1b9196db82e8fb3986cbe3cf9db",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7b204c170c0ddbbad12cdff51f659e5720e3fa31dae3e66960f19f05d6e96b49",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "e95752239dff6b8be78edf2c4322ada5f6319c1d6f009a3cb5e88b8d6602ff83",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6d144819210f12e2f71a1bb2294a1a66fcd80cb5d69426ccf9cd2cc89b4d25b0",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "44ebe79e438dd47576eeb36a4ff15d27279e313bd8f5781da4a8feeb42febdd3",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6902ed3ca6e8709276b75cb422b833644d86be9a45233b6685a3a146fa622d21",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "f2292651ad32d61d2ac668114f2a78a6b71f8ee5e3cf27fdf66103faaf32b47b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "bdd371af533f482894357138a79929185fd5941b6fe9f89f8a05dae5c97799b7",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5d2ef5b92abe4432e1339ea3272df3297e05dd24e96d18b8016fa36563ea7fc6",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "c6cf3c2388116f482f16252d61d2e651aaa5b5bc602ebff127e2cb406c4687b1",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "31b0a76c88e04f5dc8f7e62dd8e54ab9f1d49c94c82aaa0ee593f3ef23e3ba52",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "21b9dbedb7400a5a7df0230f0888671a5db60f72c7700631f8bd4055111bb3e0",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fab6e7060c338b953cf4aef7f5da5cdfec316d589d893d92a77f58441eb8a108",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fae493eeedc5bcd1195fcd3dfc0bf357437ca2fb1a9792da17731cee50835e1e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "4a0d10580275d26514b483b132402f98f5c2695bd4e0a30b291a2e021b0032bb",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "642656990a44bafe17a41c3961f983afb28eca6f841eeb8b9683ae7c771a7081",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "fcd817c382f727a44a495b7ac1427e772df97459fe140d285fb644e684b87955",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "665bc2b155f8e919e0fc132b19b03e2141605b7d3e7911f899feccf09bbcd897",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "bce04c76dbcd5a19bf11ad14f16977489040093f367844938452e93b5a9aaa94",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "31d5dcecbbe83d92d659ddd0b8293e96af71568c65290b4bc3b425fe211a914a",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8bcaffe1ec58f8f9acdca31d540250a469630564bd5fc503bd3724b91bf82c6b",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3a1e53edfc154c871ccd665d8288c2d34c18616ec9947180e2f03fa1dee864fc",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "73148f05083cc43f18d6c3d8f299eca54640eae3917e8269c98bbcb3300cb37d",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "43fd9ff57a48c4f8e5b0f4afdd696d968c43d3e267d893968d9b375dfb021d5e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "63153454eb7e108f5f91f11e3f826e26de68a68be9ef064524af373ea4d027ad",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "0b5b27050b008593c46f6d967f687701ee243acc55da9d6a0f8478744a0d756e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5e4fe142b5142c4cbc8152a60731c24442023e2dd1dd7ed6715dfb4b3be2a369",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "30975da1b30edc1cc7798e1a0deb982cd5bf402fa90af66cd802d315c28384f8",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "6ffc24764da60d56abb38afc57b1159119f169f2abdffe81c0bbba7052474d3e",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "3e2f9234abc6c93952e01efd4bbcd813c4587e30263ced29b9c5a522047a066f",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "7057610bac956bdba418e0614eb052a805f554b7ada391361033c20c79c7dbc7",
+      "rule_id": "AI-028",
+      "file_path": ".roady/events.jsonl",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "62a439136596c7cef7c0ef5fecdad138025a0e7a6a6b4f4436be9af6d8fe64d0",
+      "rule_id": "IAC-308",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "low",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8ac948ec861d5d9db8bb0fbfcbd331d0eb3229381d23f62d7b70af912d9e8a42",
+      "rule_id": "SEC-161",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "2be4cb216019958d2dd3b0db4562eabb1839a1c0bc19d164967e2a38fa908e5c",
+      "rule_id": "SEC-162",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "5ea4f9a868490232125eaf41a6c713aff885d1abf067e9cb4a5500397daf4af0",
+      "rule_id": "SEC-163",
+      "file_path": ".github/workflows/eval.yml",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "449d975a216add4ee8763628e4d69fed4313efa9ddd0d8643f553d122994a316",
+      "rule_id": "SEC-163",
+      "file_path": "internal/eval/judge_test.go",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "8ac84907778cb6b0dff80a24332c05f0776060df0f41907e0fbcedf019d050d8",
+      "rule_id": "SEC-163",
+      "file_path": "internal/mcp/sanitize_output_test.go",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
+    },
+    {
+      "fingerprint": "98a56d0f074cba979cce8d46814f2be256a4bf8fe66fd163cea7168b3458a0b9",
+      "rule_id": "VULN-001",
+      "file_path": "go.sum",
+      "severity": "medium",
+      "created_at": "2026-05-09T10:28:50.133399Z"
     }
   ]
 }

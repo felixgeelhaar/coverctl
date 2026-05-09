@@ -1,6 +1,6 @@
 {
   "project_id": "coverctl",
-  "version": 104,
+  "version": 148,
   "task_states": {
     "T-1": {
       "status": "done",
@@ -328,53 +328,113 @@
       "elapsed_minutes": 2
     },
     "T30": {
-      "status": "pending",
+      "status": "done",
       "path": "",
-      "elapsed_minutes": 0
+      "owner": "ai-agent",
+      "evidence": [
+        "docs/src/content/docs/index.mdx body rewritten: Problem section replaced with 'Why not your current setup?' alternatives table (red-CI / dashboards / native commands); Solution removed in favor of agent-loop transcript demonstration; Cards retitled to wedge-anchored value props."
+      ],
+      "started_at": "2026-05-09T12:16:26.448389+02:00",
+      "completed_at": "2026-05-09T12:17:51.118985+02:00",
+      "elapsed_minutes": 1
     },
     "T31": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "'Designed for Teams' section deleted; generic Cards replaced with 4 wedge-anchored cards (regressions before commit / agent-callable via MCP / polyglot governance / local-first hardened MCP)."
+      ],
+      "started_at": "2026-05-09T12:17:58.110472+02:00",
+      "completed_at": "2026-05-09T12:18:14.356628+02:00",
       "elapsed_minutes": 0
     },
     "T32": {
-      "status": "pending",
+      "status": "done",
       "path": "",
-      "elapsed_minutes": 0
+      "owner": "ai-agent",
+      "evidence": [
+        "Category phrase 'Agent-loop coverage governance' lands in landing tagline + description. Alternatives block under hero. README phrase added in next pass."
+      ],
+      "started_at": "2026-05-09T12:16:30.060404+02:00",
+      "completed_at": "2026-05-09T12:17:53.574169+02:00",
+      "elapsed_minutes": 1
     },
     "T33": {
-      "status": "pending",
+      "status": "done",
       "path": "",
-      "elapsed_minutes": 0
+      "owner": "ai-agent",
+      "evidence": [
+        "Landing hero CTAs reduced from 3 to 2 (GitHub action removed, available in nav). README copy leak fixes applied in next pass."
+      ],
+      "started_at": "2026-05-09T12:16:32.532599+02:00",
+      "completed_at": "2026-05-09T12:17:55.549735+02:00",
+      "elapsed_minutes": 1
     },
     "T34": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Decision: ship idealized transcript with explicit 'rendered for clarity' note since live Claude Code session not runnable from this context. Maintainer should run real session post-publish and reconcile if rendering diverges materially. Note baked into transparency-moment artifacts T35/T36."
+      ],
+      "started_at": "2026-05-09T12:15:59.161484+02:00",
+      "completed_at": "2026-05-09T12:16:20.19191+02:00",
       "elapsed_minutes": 0
     },
     "T35": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "README 'What it looks like in the agent loop' section: 6-line transcript + 'agent does well' / 'watch for' calibration block + rendered-for-clarity disclaimer."
+      ],
+      "started_at": "2026-05-09T12:20:55.683715+02:00",
+      "completed_at": "2026-05-09T12:21:22.837987+02:00",
       "elapsed_minutes": 0
     },
     "T36": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Landing index.mdx 'What it looks like in the agent loop' section: same transcript copy as README + Aside callout with three hallucination markers (threshold lowering, fabricated coverage, ignoring rejection codes). Rendered for clarity disclaimer present."
+      ],
+      "started_at": "2026-05-09T12:22:07.663296+02:00",
+      "completed_at": "2026-05-09T12:22:24.797574+02:00",
       "elapsed_minutes": 0
     },
     "T37": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "README 'Security boundaries' section replaces 'Security note': two bullets (input boundary + output boundary) with Lethal Trifecta framing; links full threat model."
+      ],
+      "started_at": "2026-05-09T12:20:57.504138+02:00",
+      "completed_at": "2026-05-09T12:21:26.007135+02:00",
       "elapsed_minutes": 0
     },
     "T38": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "'Agent-callable via MCP' bullet rewritten with multi-vendor acknowledgment (Anthropic/OpenAI/Google/Microsoft/AWS) on both README and landing index.mdx Card. 'first-class MCP server' phrase removed."
+      ],
+      "started_at": "2026-05-09T12:20:59.460662+02:00",
+      "completed_at": "2026-05-09T12:21:30.076583+02:00",
       "elapsed_minutes": 0
     },
     "T39": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Privacy-first + eval-gated paragraph added to Security boundaries section. Compatibility surface single-source: 'Cursor / Cline / Claude Desktop / Aider / Continue / OpenCode and other MCP clients' listed in Get started; mcp.mdx is canonical source."
+      ],
+      "started_at": "2026-05-09T12:21:32.332024+02:00",
+      "completed_at": "2026-05-09T12:21:56.805942+02:00",
       "elapsed_minutes": 0
     },
     "T4": {
@@ -389,39 +449,81 @@
       "elapsed_minutes": 2
     },
     "T40": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "README Community section between For Platform Teams and Contributing: marketplace + MCP registry + Discussions + Sponsors + maintainer credit + PMF survey nudge."
+      ],
+      "started_at": "2026-05-09T12:21:41.954952+02:00",
+      "completed_at": "2026-05-09T12:21:58.961253+02:00",
       "elapsed_minutes": 0
     },
     "T41": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "README 'For platform \u0026 devex teams' section links threat-model + rejection schema + gtm-metrics-spec; inbound path via 'platform-evaluation' GitHub issue label (created via gh label create)."
+      ],
+      "started_at": "2026-05-09T12:21:44.839872+02:00",
+      "completed_at": "2026-05-09T12:22:01.250115+02:00",
       "elapsed_minutes": 0
     },
     "T42": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "README header includes pull-quote of struggling moment immediately after tagline; PMF survey nudge sits in Community section; pre-emptive monetization framing closes Why this exists ('CLI and MCP server are Apache-2.0 licensed and stay free. A hosted layer... additive, not a paywall.')."
+      ],
+      "started_at": "2026-05-09T12:22:03.261273+02:00",
+      "completed_at": "2026-05-09T12:22:17.984996+02:00",
       "elapsed_minutes": 0
     },
     "T43": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "README first viewport: title → tagline → scannable nav strip → minimal badges → quote → trust-calibration → Get started (install + JSON config + agent-prompt example). Section order: Get started → What it looks like → Why this exists → MCP tools → Security boundaries → CLI reference → Configuration → Supported languages → GitHub Action → For platform teams → Community → Contributing → Releases → Security."
+      ],
+      "started_at": "2026-05-09T12:22:05.633204+02:00",
+      "completed_at": "2026-05-09T12:22:21.003801+02:00",
       "elapsed_minutes": 0
     },
     "T44": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "'Quickstart for humans' + 'Golden path (first 10 minutes)' collapsed into 'Terminal flow (without an agent)' subsection inside CLI reference. ARCHITECTURE.md created with full layered structure + wedge artifact links + boundary documentation; README Contributing section links it."
+      ],
+      "started_at": "2026-05-09T12:22:27.177137+02:00",
+      "completed_at": "2026-05-09T12:22:39.776588+02:00",
       "elapsed_minutes": 0
     },
     "T45": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Symmetric two-LinkCard Quick Start replaced with primary full-width agent LinkCard + inline secondary terminal link."
+      ],
+      "started_at": "2026-05-09T12:18:02.406865+02:00",
+      "completed_at": "2026-05-09T12:18:16.706254+02:00",
       "elapsed_minutes": 0
     },
     "T46": {
-      "status": "pending",
+      "status": "done",
       "path": "",
-      "elapsed_minutes": 0
+      "owner": "ai-agent",
+      "evidence": [
+        "Trust calibration one-liner now sits immediately after struggling-moment quote in both README hero block and landing hero supplement. Names jagged-frontier limits (mock-heavy code, exotic monorepos) and links to fuller calibration in quick-start."
+      ],
+      "started_at": "2026-05-09T12:18:18.653877+02:00",
+      "completed_at": "2026-05-09T12:20:52.946574+02:00",
+      "elapsed_minutes": 2
     },
     "T5": {
       "status": "done",
@@ -512,8 +614,14 @@
       "elapsed_minutes": 0
     },
     "task-community-and-platform-teams-surface-area": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Children T40-T42 done."
+      ],
+      "started_at": "2026-05-09T12:23:04.509095+02:00",
+      "completed_at": "2026-05-09T12:23:18.622903+02:00",
       "elapsed_minutes": 0
     },
     "task-core-foundation": {
@@ -594,13 +702,25 @@
       "elapsed_minutes": 0
     },
     "task-public-surface-wedge-reframe": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Children T30-T33 done."
+      ],
+      "started_at": "2026-05-09T12:22:42.004927+02:00",
+      "completed_at": "2026-05-09T12:22:55.347036+02:00",
       "elapsed_minutes": 0
     },
     "task-readme-and-landing-information-architecture": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Children T43-T46 done."
+      ],
+      "started_at": "2026-05-09T12:23:07.186845+02:00",
+      "completed_at": "2026-05-09T12:23:20.834881+02:00",
       "elapsed_minutes": 0
     },
     "task-rust-quick-start-tab": {
@@ -615,15 +735,27 @@
       "elapsed_minutes": 0
     },
     "task-security-and-privacy-public-posture": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Children T37-T39 done."
+      ],
+      "started_at": "2026-05-09T12:22:46.731818+02:00",
+      "completed_at": "2026-05-09T12:23:00.336234+02:00",
       "elapsed_minutes": 0
     },
     "task-transparency-moment-artifact": {
-      "status": "pending",
+      "status": "done",
       "path": "",
+      "owner": "ai-agent",
+      "evidence": [
+        "Children T34-T36 done."
+      ],
+      "started_at": "2026-05-09T12:22:44.623794+02:00",
+      "completed_at": "2026-05-09T12:22:57.882603+02:00",
       "elapsed_minutes": 0
     }
   },
-  "updated_at": "2026-05-09T11:48:46.97466+02:00"
+  "updated_at": "2026-05-09T12:23:20.834881+02:00"
 }
